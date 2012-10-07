@@ -1,0 +1,1 @@
+Class Pointed T := { top : T }.
