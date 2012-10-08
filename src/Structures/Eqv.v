@@ -1,8 +1,8 @@
+Require Import Data.Function.
 Require Import Equivalence.
+Require Import Relations.RelDec.
 
-Require Import StdFun.
-Import FunNotation.
-Require Import RelDec.
+Import FunctionNotation.
 
 Class Eqv T := { eqv : T -> T -> Prop }.
 Section Eqv.

@@ -1,5 +1,8 @@
-Require Import Eqv.
+Require Import Data.Function.
+Require Import Structures.Eqv.
+
 Import EqvNotation.
+Import FunctionNotation.
 
 Class Monad m :=
 { ret : forall {A}, A -> m A
@@ -19,6 +22,12 @@ Module MonadNotation.
     (at level 100, right associativity).
 End MonadNotation.
 Import MonadNotation.
+
+Section Monad.
+  Context {m} {M:Monad m}.
+
+  Definition liftM {A B} (f:A -> B) (aM:m A) : m B := aM >>= (ret <.> f).
+End Monad.
 
 Class MonadLaws m {E:forall A {AE:Eqv A}, Eqv (m A)} {M:Monad m} :=
 { monad_bind_of_ret

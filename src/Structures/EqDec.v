@@ -1,8 +1,11 @@
-Require Import StdFun.
-Import FunNotation.
-Require Import RelDec.
+Require Import Data.Bool.
+Require Import Data.Function.
+Require Import Relations.RelDec.
+
+Import FunctionNotation.
 
 Class EqDec T := { eq_dec : T -> T -> bool }.
+
 Section EqDec.
   Context {T} {E:EqDec T}.
 
@@ -16,10 +19,11 @@ Section EqDec.
   Definition neg_eq_dec_p : forall x y:T, {x<>y}+{x=y} := neg_rel_dec_p.
 End EqDec.
 
-Module EqNotation.
+Module EqDecNotation.
   Infix "=!" := eq_dec (at level 35, no associativity).
   Infix "/=!" := neg_eq_dec (at level 35, no associativity).
 
   Infix "=?" := eq_dec_p (at level 35, no associativity).
   Infix "/=?" := neg_eq_dec_p (at level 35, no associativity).
-End EqNotation.
+End EqDecNotation.
+

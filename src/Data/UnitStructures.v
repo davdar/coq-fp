@@ -1,9 +1,11 @@
-Require Import Equivalence.
-Require Import RelDec.
-Require Import Eq.
-Require Import Eqv.
-Require Import Lte.
-Require Import Show.
+Require Export Data.Unit.
+
+Require Import Relations.RelDec.
+Require Import Structures.EqDec.
+Require Import Structures.Eqv.
+Require Import Structures.Lte.
+Require Import Structures.RelationClasses.
+Require Import Structures.Show.
 
 Section EqDec.
   Fixpoint unit_eq_dec (_x:unit) (_y:unit) : bool := true.

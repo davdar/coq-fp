@@ -1,3 +1,5 @@
+Require Import Data.Bool.
+
 Section RelDec.
   Context {T:Type}.
   
@@ -17,12 +19,11 @@ Hint Immediate with_rel_dec : typeclass_instances.
 Hint Immediate with_rel_dec_correct : typeclass_instances.
 
 Section neg_rel_dec_correct.
-  Require Import Bool.
   Context {T D R} {RDC:RelDecWithCorrect (T:=T) D R}.
 
   Definition neg_rel_dec_correct : forall {x y}, D x y = false <-> ~R x y.
-  Proof. intros x y. destruct (bool_dec (D x y) true) ; constructor ; intros ;
-    repeat 
+  Proof. intros x y. destruct (consider_bool (D x y)) ; constructor ; intros ;
+    repeat
       match goal with
       | [ |- ~ _ ] => unfold not ; intros
       | [ H1 : ?P, H2 : ~?P |- _ ] => specialize (H2 H1) ; contradiction
@@ -32,18 +33,17 @@ Section neg_rel_dec_correct.
           apply rel_dec_correct in H1
       | [ H1 : ?rel_dec ?a ?b = false, H2 : ?R ?a ?b |- _ ] =>
           apply rel_dec_correct in H2
-      end.
+      end ; eauto.
   Qed.
 End neg_rel_dec_correct.
 
 Section rel_dec_p.
-  Require Import Bool.
   Context {T D R} {RDWC:RelDecWithCorrect (T:=T) D R}.
 
   Definition rel_dec_p (x:T) (y:T) : {R x y} + {~R x y}.
-  Proof. destruct (bool_dec (D x y) true) as [H | H].
+  Proof. destruct (consider_bool (D x y)) as [H | H].
     apply rel_dec_correct in H ; eauto.
-    apply not_true_is_false in H ; apply neg_rel_dec_correct in H ; eauto.
+    apply neg_rel_dec_correct in H ; eauto.
   Qed.
 
   Definition neg_rel_dec_p (x:T) (y:T) : {~R x y} + {R x y}.

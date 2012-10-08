@@ -1,1 +1,0 @@
-Class Morphism T U := { morph : T -> U }.

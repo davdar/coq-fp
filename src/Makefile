@@ -1,16 +1,15 @@
 PACKAGES   := Data Relations Structures
-MODULES    := $(foreach pkg,$(PACKAGES),$(patsubst %.v,%,$(wildcard $(pkg)/*.v)))
+MODULES    := $(foreach pkg,$(PACKAGES),$(patsubst %.v,%,$(wildcard $(pkg)/*.v))) \
+	            FP FPNotation
 SOURCES    := $(MODULES:%=%.v)
 
-COQARGS := -R . FP
+COQ_ARGS :=
+COQ_MAKEFILE_ARGS := -R . FP -arg "$(COQ_ARGS)"
 
 .PHONY: all toplevel clean check-admit
 
 all: Makefile.coq
 	$(MAKE) -f Makefile.coq
-
-toplevel: coq
-	coqtop.opt $(COQARGS)
 
 clean: Makefile.coq
 	$(MAKE) -f Makefile.coq clean
@@ -20,5 +19,5 @@ check-admit:
 	grep -n -e 'admit' -e 'Admitted' ${SOURCES}
 
 Makefile.coq: Makefile $(SOURCES)
-	coq_makefile $(COQARGS) $(SOURCES) -o Makefile.coq
+	coq_makefile $(COQ_MAKEFILE_ARGS) $(SOURCES) -o Makefile.coq
 

@@ -1,15 +1,14 @@
-Require Import EqNat.
-Require Import Peano.
-Require Import Compare_dec.
+Require Export Data.Nat.
 
-Require Import StdAscii.
-Require Import Equivalence.
-Require Import RelDec.
-Require Import Eq.
-Require Import Eqv.
-Require Import Lte.
-Require Import Show.
-Require Import Monoid.
+Require Import Data.Ascii.
+Require Import Relations.RelDec.
+Require Import Structures.EqDec.
+Require Import Structures.Eqv.
+Require Import Structures.Lte.
+Require Import Structures.Monoid.
+Require Import Structures.RelationClasses.
+Require Import Structures.Show.
+
 Import MonoidNotation.
 
 Section EqDec.

@@ -1,0 +1,1 @@
+Class Injection T U := { inject : T -> U }.

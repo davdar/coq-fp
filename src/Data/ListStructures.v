@@ -1,25 +1,20 @@
-Require Import Equivalence.
+Require Export Data.List.
 
-Require Import StdBool.
-Require Import StdAscii.
-Import BoolNotation.
-Require Import Eq.
-Import EqNotation.
-Require Import Eqv.
+Require Import Data.Ascii.
+Require Import Data.Bool.
+Require Import Relations.RelDec.
+Require Import Structures.EqDec.
+Require Import Structures.Eqv.
+Require Import Structures.Lte.
+Require Import Structures.Monoid.
+Require Import Structures.Pointed.
+Require Import Structures.RelationClasses.
+Require Import Structures.Show.
+
+Import EqDecNotation.
 Import EqvNotation.
-Require Import Lte.
 Import LteNotation.
-Require Import RelDec.
-Require Import Show.
-Require Import Monoid.
 Import MonoidNotation.
-Require Import Morphism.
-Require Import Pointed.
-
-Module ListNotation.
-  Infix "::" := cons.
-End ListNotation.
-Import ListNotation.
 
 Section EqDec.
   Context {A} {AED:EqDec A}.

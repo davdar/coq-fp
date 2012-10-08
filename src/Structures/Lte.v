@@ -1,8 +1,9 @@
-Require Import Equivalence.
+Require Import Structures.RelationClasses.
 
-Require Import StdFun.
-Import FunNotation.
-Require Import RelDec.
+Require Import Data.Function.
+Require Import Relations.RelDec.
+
+Import FunctionNotation.
 
 Class Lte T := { lte : T -> T -> Prop }.
 Section Lte.
@@ -161,13 +162,13 @@ Module LteNotation.
   Notation "x '>! y '>! z"  := (lt_dec z y /\ lt_dec y x)
     (at level 35, y at next level, no associativity).
 
-  Notation "x '<? y"       := (lt_dec_p x y)
+  Notation "x <? y"       := (lt_dec_p x y)
     (at level 35, no associativity).
-  Notation "x '<? y '<? z"  := (lt_dec_p x y /\ lt_dec_p y z)
+  Notation "x <? y <? z"  := (lt_dec_p x y /\ lt_dec_p y z)
     (at level 35, y at next level, no associativity).
-  Notation "x '>? y"       := (lt_dec_p y x)
+  Notation "x >? y"       := (lt_dec_p y x)
     (at level 35, no associativity, only parsing).
-  Notation "x '>? y '>? z"  := (lt_dec_p z y /\ lt_dec_p y x)
+  Notation "x >? y >? z"  := (lt_dec_p z y /\ lt_dec_p y x)
     (at level 35, y at next level, no associativity, only parsing).
 
   Notation "x '<=> y" := (order_eqv x y)

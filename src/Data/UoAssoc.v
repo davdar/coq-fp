@@ -1,0 +1,1 @@
+Inductive uo_assoc K V := UoAssoc { un_uo_assoc : list (K*V) }.

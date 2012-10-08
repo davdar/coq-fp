@@ -8,7 +8,7 @@ Definition compose3 {A B C D E}
 
 Definition on {A B C} (f:B -> B -> C) (m:A -> B)  (x:A) (y:A) := f (m x) (m y).
 
-Module FunNotation.
+Module FunctionNotation.
   Notation "f $ x" := (f x)
     (at level 99, right associativity, only parsing).
 
@@ -21,4 +21,4 @@ Module FunNotation.
 
   Notation "x ` f ` y" := (f x y)
     (at level 199, f at next level, right associativity, only parsing).
-End FunNotation.
+End FunctionNotation.

@@ -1,17 +1,11 @@
-Require Import Bool.
-Export Bool.
+Require Export Data.Bool.
 
-Require Import Equivalence.
-Require Import RelDec.
-Require Import Eq.
-Require Import Eqv.
-Require Import Lte.
-Require Import Show.
-
-Module BoolNotation.
-  Infix "&&" := andb.
-End BoolNotation.
-Import BoolNotation.
+Require Import Relations.RelDec.
+Require Import Structures.EqDec.
+Require Import Structures.Eqv.
+Require Import Structures.Lte.
+Require Import Structures.RelationClasses.
+Require Import Structures.Show.
 
 Section EqDec.
   Global Instance bool_EqDec : EqDec bool := { eq_dec := eqb }.

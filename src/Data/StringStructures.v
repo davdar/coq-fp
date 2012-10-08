@@ -1,26 +1,19 @@
-Require Import String.
-Export String.
+Require Export Data.String.
 
-Require Import StdFun.
-Import FunNotation.
-Require Import StdList.
-Import ListNotation.
-Require Import StdAscii.
-Require Import Equivalence.
-Require Import RelDec.
-Require Import Eq.
-Import EqNotation.
-Require Import Eqv.
-Require Import Lte.
-Require Import Show.
-Require Import Monoid.
+Require Import Data.AsciiStructures.
+Require Import Data.Function.
+Require Import Data.ListStructures.
+Require Import Relations.RelDec.
+Require Import Structures.EqDec.
+Require Import Structures.Eqv.
+Require Import Structures.Lte.
+Require Import Structures.Monoid.
+Require Import Structures.RelationClasses.
+Require Import Structures.Show.
+
+Import EqDecNotation.
+Import FunctionNotation.
 Import MonoidNotation.
-
-Fixpoint string2list s :=
-  match s with
-  | EmptyString => nil
-  | String c s' => c::string2list s'
-  end.
 
 Section EqDec.
   Definition string_eq_dec := eq_dec `on` string2list.

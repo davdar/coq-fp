@@ -1,0 +1,16 @@
+Require Export Structures.Applicative.
+Require Export Structures.EqDec.
+Require Export Structures.Eqv.
+Require Export Structures.FiniteMap.
+Require Export Structures.Functor.
+Require Export Structures.Injection.
+Require Export Structures.Lens.
+Require Export Structures.Lte.
+Require Export Structures.Monad.
+Require Export Structures.MonadPlus.
+Require Export Structures.Monoid.
+Require Export Structures.Pointed.
+Require Export Structures.Reducible.
+Require Export Structures.RelationClasses.
+Require Export Structures.Show.
+Require Export Structures.Traversable.

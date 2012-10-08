@@ -1,0 +1,1 @@
+Inductive identity A := Identity { un_identity : A }.
