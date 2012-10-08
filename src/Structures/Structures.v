@@ -7,7 +7,14 @@ Require Export Structures.Injection.
 Require Export Structures.Lens.
 Require Export Structures.Lte.
 Require Export Structures.Monad.
+Require Export Structures.MonadFail.
+Require Export Structures.MonadFix.
 Require Export Structures.MonadPlus.
+Require Export Structures.MonadReader.
+Require Export Structures.MonadState.
+Require Export Structures.MonadTrans.
+Require Export Structures.MonadWriter.
+Require Export Structures.MonadZero.
 Require Export Structures.Monoid.
 Require Export Structures.Pointed.
 Require Export Structures.Reducible.

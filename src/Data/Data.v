@@ -4,6 +4,7 @@ Require Export Data.Comparison.
 Require Export Data.Function.
 Require Export Data.IdentityStructures.
 Require Export Data.ListStructures.
+Require Export Data.Maps.
 Require Export Data.NatStructures.
 Require Export Data.OptionStructures.
 Require Export Data.ProdStructures.
@@ -13,4 +14,4 @@ Require Export Data.SumStructures.
 Require Export Data.Sumbool.
 Require Export Data.TwoThreeTrees.
 Require Export Data.UnitStructures.
-Require Export Data.UnorderedAssocList.
+Require Export Data.UoAssoc.
