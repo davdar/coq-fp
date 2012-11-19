@@ -1,7 +1,7 @@
 PACKAGES   := Data Relations Structures
-MODULES    := $(foreach pkg,$(PACKAGES),$(patsubst %.v,%,$(wildcard $(pkg)/*.v))) \
-	            FP FPNotation
-SOURCES    := $(MODULES:%=%.v)
+FILES      := $(foreach pkg,$(PACKAGES),$(patsubst %.v,%,$(wildcard $(pkg)/*.v))) \
+              $(patsubst %.v,%,$(wildcard *.v))
+SOURCES    := $(FILES:%=%.v) 
 
 COQ_ARGS :=
 COQ_MAKEFILE_ARGS := -R . FP -arg "$(COQ_ARGS)"
@@ -14,6 +14,9 @@ all: Makefile.coq
 clean: Makefile.coq
 	$(MAKE) -f Makefile.coq clean
 	rm -f Makefile.coq .depend
+
+html: Makefile.coq
+	$(MAKE) -f Makefile.coq html
 
 check-admit:
 	grep -n -e 'admit' -e 'Admitted' ${SOURCES}

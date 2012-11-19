@@ -2,3 +2,4 @@
 *.v.d
 *.vo
 Makefile.coq
+.DS_Store
