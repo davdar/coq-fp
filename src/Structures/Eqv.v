@@ -1,6 +1,7 @@
-Require Import Data.Function.
-Require Import Equivalence.
+Require Import Data.FunctionPre.
+
 Require Import Relations.RelDec.
+Require Import Structures.RelationClasses.
 
 Import FunctionNotation.
 
@@ -28,14 +29,14 @@ Section EqvDec.
 End EqvDec.
 
 Module EqvNotation.
-  Infix "~=!" := eqv_dec (at level 35, no associativity).
-  Infix "/~=!" := neg_eqv_dec (at level 35, no associativity).
+  Infix "'~=!" := eqv_dec (at level 35, no associativity).
+  Infix "'/~=!" := neg_eqv_dec (at level 35, no associativity).
 
-  Infix "~=?" := eqv_dec_p (at level 35, no associativity).
-  Infix "/~=?" := neg_eqv_dec_p (at level 35, no associativity).
+  Infix "'~=?" := eqv_dec_p (at level 35, no associativity).
+  Infix "'/~=?" := neg_eqv_dec_p (at level 35, no associativity).
 
-  Infix "~=" := eqv (at level 70, no associativity).
-  Infix "/~=" := not_eqv (at level 70, no associativity).
+  Infix "'~=" := eqv (at level 70, no associativity).
+  Infix "'/~=" := not_eqv (at level 70, no associativity).
 End EqvNotation.
 Import EqvNotation.
 
@@ -68,7 +69,7 @@ Hint Immediate with_eqv_dec_wf : typeclass_instances.
 Section morph_eqv_Equivalence.
   Context {T U} {TEWF:EqvWF T} {UE:EqvWF U}.
   Variable morph:U -> T.
-  Variable morph_resp : forall u1 u2, u1 ~= u2 <-> morph u1 ~= morph u2.
+  Variable morph_resp : forall u1 u2, u1 '~= u2 <-> morph u1 '~= morph u2.
 
   Definition morph_eqv_Equivalence : Equivalence (eqv (T:=U)).
   Proof. repeat constructor ;

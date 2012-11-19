@@ -1,0 +1,1 @@
+Definition force {A} (f:unit -> A) : A := f tt.

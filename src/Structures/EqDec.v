@@ -1,4 +1,4 @@
-Require Import Data.Bool.
+Require Import Data.BoolPre.
 Require Import Data.Function.
 Require Import Relations.RelDec.
 
@@ -20,10 +20,10 @@ Section EqDec.
 End EqDec.
 
 Module EqDecNotation.
-  Infix "=!" := eq_dec (at level 35, no associativity).
-  Infix "/=!" := neg_eq_dec (at level 35, no associativity).
+  Infix "'=!" := eq_dec (at level 35, no associativity).
+  Infix "'/=!" := neg_eq_dec (at level 35, no associativity).
 
-  Infix "=?" := eq_dec_p (at level 35, no associativity).
-  Infix "/=?" := neg_eq_dec_p (at level 35, no associativity).
+  Infix "'=?" := eq_dec_p (at level 35, no associativity).
+  Infix "'/=?" := neg_eq_dec_p (at level 35, no associativity).
 End EqDecNotation.
 

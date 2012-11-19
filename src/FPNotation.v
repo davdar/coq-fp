@@ -1,2 +1,2 @@
-Require Export Structures.StructuresNotation.
-Require Export Data.DataNotation.
+Require Export StructuresNotation.
+Require Export DataNotation.

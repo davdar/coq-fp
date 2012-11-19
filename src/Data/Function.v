@@ -1,24 +1,14 @@
-Definition flip {A B C} (f:A -> B -> C) (x:B) (y:A) : C := f y x.
-Definition compose {A B C} (g:B -> C) (f:A -> B) (x:A) : C := g (f x).
-Definition compose2 {A B C D} : (C -> D) -> (A -> B -> C) -> A -> B -> D :=
-  compose compose compose.
-Definition compose3 {A B C D E}
-  : (D -> E) -> (A -> B -> C -> D) -> A -> B -> C -> E :=
-    compose compose2 compose.
+Require Export Data.FunctionPre.
 
-Definition on {A B C} (f:B -> B -> C) (m:A -> B)  (x:A) (y:A) := f (m x) (m y).
+Require Import Structures.Functor.
+Require Import Structures.Monad.
 
-Module FunctionNotation.
-  Notation "f $ x" := (f x)
-    (at level 99, right associativity, only parsing).
+Definition fun_ret {T A} : A -> T -> A := const.
+Definition fun_bind {T A B} (aM:T -> A) (f:A -> T -> B) (t:T) : B :=
+  let a := aM t in
+  f a t.
+Definition Fun_Monad {T} : Monad (Fun T) :=
+  {| ret _A := fun_ret
+   ; bind _A _B := fun_bind (T:=T)
+  |}.
 
-  Notation "'begin' e1 'end'" := ((e1))
-    (at level 0, only parsing).
-
-  Infix "<.>" := compose (at level 45, right associativity).
-  Infix "<..>" := compose2 (at level 45, right associativity).
-  Infix "<...>" := compose2 (at level 45, right associativity).
-
-  Notation "x ` f ` y" := (f x y)
-    (at level 199, f at next level, right associativity, only parsing).
-End FunctionNotation.

@@ -1,4 +1,4 @@
-Require Import Data.Bool.
+Require Import Data.BoolPre.
 
 Section RelDec.
   Context {T:Type}.

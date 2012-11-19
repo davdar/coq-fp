@@ -1,0 +1,21 @@
+Require Structures.Alternative.
+Require Structures.Applicative.
+Require Structures.EqDec.
+Require Structures.Eqv.
+Require Structures.Functor.
+Require Structures.Monad.
+Require Structures.Monoid.
+Require Structures.Ord.
+Require Structures.Additive.
+Require Structures.Multiplicative.
+
+Export Structures.Alternative.AlternativeNotation.
+Export Structures.Applicative.ApplicativeNotation.
+Export Structures.EqDec.EqDecNotation.
+Export Structures.Eqv.EqvNotation.
+Export Structures.Functor.FunctorNotation.
+Export Structures.Monad.MonadNotation.
+Export Structures.Monoid.MonoidNotation.
+Export Structures.Ord.OrdNotation.
+Export Structures.Additive.AdditiveNotation.
+Export Structures.Multiplicative.MultiplicativeNotation.
