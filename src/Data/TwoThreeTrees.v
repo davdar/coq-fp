@@ -1,35 +1,37 @@
-Require Import Structures.Functor.
-Require Import Structures.FunctorP.
-Require Import Data.List.
-Require Import Data.N.
-Require Import Data.String.
-Require Import Data.Prod.
-Require Import Structures.Ord.
-Require Import Structures.MapI.
-Require Import Data.Function.
-Require Import Data.Option.
-Require Import Data.Sum.
-Require Import Structures.Monad.
-Require Import Structures.MonadPlus.
-Require Import Structures.Alternative.
-Require Import Structures.Applicative.
-Require Import Structures.Traversable.
-Require Import Structures.Monoid.
-Require Import Structures.Additive.
-Require Import Structures.Multiplicative.
-Require Import Structures.Lattice.
-Require Import Structures.Show.
-Require Import Structures.Convertible.
-Require Import Structures.Foldable.
+Require Import FP.Data.Function.
+Require Import FP.Data.List.
+Require Import FP.Data.N.
+Require Import FP.Data.Option.
+Require Import FP.Data.Prod.
+Require Import FP.Data.String.
+Require Import FP.Data.Sum.
+Require Import FP.Structures.Additive.
+Require Import FP.Structures.Alternative.
+Require Import FP.Structures.Applicative.
+Require Import FP.Structures.Convertible.
+Require Import FP.Structures.Foldable.
+Require Import FP.Structures.Functor.
+Require Import FP.Structures.FunctorP.
+Require Import FP.Structures.Lattice.
+Require Import FP.Structures.MapI.
+Require Import FP.Structures.Monad.
+Require Import FP.Structures.MonadPlus.
+Require Import FP.Structures.Monoid.
+Require Import FP.Structures.Multiplicative.
+Require Import FP.Structures.Ord.
+Require Import FP.Structures.Show.
+Require Import FP.Structures.Traversable.
+Require Import FP.Structures.Foldable.
+Require Import FP.Structures.Iterable.
 
-Import FunctionNotation.
+Import AlternativeNotation.
 Import ApplicativeNotation.
+Import FunctionNotation.
 Import FunctorNotation.
+Import ListNotation.
 Import MonadNotation.
 Import MonoidNotation.
-Import AlternativeNotation.
 Import OrdNotation.
-Import ListNotation.
 Import StringNotation.
 
 Module TwoThreeTrees.
@@ -548,7 +550,7 @@ Module TwoThreeTrees.
       let '(k,_) := e in
       fmap fst (remove k t)
     in
-    mfoldl fld t1 $ to_list t2.
+    miter fld t1 $ to_list t2.
 
   Definition intersect_with {K} {kO:OrdDec K} {V W X}
       (f:V -> W -> X) (t1:tree K V) (t2:tree K W) : tree K X :=

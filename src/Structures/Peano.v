@@ -1,11 +1,11 @@
-Require Import Structures.Comonad.
-Require Import Data.FunctionPre.
-Require Import Data.Identity.
-Require Import Data.Susp.
-Require Import Structures.Monad.
-Require Import Data.Cont.
-Require Import Structures.MonadCont.
-Require Import Structures.MonadState.
+Require Import FP.Structures.Comonad.
+Require Import FP.Data.FunctionPre.
+Require Import FP.Data.Identity.
+Require Import FP.Data.Susp.
+Require Import FP.Structures.Monad.
+Require Import FP.Data.Cont.
+Require Import FP.Structures.MonadCont.
+Require Import FP.Structures.MonadState.
 
 Import FunctionNotation.
 Import SuspNotation.
@@ -14,6 +14,8 @@ Import MonadNotation.
 Class Peano T :=
   { pzero : T
   ; psucc : T -> T
+  ; coloopr : forall {m} {M:Comonad m} {A}, (m A -> A) -> m A -> T -> A
+  ; coloopl : forall {m} {M:Comonad m} {A}, (m A -> A) -> m A -> T -> A
   }.
 
 Definition pinc {m} {M:Monad m} {T} {P:Peano T} {MS:MonadState T m} : m T :=
@@ -21,46 +23,41 @@ Definition pinc {m} {M:Monad m} {T} {P:Peano T} {MS:MonadState T m} : m T :=
   modify psucc ;;
   ret p.
 
-Definition Coiter m T {A} := (m A -> A) -> m A -> T -> A.
+Definition Coloop m T {A} := (m A -> A) -> m A -> T -> A.
 
-Definition mk_iter {T A} (coiter:Coiter identity T) (f:A -> A) (a:A) : T -> A :=
-  coiter (f <.> run_identity) (Identity a).
+Definition mk_loop {T A} (coloop:Coloop identity T) (f:A -> A) (a:A) : T -> A :=
+  coloop (f <.> run_identity) (Identity a).
 
-Definition mk_miter {m} {M:Monad m} {T A}
-    (coiter:Coiter identity T) (f:A -> m A) (a:A) : T -> m A :=
-  mk_iter coiter (revbind f) (ret a).
+Definition mk_mloop {m} {M:Monad m} {T A}
+    (coloop:Coloop identity T) (f:A -> m A) (a:A) : T -> m A :=
+  mk_loop coloop (revbind f) (ret a).
 
-Definition mk_lazyiter {T A}
-    (coiter:Coiter susp T) (f:forall {C}, (C -> A) -> C -> A) (a:A) : T -> A :=
-  coiter (fun (aM:susp A) => f coret aM) (delay | a).
+Definition mk_lazyloop {T A}
+    (coloop:Coloop susp T) (f:forall {C}, (C -> A) -> C -> A) (a:A) : T -> A :=
+  coloop (fun (aM:susp A) => f coret aM) (delay | a).
 
-Class PeanoR T :=
-  { coiterr : forall {m} {M:Comonad m} {A}, (m A -> A) -> m A -> T -> A }.
+Definition loopr {T} {P:Peano T} {A}
+  : (A -> A) -> A -> T -> A := mk_loop coloopr.
 
-Definition iterr {T} {P:PeanoR T} {A}
-  : (A -> A) -> A -> T -> A := mk_iter coiterr.
+Definition miterr {T} {P:Peano T} {m} {M:Monad m} {A}
+  : (A -> m A) -> A -> T -> m A := mk_mloop coloopr.
 
-Definition miterr {T} {P:PeanoR T} {m} {M:Monad m} {A}
-  : (A -> m A) -> A -> T -> m A := mk_miter coiterr.
+Definition lazyiterr {T} {P:Peano T} {A}
+  : (forall {C}, (C -> A) -> C -> A) -> A -> T -> A := mk_lazyloop coloopr.
 
-Definition lazyiterr {T} {P:PeanoR T} {A}
-  : (forall {C}, (C -> A) -> C -> A) -> A -> T -> A := mk_lazyiter coiterr.
-
-Definition iter_fix {T} {P:PeanoR T} {A B} (ff:(A -> option B) -> A -> option B) : T -> A -> option B :=
+Definition loopr_fix {T} {P:Peano T} {A B} (ff:(A -> option B) -> A -> option B)
+    : T -> A -> option B :=
   lazyiterr (fun _ k l => ff $ fun a => k l a) (const None).
 
-Definition iter_mfix {m} {M:Monad m} {T} {P:PeanoR T} {A B}
+Definition loopr_mfix {m} {M:Monad m} {T} {P:Peano T} {A B}
     (ff:(A -> m (option B)) -> A -> m (option B)) : T -> A -> m (option B) :=
   lazyiterr (fun _ k l => ff $ fun a => k l a) (const $ ret None).
 
-Class PeanoL T :=
-  { coiterl : forall {m} {M:Comonad m} {A}, (m A -> A) -> m A -> T -> A }.
+Definition loopl {T} {P:Peano T} {A}
+  : (A -> A) -> A -> T -> A := mk_loop coloopl.
 
-Definition iterl {T} {P:PeanoL T} {A}
-  : (A -> A) -> A -> T -> A := mk_iter coiterl.
+Definition mloopl {T} {P:Peano T} {m} {M:Monad m} {A}
+  : (A -> m A) -> A -> T -> m A := mk_mloop coloopl.
 
-Definition miterl {T} {P:PeanoL T} {m} {M:Monad m} {A}
-  : (A -> m A) -> A -> T -> m A := mk_miter coiterl.
-
-Definition lazyiterl {T} {P:PeanoL T} {A}
-  : (forall {C}, (C -> A) -> C -> A) -> A -> T -> A := mk_lazyiter coiterl.
+Definition lazyloopl {T} {P:Peano T} {A}
+  : (forall {C}, (C -> A) -> C -> A) -> A -> T -> A := mk_lazyloop coloopl.

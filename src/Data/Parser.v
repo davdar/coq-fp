@@ -66,7 +66,7 @@ Arguments Parser {T m A} _.
 Arguments un_parser_t {T m A} _ _.
 
 Definition parser_lift {T m} {M:Monad m} {A} (aM:m A) : parser_t T m A :=
-  Parser $ fun ts => aM >>= fun a => ret $ SuccessResult a (convert 0) ts.
+  Parser $ fun ts => a <- aM ;; ret $ SuccessResult a 0 ts.
 
 Instance parser_MonadTrans {T} : MonadTrans (parser_t T) :=
   { lift := @parser_lift _ }.
@@ -110,7 +110,7 @@ Definition parser_parse_refine {T m} {M:Monad m} {A} (f:T -> option A) : parser_
       | t::ts' =>
           match f t with
           | None => FailResult
-          | Some a => SuccessResult a (convert 1) ts'
+          | Some a => SuccessResult a 1 ts'
           end
       end.
 

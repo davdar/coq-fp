@@ -10,6 +10,7 @@ Definition Npos := BinNums.Npos.
 Module NNotation.
   Delimit Scope N_scope with N.
 End NNotation.
+Open Scope N_scope.
 
 Instance N_nat_Convertible : Convertible N nat :=
   { convert := BinNat.N.to_nat }.

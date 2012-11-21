@@ -2,29 +2,34 @@ Require EqNat.
 Require Peano.
 Require Compare_dec.
 
-Require Import Data.AsciiPre.
-Require Import Data.FunctionPre.
+Require Import FP.Data.AsciiPre.
+Require Import FP.Data.FunctionPre.
 
-Require Import Relations.RelDec.
-Require Import Structures.Additive.
-Require Import Structures.EqDec.
-Require Import Structures.Eqv.
-Require Import Structures.Lattice.
-Require Import Structures.Monoid.
-Require Import Structures.Multiplicative.
-Require Import Structures.Ord.
-Require Import Structures.RelationClasses.
-Require Import Structures.Show.
-Require Import Structures.Comonad.
-Require Import Structures.Foldable.
-Require Import Structures.Functor.
-Require Import Structures.Peano.
+Require Import FP.Relations.RelDec.
+Require Import FP.Structures.Additive.
+Require Import FP.Structures.EqDec.
+Require Import FP.Structures.Eqv.
+Require Import FP.Structures.Lattice.
+Require Import FP.Structures.Monoid.
+Require Import FP.Structures.Multiplicative.
+Require Import FP.Structures.Ord.
+Require Import FP.Structures.RelationClasses.
+Require Import FP.Structures.Show.
+Require Import FP.Structures.Comonad.
+Require Import FP.Structures.Foldable.
+Require Import FP.Structures.Functor.
+Require Import FP.Structures.Iterable.
+Require Import FP.Structures.Peano.
 
 Import CharNotation.
 Import MonoidNotation.
 Import FunctionNotation.
 Import ComonadNotation.
 Import OrdNotation.
+
+Module NatNotation.
+  Delimit Scope nat_scope with nat.
+End NatNotation.
 
 Section EqDec.
   Global Instance nat_EqDec : EqDec nat := { eq_dec := EqNat.beq_nat }.
@@ -111,42 +116,43 @@ Section Multiplicative.
     { Multiplicative_Monoid := nat_multiplicative_Monoid }.
 End Multiplicative.
 
-Fixpoint nat_cofoldr {m} {C:Comonad m} {A} (f:nat -> m A -> A) (aM:m A) (n:nat) : A :=
+Fixpoint nat_cofold {m} {C:Comonad m} {A} (f:nat -> m A -> A) (aM:m A) (n:nat) : A :=
   match n with
   | O => f O aM
   | S n =>
-      let aM := codo aM => nat_cofoldr f aM n in
+      let aM := codo aM => nat_cofold f aM n in
       f (S n) aM
   end.
-Instance nat_FoldableR : FoldableR nat nat :=
-  { cofoldr := @nat_cofoldr }.
+Instance nat_Foldable : Foldable nat nat :=
+  { cofold := @nat_cofold }.
 
-Fixpoint nat_cofoldl {m} {C:Comonad m} {A} (f:m A -> nat -> A) (aM:m A) (n:nat) : A :=
+Fixpoint nat_coiter {m} {C:Comonad m} {A} (f:m A -> nat -> A) (aM:m A) (n:nat) : A :=
   match n with
   | O => f aM O
   | S n =>
       let aM := codo aM => f aM (S n) in
-      nat_cofoldl f aM n
+      nat_coiter f aM n
   end.
-Instance nat_FoldableL : FoldableL nat nat :=
-  { cofoldl := @nat_cofoldl }.
+Instance nat_Iterable : Iterable nat nat :=
+  { coiter := @nat_coiter }.
 
-Fixpoint nat_coiterr {m} {M:Comonad m} {A} (f:m A -> A) (aM:m A) (n:nat) : A :=
+Fixpoint nat_coloopr {m} {M:Comonad m} {A} (f:m A -> A) (aM:m A) (n:nat) : A :=
   match n with
   | O => coret aM
   | S n =>
-      let aM := codo aM => nat_coiterr f aM n in
+      let aM := codo aM => nat_coloopr f aM n in
       f aM
   end.
-Instance nat_PeanoR : PeanoR nat :=
-  { coiterr := @nat_coiterr }. 
-
-Fixpoint nat_coiterl {m} {M:Comonad m} {A} (f:m A -> A) (aM:m A) (n:nat) : A :=
+Fixpoint nat_coloopl {m} {M:Comonad m} {A} (f:m A -> A) (aM:m A) (n:nat) : A :=
   match n with
   | O => coret aM
   | S n =>
       let aM := codo aM => f aM in
-      nat_coiterl f aM n
+      nat_coloopl f aM n
   end.
-Instance nat_PeanoL : PeanoL nat :=
-  { coiterl := @nat_coiterl }.
+Instance nat_Peano : Peano nat :=
+  { pzero := O
+  ; psucc := S
+  ; coloopr := @nat_coloopr
+  ; coloopl := @nat_coloopl
+  }.

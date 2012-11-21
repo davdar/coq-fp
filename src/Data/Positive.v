@@ -1,24 +1,25 @@
 Require BinNums.
 Require BinPos.
 
-Require Import Data.AsciiPre.
-Require Import Data.FunctionPre.
+Require Import FP.Data.AsciiPre.
+Require Import FP.Data.FunctionPre.
 
-Require Import Data.Nat.
-Require Import Relations.RelDec.
-Require Import Structures.Additive.
-Require Import Structures.Convertible.
-Require Import Structures.EqDec.
-Require Import Structures.Eqv.
-Require Import Structures.Lattice.
-Require Import Structures.Monoid.
-Require Import Structures.Multiplicative.
-Require Import Structures.Ord.
-Require Import Structures.RelationClasses.
-Require Import Structures.Show.
-Require Import Structures.Comonad.
-Require Import Structures.Foldable.
-Require Import Structures.Peano.
+Require Import FP.Data.Nat.
+Require Import FP.Relations.RelDec.
+Require Import FP.Structures.Additive.
+Require Import FP.Structures.Iterable.
+Require Import FP.Structures.Convertible.
+Require Import FP.Structures.EqDec.
+Require Import FP.Structures.Eqv.
+Require Import FP.Structures.Lattice.
+Require Import FP.Structures.Monoid.
+Require Import FP.Structures.Multiplicative.
+Require Import FP.Structures.Ord.
+Require Import FP.Structures.RelationClasses.
+Require Import FP.Structures.Show.
+Require Import FP.Structures.Comonad.
+Require Import FP.Structures.Foldable.
+Require Import FP.Structures.Peano.
 
 Import AdditiveNotation.
 Import EqDecNotation.
@@ -35,7 +36,7 @@ Definition xI := BinNums.xI.
 Module PositiveNotation.
   Delimit Scope positive_scope with positive.
 End PositiveNotation.
-Import PositiveNotation.
+Local Open Scope positive_scope.
 
 Instance positive_nat_Convertible : Convertible positive nat :=
   { convert := BinPos.Pos.to_nat }.
@@ -92,10 +93,10 @@ Section Multiplicative.
     { Multiplicative_Monoid := multiplicative_pos_Monoid }.
 End Multiplicative.
 
-Fixpoint pos_cofoldr' {m} {M:Comonad m} {A}
+Fixpoint pos_cofold' {m} {M:Comonad m} {A}
     (f:positive -> m A -> A) (aM:m A) (n:positive) : A :=
   let double_cofold :=
-    pos_cofoldr' $ fun n aM =>
+    pos_cofold' $ fun n aM =>
       let aM := codo aM => f (xI n) aM in
       f (xO n) aM
   in
@@ -109,17 +110,17 @@ Fixpoint pos_cofoldr' {m} {M:Comonad m} {A}
       let aM := codo aM => double_cofold aM n in
       f xH aM
   end.
-Definition pos_cofoldr {m} {M:Comonad m} {A}
+Definition pos_cofold {m} {M:Comonad m} {A}
     (f:positive -> m A -> A) (aM:m A) (n:positive) : A :=
   let aM := codo aM => f n aM in
-  pos_cofoldr' f aM n.
-Instance pos_FoldableR : FoldableR positive positive :=
-  { cofoldr := @pos_cofoldr }.
+  pos_cofold' f aM n.
+Instance pos_Foldable : Foldable positive positive :=
+  { cofold := @pos_cofold }.
 
-Fixpoint pos_cofoldl' {m} {M:Comonad m} {A}
+Fixpoint pos_coiter' {m} {M:Comonad m} {A}
     (f:m A -> positive -> A) (aM:m A) (n:positive) : A :=
   let double_cofold :=
-    pos_cofoldl' $ fun aM n =>
+    pos_coiter' $ fun aM n =>
       let aM := codo aM => f aM (xO n) in
       f aM (xI n)
   in
@@ -133,41 +134,39 @@ Fixpoint pos_cofoldl' {m} {M:Comonad m} {A}
       let aM := codo aM => double_cofold aM n in
       f aM (xO n)
   end.
-Definition pos_cofoldl {m} {M:Comonad m} {A}
+Definition pos_coiter {m} {M:Comonad m} {A}
     (f:m A -> positive -> A) (aM:m A) (n:positive) : A :=
-  let aM := codo aM => pos_cofoldl' f aM n in
+  let aM := codo aM => pos_coiter' f aM n in
   f aM n.
-Instance pos_FoldableL : FoldableL positive positive :=
-  { cofoldl := @pos_cofoldl }.
+Instance pos_Iterable : Iterable positive positive :=
+  { coiter := @pos_coiter }.
 
-Fixpoint pos_coiterr' {m} {M:Comonad m} {A}
+Fixpoint pos_coloopr' {m} {M:Comonad m} {A}
     (f:m A -> A) (aM:m A) (n:positive) : A :=
-  let double_coiter :=
-    pos_coiterr' $ fun aM =>
+  let double_coloopr :=
+    pos_coloopr' $ fun aM =>
       let aM := codo aM => f aM in
       f aM
   in
   match n with
   | xH => coret aM
   | xO n =>
-      let aM := codo aM => double_coiter aM n in
+      let aM := codo aM => double_coloopr aM n in
       f aM
   | xI n =>
-      let aM := codo aM => double_coiter aM n in
+      let aM := codo aM => double_coloopr aM n in
       let aM := codo aM => f aM in
       f aM
   end.
-Definition pos_coiterr {m} {M:Comonad m} {A}
+Definition pos_coloopr {m} {M:Comonad m} {A}
     (f:m A -> A) (aM:m A) (n:positive) : A :=
-  let aM := codo aM => pos_coiterr' f aM n in
+  let aM := codo aM => pos_coloopr' f aM n in
   f aM.
-Instance pos_PeanoR : PeanoR positive :=
-  { coiterr := @pos_coiterr }.
 
-Fixpoint pos_coiterl' {m} {M:Comonad m} {A}
+Fixpoint pos_coloopl' {m} {M:Comonad m} {A}
     (f:m A -> A) (aM:m A) (n:positive) : A :=
-  let double_coiter :=
-    pos_coiterl' $ fun aM =>
+  let double_coloopl :=
+    pos_coloopl' $ fun aM =>
       let aM := codo aM => f aM in
       f aM
   in
@@ -175,29 +174,33 @@ Fixpoint pos_coiterl' {m} {M:Comonad m} {A}
   | xH => coret aM
   | xO n =>
       let aM := codo aM => f aM in
-      double_coiter aM n
+      double_coloopl aM n
   | xI n =>
       let aM := codo aM => f aM in
       let aM := codo aM => f aM in
-      double_coiter aM n
+      double_coloopl aM n
   end.
-Definition pos_coiterl {m} {M:Comonad m} {A}
+Definition pos_coloopl {m} {M:Comonad m} {A}
     (f:m A -> A) (aM:m A) (n:positive) : A :=
   let aM := codo aM => f aM in
-  pos_coiterl' f aM n.
-Instance pos_PeanoL : PeanoL positive :=
-  { coiterl := @pos_coiterl }.
+  pos_coloopl' f aM n.
+Instance pos_Peano : Peano positive :=
+  { pzero := xH
+  ; psucc := BinPos.Pos.succ
+  ; coloopr := @pos_coloopr
+  ; coloopl := @pos_coloopl
+  }.
 
 (*
-Require Import Structures.Functor.
-Require Import Data.Option.
+Require Import FP.Structures.Functor.
+Require Import FP.Data.Option.
 
-Definition ffix_fact (fuel:positive) : positive -> option positive :=
-  flip ffix fuel $ fun fact n => 
-    if n '=! 1%positive then
+Definition fix_fact (fuel:positive) : positive -> option positive :=
+  flip loopr_fix fuel $ fun fact n => 
+    if n '=! 1 then
       Some n
     else
-      fmap (times n) $ fact (BinPos.Pos.sub n 1%positive).
+      fmap (times n) $ fact (BinPos.Pos.sub n 1).
 
-Eval compute in ffix_fact 1000000000%positive 4%positive.
+Eval compute in fix_fact 1000000000 4.
 *)

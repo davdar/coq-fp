@@ -18,6 +18,11 @@ Import EqDecNotation.
 Import FunctionNotation.
 Import MonoidNotation.
 
+Module StringNotation.
+  Delimit Scope string_scope with string.
+End StringNotation.
+Open Scope string_scope.
+
 Section EqDec.
   Definition string_eq_dec := eq_dec `on` string2list.
 

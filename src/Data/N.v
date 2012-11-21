@@ -1,29 +1,36 @@
-Require Export Data.NPre.
+Require Export FP.Data.NPre.
 
-Require Import Data.AsciiPre.
-Require Import Data.FunctionPre.
+Require Import FP.Data.AsciiPre.
+Require Import FP.Data.FunctionPre.
 
-Require Import Data.Nat.
-Require Import Data.Positive.
-Require Import Relations.RelDec.
-Require Import Structures.Additive.
-Require Import Structures.Convertible.
-Require Import Structures.EqDec.
-Require Import Structures.Eqv.
-Require Import Structures.Lattice.
-Require Import Structures.Monoid.
-Require Import Structures.Multiplicative.
-Require Import Structures.Ord.
-Require Import Structures.RelationClasses.
-Require Import Structures.Show.
-Require Import Structures.Comonad.
-Require Import Structures.Foldable.
-Require Import Structures.Peano.
+Require Import FP.Data.Nat.
+Require Import FP.Data.Positive.
+Require Import FP.Relations.RelDec.
+Require Import FP.Structures.Additive.
+Require Import FP.Structures.Iterable.
+Require Import FP.Structures.Convertible.
+Require Import FP.Structures.EqDec.
+Require Import FP.Structures.Eqv.
+Require Import FP.Structures.Lattice.
+Require Import FP.Structures.Monoid.
+Require Import FP.Structures.Multiplicative.
+Require Import FP.Structures.Ord.
+Require Import FP.Structures.RelationClasses.
+Require Import FP.Structures.Show.
+Require Import FP.Structures.Comonad.
+Require Import FP.Structures.Foldable.
+Require Import FP.Structures.Peano.
 
 Import EqDecNotation.
 Import FunctionNotation.
 Import MonoidNotation.
 Import ComonadNotation.
+
+Definition small_N :=        10.
+Definition medium_N :=     1000.
+Definition large_N  :=   100000.
+Definition larger_N := 10000000.
+ 
 
 Section EqDec.
   Global Instance N_EqDec : EqDec N := { eq_dec := BinNat.N.eqb }.
@@ -79,38 +86,41 @@ Section Multiplicative.
     { Multiplicative_Monoid := multiplicative_N_Monoid }.
 End Multiplicative.
 
-Definition N_cofoldr {m} {M:Comonad m} {A} (f:N -> m A -> A) (aM:m A) (n:N) : A :=
+Definition N_cofold {m} {M:Comonad m} {A} (f:N -> m A -> A) (aM:m A) (n:N) : A :=
   let aM := codo aM =>
     match n with
     | N0 => coret aM
-    | Npos p => cofoldr (fun p aM => f (Npos p) aM) aM p
+    | Npos p => cofold (fun p aM => f (Npos p) aM) aM p
     end
   in
   f N0 aM.
-Instance N_FoldableR : FoldableR N N := { cofoldr := @N_cofoldr }.
+Instance N_Foldable : Foldable N N := { cofold := @N_cofold }.
 
-Definition N_cofoldl {m} {M:Comonad m} {A} (f:m A -> N -> A) (aM:m A) (n:N) : A :=
+Definition N_coiter {m} {M:Comonad m} {A} (f:m A -> N -> A) (aM:m A) (n:N) : A :=
   let aM := codo aM => f aM N0 in
   match n with
   | N0 => coret aM
-  | Npos p => cofoldl (fun aM p => f aM (Npos p)) aM p
+  | Npos p => coiter (fun aM p => f aM (Npos p)) aM p
   end.
-Instance N_FoldableL : FoldableL N N := { cofoldl := @N_cofoldl }.
+Instance N_Iterable : Iterable N N := { coiter := @N_coiter }.
 
-Definition N_iterr {m} {M:Comonad m} {A} (f:m A -> A) (aM:m A) (n:N) : A :=
+Definition N_coloopr {m} {M:Comonad m} {A} (f:m A -> A) (aM:m A) (n:N) : A :=
   let aM := codo aM =>
     match n with
     | N0 => coret aM
-    | Npos p => coiterr f aM p
+    | Npos p => coloopr f aM p
     end
   in
   f aM.
-Instance N_PeanoR : PeanoR N := { coiterr := @N_iterr }.
-
-Definition N_iterl {m} {M:Comonad m} {A} (f:m A -> A) (aM:m A) (n:N) : A :=
+Definition N_coloopl {m} {M:Comonad m} {A} (f:m A -> A) (aM:m A) (n:N) : A :=
   let aM := codo aM => f aM in
   match n with
   | N0 => coret aM
-  | Npos p => coiterl f aM p
+  | Npos p => coloopl f aM p
   end.
-Instance N_PeanoL : PeanoL N := { coiterl := @N_iterl }.
+Instance N_Peano : Peano N :=
+  { pzero := N0
+  ; psucc := BinNat.N.succ
+  ; coloopr := @N_coloopr
+  ; coloopl := @N_coloopl
+  }.

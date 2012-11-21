@@ -18,6 +18,7 @@ Require Export Data.StringBuilder.
 Require Export Data.Sum.
 Require Export Data.Sumbool.
 Require Export Data.Thunk.
+Require Export Data.Type.
 Require Export Data.TwoThreeTrees.
 Require Export Data.Unit.
 Require Export Data.UoAssoc.

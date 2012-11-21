@@ -1,27 +1,28 @@
-Require Export Data.ListPre.
+Require Export FP.Data.ListPre.
 
-Require Import Data.AsciiPre.
-Require Import Data.BoolPre.
-Require Import Data.FunctionPre.
-Require Import Data.StringPre.
+Require Import FP.Data.AsciiPre.
+Require Import FP.Data.BoolPre.
+Require Import FP.Data.FunctionPre.
+Require Import FP.Data.StringPre.
 
-Require Import Data.Z.
-Require Import Relations.RelDec.
-Require Import Structures.Additive.
-Require Import Structures.Applicative.
-Require Import Structures.Comonad.
-Require Import Structures.EqDec.
-Require Import Structures.Eqv.
-Require Import Structures.Functor.
-Require Import Structures.Foldable.
-Require Import Structures.Peano.
-Require Import Structures.Monad.
-Require Import Structures.Monoid.
-Require Import Structures.Multiplicative.
-Require Import Structures.Ord.
-Require Import Structures.RelationClasses.
-Require Import Structures.Show.
-Require Import Structures.Traversable.
+Require Import FP.Data.Z.
+Require Import FP.Relations.RelDec.
+Require Import FP.Structures.Additive.
+Require Import FP.Structures.Applicative.
+Require Import FP.Structures.Iterable.
+Require Import FP.Structures.Comonad.
+Require Import FP.Structures.EqDec.
+Require Import FP.Structures.Eqv.
+Require Import FP.Structures.Functor.
+Require Import FP.Structures.Foldable.
+Require Import FP.Structures.Peano.
+Require Import FP.Structures.Monad.
+Require Import FP.Structures.Monoid.
+Require Import FP.Structures.Multiplicative.
+Require Import FP.Structures.Ord.
+Require Import FP.Structures.RelationClasses.
+Require Import FP.Structures.Show.
+Require Import FP.Structures.Traversable.
 
 Import AdditiveNotation.
 Import ApplicativeNotation.
@@ -166,30 +167,25 @@ Section Monoid.
     }.
 End Monoid.
 
-Section Functor.
-  Global Instance list_Functor : Functor list :=
-    { fmap := @map }.
-End Functor.
-
-Fixpoint list_cofoldr {A} {m} {M:Comonad m} {B} (f:A -> m B -> B) (bM:m B) (xs:list A) : B :=
+Fixpoint list_cofold {A} {m} {M:Comonad m} {B} (f:A -> m B -> B) (bM:m B) (xs:list A) : B :=
   match xs with
   | [] => coret bM
   | x::xs =>
-      let bM := codo bM => list_cofoldr f bM xs in
+      let bM := codo bM => list_cofold f bM xs in
       f x bM
   end.
-Instance list_FoldableR {A} : FoldableR A (list A) :=
-  { cofoldr := @list_cofoldr _ }.
+Instance list_Foldable {A} : Foldable A (list A) :=
+  { cofold := @list_cofold _ }.
 
-Fixpoint list_cofoldl {A} {m} {M:Comonad m} {B} (f:m B -> A -> B) (bM:m B) (xs:list A) : B :=
+Fixpoint list_coiter {A} {m} {M:Comonad m} {B} (f:m B -> A -> B) (bM:m B) (xs:list A) : B :=
   match xs with
   | [] => coret bM
   | x::xs =>
       let bM := codo bM => f bM x in
-      list_cofoldl f bM xs
+      list_coiter f bM xs
   end.
-Instance list_FoldableL {A} : FoldableL A (list A) :=
-  { cofoldl := @list_cofoldl _ }.
+Instance list_Iterable {A} : Iterable A (list A) :=
+  { coiter := @list_coiter _ }.
 
 Fixpoint list_sequence {u} {uA:Applicative u} {A} (xs:list (u A)) : u (list A) :=
   match xs with
@@ -198,7 +194,17 @@ Fixpoint list_sequence {u} {uA:Applicative u} {A} (xs:list (u A)) : u (list A) :
   end.
 Instance list_Traversable : Traversable list :=
   { tsequence := @list_sequence }.
+
+Definition list_build {A}
+  (fld:forall {B}, (A -> B -> B) -> B -> B) : list A := fld cons nil.
+Instance list_Buildable {A} : Buildable A (list A) :=
+  { build := @list_build _ }.
     
+Section Functor.
+  Global Instance list_Functor : Functor list :=
+    { fmap := fun _ _ => map }.
+End Functor.
+
 Fixpoint zip {A B} (xs:list A) (ys:list B) : list (A*B) :=
   match xs,ys with
   | nil,_ => nil
@@ -220,4 +226,3 @@ Fixpoint unzip {A B} (xys:list (A*B)) : list A * list B :=
       let (xs,ys) := unzip xys'
       in (x::xs,y::ys)
   end.
-
