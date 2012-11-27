@@ -10,11 +10,14 @@ Class MonadReader R m :=
 }.
 
 Section iso_MonadReader.
-  Context {m} {n} {B:FunctorBijection m n} {R} {nMP:MonadReader R n}.
+  Variable (n:Type -> Type).
+  Context {m} {B:FunctorBijection m n} {R} {nMR:MonadReader R n}.
+
   Definition iso_MonadReader_ask : m R := ffrom ask.
-  Definition iso_MonadPlus_local {A} (f:R -> R) : m A -> m A := ffrom <.> local f <.> fto.
+  Definition iso_MonadReader_local {A} (f:R -> R) : m A -> m A :=
+    ffrom <.> local f <.> fto.
+  Definition iso_MonadReader : MonadReader R m :=
+    {| ask := iso_MonadReader_ask
+     ; local := @iso_MonadReader_local
+    |}.
 End iso_MonadReader.
-Definition iso_MonadReader {m} n {B:FunctorBijection m n} {R} {nMR:MonadReader R n} : MonadReader R m :=
-  {| ask := @iso_MonadReader_ask _ _ _ _ _
-   ; local := @iso_MonadPlus_local _ _ _ _ _
-  |}.

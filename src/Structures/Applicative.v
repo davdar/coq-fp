@@ -1,7 +1,7 @@
-Require Import Data.ProdPre.
-Require Import Data.FunctionPre.
+Require Import FP.Data.ProdPre.
+Require Import FP.Data.FunctionPre.
 
-Require Import Structures.Functor.
+Require Import FP.Structures.Functor.
 
 Import FunctionNotation.
 
@@ -35,6 +35,5 @@ Module ApplicativeNotation.
   Infix "<@>" := fapply (at level 46, left associativity).
   Infix "<@" := fapplyl (at level 46, left associativity).
   Infix "@>" := fapplyr (at level 46, left associativity).
-  Infix "<*>" := ftimes (at level 46, left associativity).
+  Infix "<*>" := ftimes (at level 47, left associativity).
 End ApplicativeNotation.
-Import ApplicativeNotation.

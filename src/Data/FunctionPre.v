@@ -20,6 +20,8 @@ Definition on {A B C} (f:B -> B -> C) (i:A -> B)  (x:A) (y:A) := f (i x) (i y).
 
 Definition uncurry {A B C} (f:A -> B -> C) (p:A*B) : C :=
   let (a,b) := p in f a b.
+Definition uncurry2 {A B C D} (f:A -> B -> C -> D) (p:A*B*C) : D :=
+  let '(a,b,c) := p in f a b c.
 
 Module FunctionNotation.
   Notation "f $ x" := (f x)
@@ -30,7 +32,7 @@ Module FunctionNotation.
 
   Infix "<.>" := compose (at level 45, right associativity).
   Infix "<..>" := compose2 (at level 45, right associativity).
-  Infix "<...>" := compose2 (at level 45, right associativity).
+  Infix "<...>" := compose3 (at level 45, right associativity).
 
   Notation "x ` f ` y" := (f x y)
     (at level 98, f at next level, right associativity, only parsing).

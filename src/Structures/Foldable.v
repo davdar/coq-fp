@@ -3,16 +3,12 @@ Require Import FP.Data.Susp.
 Require Import FP.Structures.Comonad.
 Require Import FP.Structures.Monad.
 Require Import FP.Data.FunctionPre.
-Require Import FP.Data.Option.
 Require Import FP.Data.Cont.
 Require Import FP.Structures.MonadCont.
-Require Import FP.Structures.Eqv.
-Require Import FP.Structures.Functor.
 
 Import MonadNotation.
 Import FunctionNotation.
 Import SuspNotation.
-Import EqvNotation.
 
 Class Foldable A T :=
   { cofold : forall {m} {M:Comonad m} {B}, (A -> m B -> B) -> m B -> T -> B }.
@@ -55,22 +51,18 @@ Section Fix.
 End Fix.
 
 Class Buildable A T :=
-  { build : (forall B, (A -> B -> B) -> B -> B) -> T }.
+  { mbuild : forall {m} {M:Monad m},
+               (forall B, (A -> B -> B) -> B -> m B) -> m T
+  }.
 
-Section GeneralizedList.
-  Definition map {T A U B} {TF:Foldable A T} {UB:Buildable B U}
-      (f:A -> B) (t:T) : U :=
-    build $ fun C (cons:B -> C -> C) (nil:C) =>
-      fold (fun (a:A) (c:C) => cons (f a) c) nil t.
+Section Buildable.
+  Context {T A} {Bu:Buildable A T}.
 
-  Definition select {T A} {TF:Foldable A T} (p:A -> bool) : T -> option A :=
-    lazyfold begin fun C (a:A) (k:C -> option A) (l:C) =>
-      if p a then Some a else k l
-    end None.
-
-  Definition lookup {T A B} {E:EqvDec A} {TF:Foldable (A*B) T} (a:A)
-      : T -> option B :=
-    fmap snd <.> select (fun (p:A*B) => fst p '~=! a).
-  
-End GeneralizedList.
-
+  Definition build (f:forall B, (A -> B -> B) -> B -> B) : T :=
+    un_identity $ mbuild $
+      fun B (f':A -> B -> B) (b:B) =>
+        Identity $ f B begin fun (a:A) (b:B) =>
+          f' a b
+        end b.
+              
+End Buildable.

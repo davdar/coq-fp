@@ -1,17 +1,16 @@
-Require Import Data.Option.
-Require Import Data.List.
+Require Import FP.Data.Function.
+Require Import FP.Data.List.
+Require Import FP.Data.Option.
+Require Import FP.Structures.Alternative.
+Require Import FP.Structures.Applicative.
+Require Import FP.Structures.Eqv.
+Require Import FP.Structures.Functor.
+Require Import FP.Structures.MonadFix.
 
-Require Import Structures.Applicative.
-Require Import Structures.Alternative.
-Require Import Structures.MonadFix.
-Require Import Structures.Eqv.
-Require Import Data.Function.
-Require Import Structures.Functor.
-
+Import AlternativeNotation.
+Import ApplicativeNotation.
 Import FunctionNotation.
 Import FunctorNotation.
-Import ApplicativeNotation.
-Import AlternativeNotation.
 Import ListNotation.
 
 Class LLParser T p :=
@@ -60,6 +59,9 @@ Section LLParser.
 
   Definition sep_by {A B} (aP:p A) (sep:p B) : p (list A) :=
     cons <$> aP <@> many (const id <$> sep <@> aP).
+
+  Definition sep_opt_begin_by {A B} (aP:p A) (sep:p B) : p (list A) :=
+    optional sep @> sep_by aP sep.
 
   Definition many_till {A B} : p A -> p B -> p (list A) :=
     mfix2 $ fun many_till aP nd =>

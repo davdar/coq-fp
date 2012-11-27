@@ -1,39 +1,39 @@
-Require Import Data.Ascii.
-Require Import Data.Fuel.
-Require Import Data.Function.
-Require Import Data.List.
-Require Import Data.Maps.
-Require Import Data.N.
-Require Import Data.Reader.
-Require Import Data.String.
-Require Import Data.Type.
-Require Import Structures.Additive.
-Require Import Structures.Alternative.
-Require Import Structures.Applicative.
-Require Import Structures.Convertible.
-Require Import Structures.EqDec.
-Require Import Structures.Functor.
-Require Import Structures.LLParser.
-Require Import Structures.Monad.
-Require Import Structures.MonadFix.
-Require Import Structures.MonadReader.
-Require Import Structures.MonadTrans.
-Require Import Structures.Multiplicative.
-Require Import Structures.Ord.
-Require Import Structures.Traversable.
+Require Import FP.Data.Ascii.
+Require Import FP.Data.Fuel.
+Require Import FP.Data.Function.
+Require Import FP.Data.List.
+Require Import FP.Data.Maps.
+Require Import FP.Data.N.
+Require Import FP.Data.Reader.
+Require Import FP.Data.String.
+Require Import FP.Data.Type.
+Require Import FP.Structures.Additive.
+Require Import FP.Structures.Alternative.
+Require Import FP.Structures.Applicative.
+Require Import FP.Structures.Convertible.
+Require Import FP.Structures.EqDec.
+Require Import FP.Structures.Functor.
+Require Import FP.Structures.LLParser.
+Require Import FP.Structures.Monad.
+Require Import FP.Structures.MonadFix.
+Require Import FP.Structures.MonadReader.
+Require Import FP.Structures.MonadTrans.
+Require Import FP.Structures.Multiplicative.
+Require Import FP.Structures.Ord.
+Require Import FP.Structures.Traversable.
 
-Import MultiplicativeNotation.
-Import EqDecNotation.
-Import OrdNotation.
-Import FunctionNotation.
-Import FunctorNotation.
+Import AdditiveNotation.
 Import AlternativeNotation.
 Import ApplicativeNotation.
-Import MonadNotation.
-Import ListNotation.
-Import StringNotation.
-Import AdditiveNotation.
 Import CharNotation.
+Import EqDecNotation.
+Import FunctionNotation.
+Import FunctorNotation.
+Import ListNotation.
+Import MonadNotation.
+Import MultiplicativeNotation.
+Import OrdNotation.
+Import StringNotation.
 
 Inductive result (T:Type) (A:Type) :=
   | SuccessResult :
@@ -61,12 +61,15 @@ Definition result_fmap {T A B} (f:A -> B) (r:result T A) : result T B :=
 Instance result_Functor {T} : Functor (result T) :=
   { fmap := @result_fmap _ }.
 
-Inductive parser_t T m A := Parser { un_parser_t : list T -> m (result T A) }.
-Arguments Parser {T m A} _.
+Inductive parser_t T m A := ParserT { un_parser_t : list T -> m (result T A) }.
+Arguments ParserT {T m A} _.
 Arguments un_parser_t {T m A} _ _.
 
+Definition run_parser_t {T m A} : list T -> parser_t T m A -> m (result T A) :=
+  flip un_parser_t.
+
 Definition parser_lift {T m} {M:Monad m} {A} (aM:m A) : parser_t T m A :=
-  Parser $ fun ts => a <- aM ;; ret $ SuccessResult a 0 ts.
+  ParserT $ fun ts => a <- aM ;; ret $ SuccessResult a 0 ts.
 
 Instance parser_MonadTrans {T} : MonadTrans (parser_t T) :=
   { lift := @parser_lift _ }.
@@ -75,7 +78,7 @@ Definition parser_ret {T m} {M:Monad m} {A} (a:A) : parser_t T m A :=
   lift $ ret a.
 
 Definition parser_bind {T m} {M:Monad m} {A B} (p:parser_t T m A) (f:A -> parser_t T m B) : parser_t T m B :=
-  Parser $ fun ts =>
+  ParserT $ fun ts =>
     x <- un_parser_t p ts ;;
     match x with
     | SuccessResult a n ts' => result_add_length n <$> un_parser_t (f a) ts'
@@ -87,10 +90,10 @@ Instance parser_Monad {T m} {M:Monad m} : Monad (parser_t T m) :=
   ; bind := @parser_bind _ _ _
   }.
 
-Definition parser_zero {T m} {M:Monad m} {A} : parser_t T m A := Parser $ fun _ => ret FailResult.
+Definition parser_zero {T m} {M:Monad m} {A} : parser_t T m A := ParserT $ fun _ => ret FailResult.
 
 Definition parser_plus {T m} {M:Monad m} {A B} (aP:parser_t T m A) (bP:parser_t T m B) : parser_t T m (A+B) :=
-  Parser $ fun ts =>
+  ParserT $ fun ts =>
     x <- un_parser_t aP ts ;;
     match x with
     | SuccessResult a n ts' => ret $ inl <$> SuccessResult a n ts'
@@ -103,7 +106,7 @@ Instance parser_Alternative {T m} {M:Monad m} : Alternative (parser_t T m) :=
   }.
 
 Definition parser_parse_refine {T m} {M:Monad m} {A} (f:T -> option A) : parser_t T m A :=
-  Parser $ fun ts =>
+  ParserT $ fun ts =>
     ret $
       match ts with
       | nil => FailResult
@@ -121,18 +124,16 @@ Definition parser_fix {T m} {M:Monad m} {MF:MonadFix m} {A B}
     (ff:(A -> parser_t T m B) -> A -> parser_t T m B) (a:A) : parser_t T m B :=
   let ff' (f:A*list T -> m (result T B)) (ats:A*list T) := 
     let (a,ts) := ats in
-    flip un_parser_t ts $
-      flip ff a $ fun (a:A) =>
-        Parser $ fun ts => f (a,ts)
+    run_parser_t ts $
+      ff begin fun (a:A) =>
+        ParserT $ fun ts => f (a,ts)
+      end a
   in
-  Parser $ fun ts => mfix ff' (a,ts).
+  ParserT $ fun ts => mfix ff' (a,ts).
 
 Instance parser_MonadFix {T m} {M:Monad m } {MF:MonadFix m}
     : MonadFix (parser_t T m) :=
   { mfix := @parser_fix _ _ _ _ }.
-
-Definition run_parser_t {T m A} : list T -> parser_t T m A -> m (result T A) :=
-  flip un_parser_t.
 
 Definition parser T := parser_t T fuel.
 Definition run_parser {T A} (n:N) (ts:list T) : parser T A -> option (result T A) :=
@@ -156,38 +157,36 @@ Fixpoint best_lex' {T A} (results:list (result T A)) : option (A * N * list T) :
 Definition best_lex {T A} : list (result T A) -> option (A * list T) :=
   fmap (fun x => let '(a, _, ts) := x in (a, ts)) <.> best_lex'.
 
-Definition lex {T m A} {M:Monad m} {MF:MonadFix m} (token_ps:list (parser_t T m A)) : list T -> m (list A * list T) :=
+Definition lex {T m A} {M:Monad m} {MF:MonadFix m} (token_ps:list (parser_t T m A))
+    : list T -> m (list A * list T) :=
   mfix $ fun lex input =>
     ls <- tmap (run_parser_t input) token_ps ;;
     match best_lex ls with
       | None => ret ([], input)
-      | Some (o, input') =>
-          rs <- lex input' ;;
+      | Some (o, input) =>
+          rs <- lex input ;;
           let '(os,ts) := rs in
-          ret $ (o::os,ts)
+          ret (o::os,ts)
     end.
+
 
 (* ---------------------- *)
 
-Definition xs : unit -> parser_t ascii (fuel_t option) (list ascii) :=
-  mfix $ fun xs _ =>
-    (fret cons <@> parse_token "x"%char <@> xs tt) <|> (fret nil).
+(*
+Definition xs : parser_t ascii fuel (list ascii) :=
+  many (parse_token "x"%char).
 
-Definition bad : unit -> parser_t ascii (fuel_t option) unit :=
+Definition bad : unit -> parser_t ascii fuel unit :=
   mfix $ fun bad _ =>
     parse_token "x"%char @> bad tt
     <|>
     parse_token "y"%char @> fret tt.
 
-(*
 Eval compute in (run_fuel_t 100 (un_parser_t (bad tt) (string2list "xyzx"))).
-*)
 
-Definition xx : unit -> parser_t ascii (fuel_t option) (ascii*ascii) :=
-  mfix $ fun xs _ =>
+Definition xx : parser_t ascii fuel (ascii*ascii) :=
     fret pair <@> parse_token "x"%char <@> parse_token "x"%char.
 
-(*
-Eval compute in (run_fuel_t 1000 (un_parser_t (xs tt) (string2list "x"))).
-Eval compute in (run_fuel_t 1000 (un_parser_t (xx tt) (string2list "xx"))).
+Eval compute in (run_fuel_t 1000 (un_parser_t xs (string2list "xxxx"))).
+Eval compute in (run_fuel_t 1000 (un_parser_t xx (string2list "xx"))).
 *)

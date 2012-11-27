@@ -1,21 +1,25 @@
-Require Export Data.ProdPre.
+Require Export FP.Data.ProdPre.
 
-Require Import Data.AsciiPre.
-Require Import Data.StringPre.
+Require Import FP.Data.AsciiPre.
+Require Import FP.Data.StringPre.
 
-Require Import Data.Bool.
-Require Import Data.Function.
-Require Import Relations.RelDec.
-Require Import Structures.Applicative.
-Require Import Structures.EqDec.
-Require Import Structures.Eqv.
-Require Import Structures.Functor.
-Require Import Structures.Monoid.
-Require Import Structures.Ord.
-Require Import Structures.RelationClasses.
-Require Import Structures.Show.
-Require Import Structures.Traversable.
+Require Import FP.Data.Lens.
+Require Import FP.Data.Store.
+Require Import FP.Data.Bool.
+Require Import FP.Data.Function.
+Require Import FP.Relations.RelDec.
+Require Import FP.Structures.Applicative.
+Require Import FP.Structures.EqDec.
+Require Import FP.Structures.Eqv.
+Require Import FP.Structures.Functor.
+Require Import FP.Structures.Monoid.
+Require Import FP.Structures.Ord.
+Require Import FP.Structures.RelationClasses.
+Require Import FP.Structures.Show.
+Require Import FP.Structures.Traversable.
+Require Import FP.Structures.HasLens.
 
+Import LensNotation.
 Import CharNotation.
 Import EqDecNotation.
 Import OrdNotation.
@@ -192,3 +196,20 @@ Section Type_Monoid.
      ; gunit := (unit:Type)
     |}.
 End Type_Monoid.
+
+Section Lens.
+  Definition fst_lens {A B} : lens (A*B) A :=
+    Lens $ fun p =>
+      let '(a,b) := p in
+      Store (fun a => (a,b)) a.
+
+  Definition snd_lens {A B} : lens (A*B) B :=
+    Lens $ fun p =>
+      let '(a,b) := p in
+      Store (fun b => (a,b)) b.
+
+  Global Instance prod_HasLens_fst {A B S} {HL:HasLens A S} : HasLens (A*B) S :=
+    { get_lens := fst_lens '.' get_lens S }.
+  Global Instance prod_HasLens_snd {A B} : HasLens (A*B) B :=
+    { get_lens := snd_lens }.
+End Lens.

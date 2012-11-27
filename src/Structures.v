@@ -28,3 +28,4 @@ Require Export FP.Structures.Traversable.
 Require Export FP.Structures.Foldable.
 Require Export FP.Structures.Peano.
 Require Export FP.Structures.Iterable.
+Require Export FP.Structures.HasLens.

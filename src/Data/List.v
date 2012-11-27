@@ -5,21 +5,26 @@ Require Import FP.Data.BoolPre.
 Require Import FP.Data.FunctionPre.
 Require Import FP.Data.StringPre.
 
+Require Import FP.Data.N.
+Require Import FP.Data.Option.
+Require Import FP.Data.State.
 Require Import FP.Data.Z.
 Require Import FP.Relations.RelDec.
 Require Import FP.Structures.Additive.
 Require Import FP.Structures.Applicative.
-Require Import FP.Structures.Iterable.
 Require Import FP.Structures.Comonad.
 Require Import FP.Structures.EqDec.
 Require Import FP.Structures.Eqv.
-Require Import FP.Structures.Functor.
 Require Import FP.Structures.Foldable.
-Require Import FP.Structures.Peano.
+Require Import FP.Structures.Functor.
+Require Import FP.Structures.Iterable.
 Require Import FP.Structures.Monad.
+Require Import FP.Structures.MonadState.
+Require Import FP.Structures.MonadPlus.
 Require Import FP.Structures.Monoid.
 Require Import FP.Structures.Multiplicative.
 Require Import FP.Structures.Ord.
+Require Import FP.Structures.Peano.
 Require Import FP.Structures.RelationClasses.
 Require Import FP.Structures.Show.
 Require Import FP.Structures.Traversable.
@@ -38,6 +43,15 @@ Import MonadNotation.
 Import MonoidNotation.
 Import OrdNotation.
 Import StringNotation.
+
+Section coercions.
+  Context {m} {M:Monad m} {MP:MonadPlus m}.
+  Definition coerce_cons {A} (xs:list A) : m (A*list A) :=
+    match xs with
+    | [] => mzero
+    | x::xs => ret (x,xs)
+    end.
+End coercions.
 
 Section EqDec.
   Context {A} {AED:EqDec A}.
@@ -195,10 +209,11 @@ Fixpoint list_sequence {u} {uA:Applicative u} {A} (xs:list (u A)) : u (list A) :
 Instance list_Traversable : Traversable list :=
   { tsequence := @list_sequence }.
 
-Definition list_build {A}
-  (fld:forall {B}, (A -> B -> B) -> B -> B) : list A := fld cons nil.
+Definition list_build {A} {m} {M:Monad m}
+  (fld:forall {B}, (A -> B -> B) -> B -> m B) : m (list A) :=
+    fld cons nil.
 Instance list_Buildable {A} : Buildable A (list A) :=
-  { build := @list_build _ }.
+  { mbuild := @list_build _ }.
     
 Section Functor.
   Global Instance list_Functor : Functor list :=
@@ -226,3 +241,48 @@ Fixpoint unzip {A B} (xys:list (A*B)) : list A * list B :=
       let (xs,ys) := unzip xys'
       in (x::xs,y::ys)
   end.
+
+Fixpoint nth {A} (n:N) (xs:list A) : option A :=
+  match xs with
+  | [] => None
+  | x::xs => if n '=! 0 then Some x else nth (n `BinNat.N.sub` 1) xs
+  end.
+
+Section GeneralizedList.
+  Definition map {T A U B} {TF:Foldable A T} {UB:Buildable B U}
+      (f:A -> B) (t:T) : U :=
+    build $ fun C (cons:B -> C -> C) (nil:C) =>
+      fold (fun (a:A) (c:C) => cons (f a) c) nil t.
+
+  Definition foreach {T A U B} {TF:Foldable A T} {UB:Buildable B U}
+      : T -> (A -> B) -> U := flip map.
+
+  Definition filter {T A U} {TF:Foldable A T} {UB:Buildable A U}
+      (f:A -> bool) (t:T) : U :=
+    build $ fun C (cons:A -> C -> C) (nil:C) =>
+      fold (fun (a:A) (c:C) => if f a then cons a c else c) nil t.
+
+  Definition select {T A} {TF:Foldable A T} (p:A -> bool) : T -> option A :=
+    lazyfold begin fun C (a:A) (k:C -> option A) (l:C) =>
+      if p a then Some a else k l
+    end None.
+
+  Definition lookup {T A B} {E:EqvDec A} {TF:Foldable (A*B) T} (a:A)
+      : T -> option B :=
+    fmap snd <.> select (fun (p:A*B) => fst p '~=! a).
+  
+  Definition cat_options {T A U} {TF:Foldable (option A) T} {UB:Buildable A U}
+      (t:T) : U :=
+    build $ fun C (cons:A -> C -> C) (nil:C) =>
+      fold (fun (aM:option A) (c:C) => fold cons c aM) nil t.
+
+  Definition numbered {T A U} {TF:Foldable A T} {UB:Buildable (N*A) U}
+      (t:T) : U :=
+    eval_state 0 $ mbuild (m:=state N) $ fun C (cons:N*A -> C -> C) (nil:C) =>
+      mfold begin fun (a:A) (c:C) =>
+        n <- get ;;
+        modify psucc ;;
+        ret $ cons (n,a) c
+      end nil t.
+              
+End GeneralizedList.
