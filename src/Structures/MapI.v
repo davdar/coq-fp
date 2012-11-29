@@ -16,7 +16,7 @@ Class MapI K t :=
   ; minsert_with : forall {V}, (V -> V -> V) -> K -> V -> t V -> t V
   ; mremove : forall {V}, K -> t V -> t V * option V
   ; mupdate : forall {V}, K -> (V -> V) -> t V -> t V
-  ; munionl : forall {V}, t V -> t V -> t V
+  ; munion_with : forall {V}, (V -> V -> V) -> t V -> t V -> t V
   ; mdifference : forall {V W}, t V -> t W -> t V
   ; mintersect_with : forall {V W X}, (V -> W -> X) -> t V -> t W -> t X
   ; mmap_with : forall {V W}, (K -> V -> W) -> t V -> t W
@@ -27,8 +27,10 @@ Section MapI.
 
   Definition minsertl : K -> V -> t V -> t V := minsert_with const.
   Definition minsertr : K -> V -> t V -> t V := minsert_with (const id).
-  Definition munionr : t V -> t V -> t V := flip munionl.
-  Definition munionsl : list (t V) -> t V := foldr munionl mempty.
+  Definition munionl : t V -> t V -> t V := munion_with const.
+  Definition munionr : t V -> t V -> t V := munion_with (const id).
+  Definition munions_with (f:V -> V -> V) : list (t V) -> t V := foldr (munion_with f) mempty.
+  Definition munionsl : list (t V) -> t V := munions_with const.
   Definition munionsr : list (t V) -> t V := foldr munionr mempty.
 End MapI.
 

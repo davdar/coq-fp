@@ -63,8 +63,8 @@ End OrdDec.
 
 Section Lattice.
   Global Instance Z_Lattice : Lattice Z :=
-    { meet := BinInt.Z.min
-    ; join := BinInt.Z.max
+    { lmeet := BinInt.Z.min
+    ; ljoin := BinInt.Z.max
     }.
 End Lattice.
 
@@ -95,24 +95,3 @@ Section Multiplicative.
   Global Instance Z_Multiplicative : Multiplicative Z :=
     { Multiplicative_Monoid := Z_multiplicative_Monoid }.
 End Multiplicative.
-
-(*
-Definition Z_foldl {A} (f:Z -> A -> A) (a:A) (n:Z) : A :=
-  let a' := f Z0 a in
-  match n with
-  | Z0 => a'
-  | Zpos p => pos_foldl (fun p' a'' => f (Zpos p') a'') a' p
-  | Zneg p => pos_foldl (fun p' a'' => f (Zneg p') a'') a' p
-  end.
-Definition Z_iterl {A} (f:A -> A) : A -> Z -> A := Z_foldl $ const f.
-
-Definition Z_foldl_k {A} (f:forall {B}, Z -> (B -> A) -> B -> A) (a:A) (n:Z) : A :=
-  let a' := f Z0 id a in
-  match n with
-  | Z0 => a'
-  | Zpos p => pos_foldl_k (fun _ p' ak b => f (Zpos p') ak b) a' p
-  | Zneg p => pos_foldl_k (fun _ p' ak b => f (Zneg p') ak b) a' p
-  end.
-Definition Z_iterl_k {A} (f:forall {B}, (B -> A) -> B -> A) : A -> Z -> A := Z_foldl_k $ fun _ => const f.
-
-*)

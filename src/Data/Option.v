@@ -1,6 +1,14 @@
-Require Import FP.Data.FunctionPre.
-Require Import FP.Data.Identity.
 Require Import FP.Data.StringPre.
+Require Import FP.Data.FunctionPre.
+
+Require Import FP.Data.Identity.
+Require Import FP.Data.Sum.
+Require Import FP.Data.Unit.
+Require Import FP.Structures.Alternative.
+Require Import FP.Structures.Comonad.
+Require Import FP.Structures.EqDec.
+Require Import FP.Structures.Eqv.
+Require Import FP.Structures.Foldable.
 Require Import FP.Structures.Functor.
 Require Import FP.Structures.Injection.
 Require Import FP.Structures.Injection.
@@ -11,19 +19,34 @@ Require Import FP.Structures.MonadReader.
 Require Import FP.Structures.MonadState.
 Require Import FP.Structures.MonadTrans.
 Require Import FP.Structures.Monoid.
-Require Import FP.Structures.Comonad.
-Require Import FP.Structures.Foldable.
-Require Import FP.Structures.Alternative.
+Require Import FP.Structures.Ord.
 
+Import AlternativeNotation.
 Import FunctionNotation.
 Import FunctorNotation.
 Import MonadNotation.
-Import AlternativeNotation.
-
-(* option *)
 
 Arguments Some {A} _.
 Arguments None {A}.
+
+Definition option_to_sum {A} (aM:option A) : unit + A :=
+  match aM with
+  | None => inl tt
+  | Some a => inr a
+  end.
+
+Section EqDec.
+  Context {A} {EqDec_A:EqDec A}.
+  Global Instance option_EqDec : EqDec (option A) := { eq_dec := eq_dec `on` option_to_sum }.
+End EqDec.
+Section EqvDec.
+  Context {A} {EqvDec_A:EqvDec A}.
+  Global Instance option_EqvDec : EqvDec (option A) := { eqv_dec := eqv_dec `on` option_to_sum }.
+End EqvDec.
+Section OrdDec.
+  Context {A} {OrdDec_A:OrdDec A}.
+  Global Instance option_OrdDec : OrdDec (option A) := { ord_dec := ord_dec `on` option_to_sum }.
+End OrdDec.
 
 Definition from_option {A} (a:A) (aM:option A) : A :=
   match aM with

@@ -1,18 +1,18 @@
-Require Export Data.AsciiPre.
+Require Export FP.Data.AsciiPre.
 
-Require Import Data.FunctionPre.
+Require Import FP.Data.FunctionPre.
 
-Require Import Data.Bool.
-Require Import Data.List.
-Require Import Data.N.
-Require Import Data.Prod.
-Require Import Structures.EqDec.
-Require Import Structures.Eqv.
-Require Import Structures.Functor.
-Require Import Structures.Monoid.
-Require Import Structures.Ord.
-Require Import Structures.Show.
-Require Import Structures.Convertible.
+Require Import FP.Data.Bool.
+Require Import FP.Data.List.
+Require Import FP.Data.N.
+Require Import FP.Data.Prod.
+Require Import FP.Structures.EqDec.
+Require Import FP.Structures.Eqv.
+Require Import FP.Structures.Functor.
+Require Import FP.Structures.Monoid.
+Require Import FP.Structures.Ord.
+Require Import FP.Structures.Show.
+Require Import FP.Structures.Convertible.
 
 Import CharNotation.
 Import EqvNotation.
@@ -63,9 +63,9 @@ Section Show.
 End Show.
 
 Definition space := " "%char.
-Definition newline := "012"%char.
-Definition tab := "013"%char.
-Definition carriage_return := "015"%char.
+Definition newline := "010"%char.
+Definition tab := "011"%char.
+Definition carriage_return := "013"%char.
 
 Section predicates.
   Definition is_alpha (c:ascii) : bool:=

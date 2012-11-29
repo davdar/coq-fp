@@ -58,8 +58,8 @@ End OrdDec.
 
 Section Lattice.
   Global Instance N_Lattice : Lattice N :=
-    { meet := BinNat.N.min
-    ; join := BinNat.N.max
+    { lmeet := BinNat.N.min
+    ; ljoin := BinNat.N.max
     }.
 End Lattice.
 
@@ -105,15 +105,11 @@ Definition N_coiter {m} {M:Comonad m} {A} (f:m A -> N -> A) (aM:m A) (n:N) : A :
 Instance N_Iterable : Iterable N N := { coiter := @N_coiter }.
 
 Definition N_coloopr {m} {M:Comonad m} {A} (f:m A -> A) (aM:m A) (n:N) : A :=
-  let aM := codo aM =>
-    match n with
-    | N0 => coret aM
-    | Npos p => coloopr f aM p
-    end
-  in
-  f aM.
+  match n with
+  | N0 => coret aM
+  | Npos p => coloopr f aM p
+  end.
 Definition N_coloopl {m} {M:Comonad m} {A} (f:m A -> A) (aM:m A) (n:N) : A :=
-  let aM := codo aM => f aM in
   match n with
   | N0 => coret aM
   | Npos p => coloopl f aM p

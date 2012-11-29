@@ -135,7 +135,7 @@ Section OrdDec.
 
   Definition prod_ord_dec : A*B -> A*B -> comparison := prod_ord_dec_b ord_dec ord_dec.
 
-  Global Instance prod_LteDec : OrdDec (A*B) := { ord_dec := prod_ord_dec }.
+  Global Instance prod_OrdDec : OrdDec (A*B) := { ord_dec := prod_ord_dec }.
 End OrdDec.
 
 Section Show.

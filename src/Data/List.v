@@ -209,11 +209,11 @@ Fixpoint list_sequence {u} {uA:Applicative u} {A} (xs:list (u A)) : u (list A) :
 Instance list_Traversable : Traversable list :=
   { tsequence := @list_sequence }.
 
-Definition list_build {A} {m} {M:Monad m}
+Definition list_mbuild {A} {m} {M:Monad m}
   (fld:forall {B}, (A -> B -> B) -> B -> m B) : m (list A) :=
     fld cons nil.
 Instance list_Buildable {A} : Buildable A (list A) :=
-  { mbuild := @list_build _ }.
+  { mbuild := @list_mbuild _ }.
     
 Section Functor.
   Global Instance list_Functor : Functor list :=
@@ -248,6 +248,29 @@ Fixpoint nth {A} (n:N) (xs:list A) : option A :=
   | x::xs => if n '=! 0 then Some x else nth (n `BinNat.N.sub` 1) xs
   end.
 
+Section Monad.
+  Definition list_ret {A} (a:A) : list A := [a].
+  Fixpoint list_bind {A B} (xs:list A) (f:A -> list B) : list B :=
+    match xs with
+    | [] => []
+    | x::xs => f x ** list_bind xs f
+    end.
+  Global Instance list_Monad : Monad list :=
+    { ret := @list_ret
+    ; bind := @list_bind
+    }.
+End Monad.
+
+Section MonadPlus.
+  Definition list_mzero {A} : list A := [].
+  Definition list_mplus {A B} (xs:list A) (ys:list B) : list (A+B) :=
+    fmap inl xs ** fmap inr ys.
+  Global Instance list_MonadPlus : MonadPlus list :=
+    { mzero := @list_mzero
+    ; mplus := @list_mplus
+    }.
+End MonadPlus.
+
 Section GeneralizedList.
   Definition map {T A U B} {TF:Foldable A T} {UB:Buildable B U}
       (f:A -> B) (t:T) : U :=
@@ -278,11 +301,24 @@ Section GeneralizedList.
 
   Definition numbered {T A U} {TF:Foldable A T} {UB:Buildable (N*A) U}
       (t:T) : U :=
-    eval_state 0 $ mbuild (m:=state N) $ fun C (cons:N*A -> C -> C) (nil:C) =>
+    eval_state 0 $ mbuild $ fun C (cons:N*A -> C -> C) (nil:C) =>
       mfold begin fun (a:A) (c:C) =>
         n <- get ;;
         modify psucc ;;
         ret $ cons (n,a) c
       end nil t.
+
+  Definition intersperse {T A U} {TF:Foldable A T} {UB:Buildable A U}
+      (i:A) (t:T) : U :=
+    eval_state false $ mbuild $ fun C (cons:A -> C -> C) (nil:C) =>
+      mfold begin fun (a:A) (c:C) =>
+        b <- get ;;
+        put true ;;
+        ret $ if b:bool then
+          cons a c
+        else
+          cons i (cons a c)
+      end nil t.
+    
               
 End GeneralizedList.

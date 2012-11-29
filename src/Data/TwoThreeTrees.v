@@ -9,12 +9,13 @@ Require Import FP.Structures.Additive.
 Require Import FP.Structures.Alternative.
 Require Import FP.Structures.Applicative.
 Require Import FP.Structures.Convertible.
-Require Import FP.Structures.Foldable.
+Require Import FP.Structures.Comonad.
 Require Import FP.Structures.Functor.
 Require Import FP.Structures.FunctorP.
 Require Import FP.Structures.Lattice.
 Require Import FP.Structures.MapI.
 Require Import FP.Structures.Monad.
+Require Import FP.Structures.Eqv.
 Require Import FP.Structures.MonadPlus.
 Require Import FP.Structures.Monoid.
 Require Import FP.Structures.Multiplicative.
@@ -64,8 +65,8 @@ Module TwoThreeTrees.
     Fixpoint height (t:tree) : N :=
       match t with
       | Null_t => zero
-      | Two_t tl _ tr => height tl `max` height tr
-      | Three_t tl _ tm _ tr => height tl `max` height tm `max` height tr
+      | Two_t tl _ tr => height tl `lmax` height tr
+      | Three_t tl _ tm _ tr => height tl `lmax` height tm `lmax` height tr
       end.
 
     (* a context of a two-three tree. this is the type of taking a tree and
@@ -500,13 +501,16 @@ Module TwoThreeTrees.
       end.
 
     Definition to_list t := to_list_k t id.
+    Definition tree_cofold {m} {M:Comonad m} {B} (f:(K*V) -> m B -> B) (z:m B) (t:tree) : B := cofold f z (to_list t).
+    Definition tree_mbuild {m} {M:Monad m} (f:forall {C}, ((K*V) -> C -> C) -> C -> m C) : m tree :=
+      f (uncurry (insert_with const)) Null_t.
 
     Definition from_list := foldr (uncurry $ insert_with const) Null_t.
 
-    Definition unionl (t1:tree) (t2:tree) : tree :=
+    Definition union_with (f:V -> V -> V) (t1:tree) (t2:tree) : tree :=
       let fld (t:tree) (e:K*V) :=
         let (k,v) := e in
-        insert_with const k v t
+        insert_with f k v t
       in
       foldl fld t2 $ to_list t1.
 
@@ -536,11 +540,13 @@ Module TwoThreeTrees.
   Arguments singleton {K V} k v.
   Arguments remove {K kO V} k t.
   Arguments to_list {K V} t.
+  Arguments tree_cofold {K V} {m} {M} {B} f z t.
+  Arguments tree_mbuild {K kO V} {m} {M} f.
   Arguments from_list {K kO V} xs.
   Arguments lookup {K kO V} k t.
   Arguments insert_with {K kO V} f k v t.
   Arguments update {K kO V} k f t.
-  Arguments unionl {K kO V} t1 t2.
+  Arguments union_with {K kO V} f t1 t2.
   Arguments map_show {K V SK SV R SR} t.
   
   (* returns none if not well founded *)
@@ -624,7 +630,7 @@ Module TwoThreeTrees.
 
   Definition set_unionl {A} {aO:OrdDec A}
       : tree A unit -> tree A unit -> tree A unit :=
-    unionl.
+    union_with const.
 
   Definition set_difference {A} {aO:OrdDec A}
       : tree A unit -> tree A unit -> option (tree A unit) :=
@@ -648,6 +654,12 @@ Module TwoThreeTrees.
 
   Definition set_to_list {A} : tree A unit -> list A :=
     fmap fst <.> to_list.
+
+  Definition set_cofold {A} {m} {M:Comonad m} {B} (f:A -> m B -> B) : m B -> tree A unit -> B :=
+    tree_cofold (fun att bM => let (a,tt) := att in f a bM).
+
+  Definition set_mbuild {A} {aO:OrdDec A} {m} {M:Monad m} (ff:forall {C}, (A -> C -> C) -> C -> m C) : m (tree A unit) :=
+    tree_mbuild (fun _ f' => ff $ fun a => f' (a,tt)).
 
   Fixpoint sequence {K} {u} {uA:Applicative u} {V} (tT : tree K (u V)) : u (tree K V) := 
     match tT with
@@ -698,7 +710,7 @@ Instance two3map_MapI {K} {oK:OrdDec K} : MapI K (two3map K) :=
   ; minsert_with := @TwoThreeTrees.insert_with _ _
   ; mremove := @TwoThreeTrees.remove_unsafe _ _
   ; mupdate := @TwoThreeTrees.update _ _
-  ; munionl := @TwoThreeTrees.unionl _ _
+  ; munion_with := @TwoThreeTrees.union_with _ _
   ; mdifference := @TwoThreeTrees.difference_unsafe _ _
   ; mintersect_with := @TwoThreeTrees.intersect_with _ _
   ; mmap_with := @TwoThreeTrees.map_with _
@@ -714,8 +726,17 @@ Instance two3map_FiniteMapI {K} {oK:OrdDec K} : FiniteMapI K (two3map K) :=
 Instance two3tree_Traversable {K} : Traversable (two3map K) :=
   { tsequence := @TwoThreeTrees.sequence _ }.
 
+Instance two3map_EqvDec {K V} {KE:OrdDec K} {VE:EqvDec V} : EqvDec (two3map K V) :=
+  { eqv_dec := eqv_dec (T:=list (K*V)) `on` mto_list }.
+Instance two3map_OrdDec {K V} {KO:OrdDec K} {VO:OrdDec V} : OrdDec (two3map K V) :=
+  { ord_dec := ord_dec `on` mto_list }.
 Instance two3tree_Show {K V} {SK:Show K} {SV:Show V} : Show (two3map K V) :=
   { show := @TwoThreeTrees.map_show _ _ _ _ }.
+
+Instance two3tree_Foldable {K V} : Foldable (K*V) (two3map K V) :=
+  { cofold := @TwoThreeTrees.tree_cofold _ _ }.
+Instance two3tree_Buildable {K V} {KE:OrdDec K} : Buildable (K*V) (two3map K V) :=
+  { mbuild := @TwoThreeTrees.tree_mbuild _ _ _ }.
 
 Definition two3set e := two3map e unit.
 
@@ -743,5 +764,14 @@ Instance two3set_FiniteSetI : FiniteSetI OrdDec two3set :=
 Instance two3set_Traversable : TraversableP OrdDec two3set :=
   { tsequence_p := @TwoThreeTrees.set_sequence }.
 
+Instance two3set_EqvDec {E} {OE:OrdDec E} : EqvDec (two3set E) :=
+  { eqv_dec := eqv_dec `on` sto_list }.
+Instance two3set_OrdDec {E} {OE:OrdDec E} : OrdDec (two3set E) :=
+  { ord_dec := ord_dec `on` sto_list }.
 Instance two3set_Show {E} {SE:Show E} : Show (two3set E) :=
   { show := @TwoThreeTrees.set_show _ _ }.
+
+Instance two3set_Foldable {E} : Foldable E (two3set E) :=
+  { cofold := @TwoThreeTrees.set_cofold _ }.
+Instance two3set_Buildable {E} {OE:OrdDec E} : Buildable E (two3set E) :=
+  { mbuild := @TwoThreeTrees.set_mbuild _ _ }.

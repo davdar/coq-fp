@@ -1,5 +1,6 @@
-Require Import Data.String.
-Require Import Data.Function.
+Require Import Data.StringPre.
+Require Import Data.FunctionPre.
+
 Require Import Relations.RelDec.
 Require Import Structures.EqDec.
 Require Import Structures.Eqv.

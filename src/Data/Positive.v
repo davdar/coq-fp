@@ -67,8 +67,8 @@ End OrdDec.
 
 Section Lattice.
   Global Instance pos_Lattice : Lattice positive :=
-    { meet := BinPos.Pos.min
-    ; join := BinPos.Pos.max
+    { lmeet := BinPos.Pos.min
+    ; ljoin := BinPos.Pos.max
     }.
 End Lattice.
 

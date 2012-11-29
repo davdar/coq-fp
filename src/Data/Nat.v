@@ -57,8 +57,8 @@ End OrdDec.
 
 Section Lattice.
   Global Instance nat_Lattice : Lattice nat :=
-    { meet := Peano.min
-    ; join := Peano.max
+    { lmeet := Peano.min
+    ; ljoin := Peano.max
     }.
 End Lattice.
 

@@ -1,10 +1,10 @@
-Require Import Structures.Ord.
+Require Import FP.Structures.Ord.
 
 Class Lattice t :=
-  { lattice_Ord :> Ord t
-  ; meet : t -> t -> t
-  ; join : t -> t -> t
+  { lattice_OrdDec :> OrdDec t
+  ; lmeet : t -> t -> t
+  ; ljoin : t -> t -> t
   }.
 
-Definition min {t} {L:Lattice t} : t -> t -> t := meet.
-Definition max {t} {L:Lattice t} : t -> t -> t := join.
+Definition lmin {t} {L:Lattice t} : t -> t -> t := lmeet.
+Definition lmax {t} {L:Lattice t} : t -> t -> t := ljoin.
