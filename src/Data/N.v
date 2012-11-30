@@ -5,6 +5,7 @@ Require Import FP.Data.FunctionPre.
 
 Require Import FP.Data.Nat.
 Require Import FP.Data.Positive.
+Require Import FP.Data.PrettyI.
 Require Import FP.Relations.RelDec.
 Require Import FP.Structures.Additive.
 Require Import FP.Structures.Iterable.

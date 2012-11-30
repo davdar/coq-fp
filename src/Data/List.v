@@ -28,6 +28,7 @@ Require Import FP.Structures.Peano.
 Require Import FP.Structures.RelationClasses.
 Require Import FP.Structures.Show.
 Require Import FP.Structures.Traversable.
+Require Import FP.Data.PrettyI.
 
 Import AdditiveNotation.
 Import ApplicativeNotation.
@@ -163,7 +164,7 @@ Section Show.
              raw_char "["%char
           ** show x
           ** raw_char "]"%char
-      | x1::x2::xL' =>
+      | x1::x2::xL =>
              raw_char "["%char
           ** show x1
           ** list_show_inner (x2::xL)
@@ -173,6 +174,42 @@ Section Show.
 
   Global Instance list_Show : Show (list A) := { show := list_show }.
 End Show.
+
+Section Pretty.
+  Context {A} {SP:Pretty A}.
+
+  Fixpoint list_pretty_inner (xL:list A) :=
+    match xL with
+    | nil => nil_d
+    | x::xL =>
+        text_d "; " `concat_d`
+        nest_d 2 (pretty x) `concat_d`
+        line_d `concat_d`
+        list_pretty_inner xL
+    end.
+
+  Fixpoint list_pretty (xL:list A) : doc :=
+    match xL with
+    | [] => text_d "[]"
+    | [x] =>
+      group_d begin
+        text_d "[ " `concat_d`
+        nest_d 2 (pretty x) `concat_d`
+        line_d `concat_d`
+        text_d "]"
+      end
+    | x1::x2::xL =>
+      group_d begin
+        text_d "[ " `concat_d`
+        nest_d 2 (pretty x1) `concat_d`
+        line_d `concat_d`
+        list_pretty_inner (x2::xL) `concat_d`
+        text_d "]"
+      end
+    end.
+  Global Instance list_Pretty : Pretty (list A) := { pretty := list_pretty }.
+    
+End Pretty.
 
 Section Monoid.
   Global Instance list_Monoid : forall {A}, Monoid (list A) :=
@@ -315,10 +352,14 @@ Section GeneralizedList.
         b <- get ;;
         put true ;;
         ret $ if b:bool then
-          cons a c
+          cons a (cons i c)
         else
-          cons i (cons a c)
+          cons a c 
       end nil t.
+
+  Definition replicate {T A} {TB:Buildable A T} (n:N) (a:A) : T :=
+    build $ fun C (cons:A -> C -> C) (nil:C) =>
+      loopr (cons a) nil n.
     
               
 End GeneralizedList.

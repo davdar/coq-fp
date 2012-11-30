@@ -17,4 +17,12 @@ Instance N_nat_Convertible : Convertible N nat :=
 Instance nat_N_Convertible : Convertible nat N :=
   { convert := BinNat.N.of_nat }.
 
+Definition N2Z (n:N) : BinNums.Z :=
+  match n with
+  | N0 => BinNums.Z0
+  | Npos p => BinNums.Zpos p
+  end.
+Instance N_Convertible_Z : Convertible N BinNums.Z :=
+  { convert := N2Z }.
+
 

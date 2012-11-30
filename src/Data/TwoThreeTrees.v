@@ -24,6 +24,7 @@ Require Import FP.Structures.Show.
 Require Import FP.Structures.Traversable.
 Require Import FP.Structures.Foldable.
 Require Import FP.Structures.Iterable.
+Require Import FP.Data.PrettyI.
 
 Import AlternativeNotation.
 Import ApplicativeNotation.
@@ -532,6 +533,47 @@ Module TwoThreeTrees.
       | p::ps => raw_string "{" ** show_pair p ** show_inner ps ** raw_string "}"
       end.
 
+    Definition map_pretty {PK:Pretty K} {PV:Pretty V} (t:tree) : doc :=
+      let pretty_pair (p:K*V) :=
+        let '(k,v) := p in
+        group_d begin
+          pretty k `concat_d`
+          text_d " =>" `concat_d`
+          nest_d 2 (line_d `concat_d` pretty v)
+        end
+      in
+      let pretty_inner :=
+      fix pretty_inner ps :=
+        match ps with
+        | [] => nil_d
+        | p::ps =>
+            text_d "; " `concat_d`
+            nest_d 2 (pretty_pair p) `concat_d`
+            line_d `concat_d`
+            pretty_inner ps
+        end
+      in
+      match to_list t with
+      | [] => text_d "{}"
+      | [p] =>
+          group_d begin
+            text_d "{ " `concat_d`
+            nest_d 2 (pretty_pair p) `concat_d`
+            line_d `concat_d`
+            text_d "}"
+          end
+      | p::ps =>
+          group_d begin
+            text_d "{ " `concat_d`
+            nest_d 2 (pretty_pair p) `concat_d`
+            line_d `concat_d`
+            pretty_inner ps `concat_d`
+            text_d "}"
+          end
+      end.
+
+
+
   End variable.
   Arguments Null_t {K V}.
   Arguments Two_t {K V} _ _ _.
@@ -696,6 +738,37 @@ Module TwoThreeTrees.
     | x::xs => raw_string "{" ** show x ** show_inner xs ** raw_string "}"
     end.
 
+    Definition set_pretty {A} {AK:Pretty A} (t:tree A unit) : doc :=
+      let pretty_inner :=
+      fix pretty_inner ps :=
+        match ps with
+        | [] => nil_d
+        | p::ps =>
+            text_d "; " `concat_d`
+            nest_d 2 (pretty p) `concat_d`
+            line_d `concat_d`
+            pretty_inner ps
+        end
+      in
+      match set_to_list t with
+      | [] => text_d "{}"
+      | [p] =>
+          group_d begin
+            text_d "{ " `concat_d`
+            nest_d 2 (pretty p) `concat_d`
+            line_d `concat_d`
+            text_d "}"
+          end
+      | p::ps =>
+          group_d begin
+            text_d "{ " `concat_d`
+            nest_d 2 (pretty p) `concat_d`
+            line_d `concat_d`
+            pretty_inner ps `concat_d`
+            text_d "}"
+          end
+      end.
+
 End TwoThreeTrees.
 
 Definition two3map := TwoThreeTrees.tree.
@@ -732,6 +805,8 @@ Instance two3map_OrdDec {K V} {KO:OrdDec K} {VO:OrdDec V} : OrdDec (two3map K V)
   { ord_dec := ord_dec `on` mto_list }.
 Instance two3tree_Show {K V} {SK:Show K} {SV:Show V} : Show (two3map K V) :=
   { show := @TwoThreeTrees.map_show _ _ _ _ }.
+Instance two3tree_Pretty {K V} {SK:Pretty K} {SV:Pretty V} : Pretty (two3map K V) :=
+  { pretty := @TwoThreeTrees.map_pretty _ _ _ _ }.
 
 Instance two3tree_Foldable {K V} : Foldable (K*V) (two3map K V) :=
   { cofold := @TwoThreeTrees.tree_cofold _ _ }.
@@ -770,6 +845,8 @@ Instance two3set_OrdDec {E} {OE:OrdDec E} : OrdDec (two3set E) :=
   { ord_dec := ord_dec `on` sto_list }.
 Instance two3set_Show {E} {SE:Show E} : Show (two3set E) :=
   { show := @TwoThreeTrees.set_show _ _ }.
+Instance two3set_Pretty {E} {SE:Pretty E} : Pretty (two3set E) :=
+  { pretty := @TwoThreeTrees.set_pretty _ _ }.
 
 Instance two3set_Foldable {E} : Foldable E (two3set E) :=
   { cofold := @TwoThreeTrees.set_cofold _ }.

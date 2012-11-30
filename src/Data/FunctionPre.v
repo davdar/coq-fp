@@ -22,6 +22,8 @@ Definition uncurry {A B C} (f:A -> B -> C) (p:A*B) : C :=
   let (a,b) := p in f a b.
 Definition uncurry2 {A B C D} (f:A -> B -> C -> D) (p:A*B*C) : D :=
   let '(a,b,c) := p in f a b c.
+Definition curry {A B C} (f:A*B -> C) (a:A) (b:B) : C := f (a,b).
+Definition curry2 {A B C D} (f:A*B*C -> D) (a:A) (b:B) (c:C) : D := f (a,b,c).
 
 Module FunctionNotation.
   Notation "f $ x" := (f x)

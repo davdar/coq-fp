@@ -1,17 +1,19 @@
-Require Export Data.StringPre.
+Require Export FP.Data.StringPre.
 
-Require Import Data.FunctionPre.
+Require Import FP.Data.FunctionPre.
 
-Require Import Data.Ascii.
-Require Import Data.List.
-Require Import Relations.RelDec.
-Require Import Structures.EqDec.
-Require Import Structures.Eqv.
-Require Import Structures.Injection.
-Require Import Structures.Monoid.
-Require Import Structures.Ord.
-Require Import Structures.RelationClasses.
-Require Import Structures.Show.
+Require Import FP.Data.Ascii.
+Require Import FP.Data.PrettyI.
+Require Import FP.Data.List.
+Require Import FP.Relations.RelDec.
+Require Import FP.Structures.EqDec.
+Require Import FP.Structures.Eqv.
+Require Import FP.Structures.Injection.
+Require Import FP.Structures.Monoid.
+Require Import FP.Structures.Ord.
+Require Import FP.Structures.RelationClasses.
+Require Import FP.Structures.Show.
+Require Import FP.Data.N.
 
 Import CharNotation.
 Import EqDecNotation.
@@ -77,3 +79,5 @@ Section Injection.
   Global Instance string_ascii_Injection : Injection ascii string :=
     { inject c := String c EmptyString }.
 End Injection.
+
+Instance N_Pretty : Pretty N := { pretty := text_d <.> show }.

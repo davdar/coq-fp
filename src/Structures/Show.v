@@ -1,8 +1,8 @@
-Require Import Data.AsciiPre.
-Require Import Data.StringPre.
+Require Import FP.Data.AsciiPre.
+Require Import FP.Data.StringPre.
 
-Require Import Structures.Injection.
-Require Import Structures.Monoid.
+Require Import FP.Structures.Injection.
+Require Import FP.Structures.Monoid.
 
 Import MonoidNotation.
 

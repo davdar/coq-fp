@@ -25,3 +25,5 @@ Require Export FP.Data.TwoThreeTrees.
 Require Export FP.Data.Unit.
 Require Export FP.Data.UoAssoc.
 Require Export FP.Data.Z.
+Require Export FP.Data.Pretty.
+Require Export FP.Data.PrettyI.

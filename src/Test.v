@@ -1,3 +1,10 @@
+Require Import FP.
+Require Import FPNotation.
+
+(*
+Eval compute in intersperse ","%char (convert (to:=list ascii) "foo").
+*)
+
 Require Import Coq.Lists.List.
 
 Class Functor t :=
