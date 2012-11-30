@@ -1,22 +1,24 @@
 Require BinNums.
 Require BinInt.
 
-Require Import Data.AsciiPre.
+Require Import FP.Data.AsciiPre.
 
-Require Import Data.Positive.
-Require Import Data.Nat.
-Require Import Data.Function.
-Require Import Relations.RelDec.
-Require Import Structures.EqDec.
-Require Import Structures.Eqv.
-Require Import Structures.Ord.
-Require Import Structures.Monoid.
-Require Import Structures.RelationClasses.
-Require Import Structures.Show.
-Require Import Structures.Additive.
-Require Import Structures.Lattice.
-Require Import Structures.Multiplicative.
-Require Import Structures.Convertible.
+Require Import FP.Data.Positive.
+Require Import FP.Data.Nat.
+Require Import FP.Data.Function.
+Require Import FP.Relations.RelDec.
+Require Import FP.Structures.EqDec.
+Require Import FP.Structures.Eqv.
+Require Import FP.Structures.Ord.
+Require Import FP.Structures.Comonad.
+Require Import FP.Structures.Peano.
+Require Import FP.Structures.Monoid.
+Require Import FP.Structures.RelationClasses.
+Require Import FP.Structures.Show.
+Require Import FP.Structures.Additive.
+Require Import FP.Structures.Lattice.
+Require Import FP.Structures.Multiplicative.
+Require Import FP.Structures.Convertible.
 
 Import MonoidNotation.
 Import FunctionNotation.
@@ -95,3 +97,22 @@ Section Multiplicative.
   Global Instance Z_Multiplicative : Multiplicative Z :=
     { Multiplicative_Monoid := Z_multiplicative_Monoid }.
 End Multiplicative.
+
+Definition Z_coloopr {m} {M:Comonad m} {A} (f:m A -> A) (aM:m A) (z:Z) : A :=
+  match z with
+  | Z0 => coret aM
+  | Zpos p => coloopr f aM p
+  | Zneg p => coloopr f aM p
+  end.
+Definition Z_coloopl {m} {M:Comonad m} {A} (f:m A -> A) (aM:m A) (z:Z) : A :=
+  match z with
+  | Z0 => coret aM
+  | Zpos p => coloopl f aM p
+  | Zneg p => coloopl f aM p
+  end.
+Instance Z_Peano : Peano Z :=
+  { pzero := Z0
+  ; psucc := BinInt.Z.succ
+  ; coloopr := @Z_coloopr
+  ; coloopl := @Z_coloopl
+  }.

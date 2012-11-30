@@ -18,6 +18,7 @@ Require Import FP.Structures.Applicative.
 Require Import FP.Structures.Monad.
 Require Import FP.Data.Option.
 Require Import FP.Data.PrettyI.
+Require Import FP.Data.StringBuilder.
 
 Import SuspNotation.
 Import MonadNotation.
@@ -36,54 +37,66 @@ Inductive tinydoc :=
   | ConcatTD : string -> tinydoc -> tinydoc
   | LineTD : N -> tinydoc -> tinydoc.
 
-Fixpoint layout' (td:tinydoc) : (string->string) -> string :=
+Fixpoint layout (td:tinydoc) : string_builder :=
   match td with
-  | NilTD => fun k => k ""
-  | ConcatTD s td => fun k => layout' td (fun s2 => k (s ** s2))
-  | LineTD i td => fun k => layout' td (fun s => k (convert (to:=string) (newline :: replicate i " "%char) ** s))
+  | NilTD => mk_string_builder ""
+  | ConcatTD s td => mk_string_builder s ** layout td
+  | LineTD i td => mk_string_builder (convert (to:=string) (newline :: replicate i " "%char)) ** layout td
   end.
-Definition layout (td:tinydoc) : string := layout' td id.
+Inductive fmode :=
+  | Flat
+  | Break.
 
-Fixpoint fits (w:Z) (td:tinydoc) :=
-  if w '<! 0%Z then
-    false
-  else
-    match td with
-    | NilTD => true
-    | ConcatTD s td => fits (w - convert (length (convert s))) td
-    | LineTD i td => true
-    end.
-Definition better (w:Z) (k:Z) (td1:susp tinydoc) (td2:susp tinydoc) : susp tinydoc :=
-  let td1' := force td1 in
-  if fits (w-k) td1' then
-    delay | td1'
-  else
-    delay | force td2.
+Axiom undefined : forall {A}, A.
 
-Definition be : Z -> Z -> list (N*doc) -> fuel (susp tinydoc) :=
-  curry2 $
-  mfix $ fun be args =>
-    let be w k ds := be (w,k,ds) in
-    let '(w,k,ds) := args in
-    match ds with
-    | [] => ret (delay | NilTD)
-    | (i,NilD)::ds => be w k ds
-    | (i,ConcatD dl dr)::ds => be w k ((i,dl)::(i,dr)::ds)
-    | (i,NestD j dn)::ds => be w k ((i+j,dn)::ds)
-    | (i,TextD s)::ds =>
-        r <- be w (k+convert (length (convert s))) ds ;;
-        ret (delay | ConcatTD s (force r))
-    | (i,LineD)::ds =>
-        r <- be w (convert i) ds ;;
-        ret (delay | LineTD i (force r))
-    | (i,UnionD dl dr)::ds =>
-        fret (better w k) <@> (be w k ((i,dl)::ds)) <@> (be w k ((i,dr)::ds))
-    end.
+Definition fits : Z -> list (N*fmode*doc) -> fuel bool :=
+  mfix2 $ fun fits w ps =>
+    if w '<! 0%Z then
+      ret false
+    else
+      match ps with
+      | [] => ret true
+      | (_,_,NilD)::ps => fits w ps
+      | (i,m,ConcatD dl dr)::ps => fits w ((i,m,dl)::(i,m,dr)::ps)
+      | (i,m,NestD j dn)::ps => fits w ((i+j,m,dn)::ps)
+      | (i,m,TextD s)::ps => fits (w - length s) ps
+      | (i,Flat,LineD s)::ps => fits (w - length s) ps
+      | (i,Break,LineD _)::_ => ret true
+      | (i,m,GroupD dg)::ps => fits w ((i,Flat,dg)::ps)
+      end.
 
-Definition best (w:Z) (k:Z) (d:doc) : fuel tinydoc := force <$> be w k [(0,d)].
-
-Definition run_pretty' (w:N) (d:doc) : fuel string := layout <$> best (convert w) 0%Z d.
-Definition run_pretty w d : option string := gtimes (convert [newline]) <$> run_fuel 100000 (run_pretty' w d).
+Definition format : Z -> Z -> list (N*fmode*doc) -> fuel tinydoc :=
+  curry $
+  mfix2 $ fun format wk ps =>
+    let format (w:Z) (k:Z) (ps:list (N*fmode*doc)) := format (w,k) ps in
+    let '(w,k) := wk in
+    match ps with
+    | [] => ret NilTD
+    | (i,m,NilD)::ps => format w k ps
+    | (i,m,ConcatD dl dr)::ps => format w k ((i,m,dl)::(i,m,dr)::ps)
+    | (i,m,NestD j dn)::ps => format w k ((i+j,m,dn)::ps)
+    | (i,m,TextD s)::ps => ConcatTD s <$> format w (k + length s) ps
+    | (i,Flat,LineD s)::ps => ConcatTD s <$> format w (k + length s) ps
+    | (i,Break,LineD s)::ps => LineTD i <$> format w (convert i) ps
+    | (i,m,GroupD dg)::ps =>
+        b <- fits (w-k) ((i,Flat,dg)::ps) ;;
+        if b then
+          format w k ((i,Flat,dg)::ps)
+        else
+          format w k ((i,Break,dg)::ps)
+   end.
+    
+Definition run_pretty' (w:N) (d:doc) : option string :=
+  run_fuel large_N $ begin
+    td <- format (convert w) 0%Z [(0,Flat,GroupD d)] ;;
+    ret $ run_string_builder $ layout td ** mk_string_builder (convert [newline])
+  end.
+Definition run_pretty (w:N) (d:doc) : option string :=
+  run_fuel large_N $ begin
+    td <- format (convert w) 0%Z [(0,Flat,GroupD d)] ;;
+    let nl := mk_string_builder $ convert [newline] in
+    ret $ run_string_builder $ nl ** layout td ** nl
+  end.
 
 (* example *)
 
@@ -121,6 +134,6 @@ Definition t1 : tree :=
 
 (*
 Eval compute in
-  s <- run_pretty 20 (show_tree t1) ;;
+  s <- run_pretty 20 $ show_tree t1 ;;
   ret $ convert [newline] ** s.
 *)

@@ -11,10 +11,14 @@ Require Import FP.Structures.Eqv.
 Require Import FP.Structures.Injection.
 Require Import FP.Structures.Monoid.
 Require Import FP.Structures.Ord.
+Require Import FP.Structures.Foldable.
 Require Import FP.Structures.RelationClasses.
 Require Import FP.Structures.Show.
+Require Import FP.Structures.Monad.
 Require Import FP.Data.N.
+Require Import FP.Structures.Comonad.
 
+Import ComonadNotation.
 Import CharNotation.
 Import EqDecNotation.
 Import FunctionNotation.
@@ -79,5 +83,24 @@ Section Injection.
   Global Instance string_ascii_Injection : Injection ascii string :=
     { inject c := String c EmptyString }.
 End Injection.
+
+Section Foldable.
+  Fixpoint string_cofold {w} {W:Comonad w} {B} (f:ascii -> w B -> B) (bW:w B) (t:string) : B :=
+    match t with
+    | EmptyString => coret bW
+    | String a t =>
+        let bW := codo bW => string_cofold f bW t
+        in f a bW
+    end.
+  Global Instance string_Foldable : Foldable ascii string :=
+    { cofold := @string_cofold }.
+End Foldable.
+
+Section Buildable.
+  Definition string_mbuild {m} {M:Monad m} (f:forall {C}, (ascii -> C -> C) -> C -> m C) : m string :=
+    f String EmptyString.
+  Global Instance string_Buildable : Buildable ascii string :=
+    { mbuild := @string_mbuild }.
+End Buildable.
 
 Instance N_Pretty : Pretty N := { pretty := text_d <.> show }.

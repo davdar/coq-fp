@@ -625,7 +625,7 @@ Module TwoThreeTrees.
 
   Definition map {K V W} (f:V -> W) : tree K V -> tree K W := map_with (const f).
 
-  Definition size {K V} : tree K V -> N := convert <.> length <.> to_list.
+  Definition size {K V} : tree K V -> N := length <.> to_list.
 
   Definition reduce {K V} {M:Monoid V} : tree K V -> V :=
     gproductl <.> List.map snd <.> to_list.

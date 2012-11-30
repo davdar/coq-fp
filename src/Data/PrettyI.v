@@ -8,8 +8,8 @@ Inductive doc :=
   | ConcatD : doc -> doc -> doc
   | TextD : string -> doc
   | NestD : N -> doc -> doc
-  | LineD : doc
-  | UnionD : doc -> doc -> doc.
+  | LineD : string -> doc
+  | GroupD : doc -> doc.
 
 Class Pretty t :=
   { pretty : t -> doc }.
@@ -18,8 +18,11 @@ Definition nil_d : doc := NilD.
 Definition concat_d : doc -> doc -> doc := ConcatD.
 Definition nest_d : N -> doc -> doc := NestD.
 Definition text_d : string -> doc := TextD.
-Definition line_d : doc := LineD.
+Definition line_d : doc := LineD " ".
+Definition line_with_d : string -> doc := LineD.
+Definition group_d := GroupD.
 
+(*
 Fixpoint flatten_d (d:doc) : doc :=
   match d with
   | NilD => NilD
@@ -32,3 +35,5 @@ Fixpoint flatten_d (d:doc) : doc :=
 
 Definition group_d (d:doc) : doc := UnionD (flatten_d d) d.
 
+
+*)

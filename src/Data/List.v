@@ -360,6 +360,12 @@ Section GeneralizedList.
   Definition replicate {T A} {TB:Buildable A T} (n:N) (a:A) : T :=
     build $ fun C (cons:A -> C -> C) (nil:C) =>
       loopr (cons a) nil n.
+
+  Definition length {T A} {TF:Foldable A T} {P} {Peano:Peano P} (t:T) : P :=
+    exec_state pzero $
+      mfold begin fun (_:A) (_:unit) =>
+        pinc ;; ret tt
+      end tt t.
     
               
 End GeneralizedList.
