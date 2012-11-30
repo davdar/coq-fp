@@ -2,6 +2,7 @@ Require Export FP.Data.ProdPre.
 
 Require Import FP.Data.AsciiPre.
 Require Import FP.Data.StringPre.
+Require Import FP.Data.NPre.
 
 Require Import FP.Data.Lens.
 Require Import FP.Data.Store.
@@ -12,6 +13,7 @@ Require Import FP.Structures.Applicative.
 Require Import FP.Structures.EqDec.
 Require Import FP.Structures.Eqv.
 Require Import FP.Structures.Functor.
+Require Import FP.Data.PrettyI.
 Require Import FP.Structures.Monoid.
 Require Import FP.Structures.Ord.
 Require Import FP.Structures.RelationClasses.
@@ -155,6 +157,24 @@ Section Show.
 
   Global Instance prod_Show : Show (A*B) := { show := prod_show }.
 End Show.
+
+Section Pretty.
+  Context {A B} {AP:Pretty A} {BP:Pretty B}.
+
+  Definition prod_pretty (ab:A*B) : doc :=
+    let (a,b) := ab in
+      group_d begin
+        text_d "( " `concat_d`
+        nest_d 2 (pretty a) `concat_d`
+        line_d `concat_d`
+        text_d ", " `concat_d`
+        nest_d 2 (pretty b) `concat_d`
+        line_d `concat_d`
+        text_d ")"
+      end.
+  Global Instance prod_Pretty : Pretty (A*B) :=
+    { pretty := prod_pretty }.
+End Pretty.
 
 Inductive on_fst B A := OnFst { un_on_fst : A*B }.
 Arguments OnFst {B A} _.
