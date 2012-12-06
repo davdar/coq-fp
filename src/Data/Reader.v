@@ -1,5 +1,4 @@
-Require Import FP.Data.FunctionPre.
-
+Require Import FP.Data.Function.
 Require Import FP.Structures.Alternative.
 Require Import FP.Structures.Monad.
 Require Import FP.Structures.MonadError.
@@ -32,7 +31,7 @@ Section reader_t.
   Definition run_reader_t {A} : R -> reader_t R m A -> m A := flip un_reader_t.
 
   Section Monad.
-    Definition reader_t_ret {A} : A -> reader_t R m A := ReaderT <.> const <.> ret.
+    Definition reader_t_ret {A} : A -> reader_t R m A := ReaderT '.' const '.' ret.
     Definition reader_t_bind {A B}
         (aMM:reader_t R m A) (f:A -> reader_t R m B) : reader_t R m B :=
       ReaderT $ fun r => begin
@@ -61,7 +60,7 @@ Section reader_t.
 
     Definition reader_t_ask_passthrough : reader_t R m R2 := lift ask.
     Definition reader_t_local_passthrough {A} (f:R2 -> R2) (aM:reader_t R m A) :=
-      ReaderT $ local f <.> un_reader_t aM.
+      ReaderT $ local f '.' un_reader_t aM.
     Definition reader_t_MonadReader_passthrough : MonadReader R2 (reader_t R m) :=
       {| ask := @reader_t_ask_passthrough
        ; local := @reader_t_local_passthrough
@@ -72,7 +71,7 @@ Section reader_t.
     Context {S} {MS:MonadState S m}.
 
     Definition reader_t_get : reader_t R m S := lift get.
-    Definition reader_t_put : S -> reader_t R m unit :=lift <.> put.
+    Definition reader_t_put : S -> reader_t R m unit := lift '.' put.
     Global Instance reader_t_MonadState : MonadState S (reader_t R m) :=
       { get := reader_t_get
       ; put := reader_t_put
@@ -110,10 +109,10 @@ Section reader_t.
   Section MonadError.
     Context {E} {ME:MonadError E m}.
 
-    Definition reader_t_throw {A} : E -> reader_t R m A := lift <.> throw.
+    Definition reader_t_throw {A} : E -> reader_t R m A := lift '.' throw.
     Definition reader_t_catch {A}
         (aM:reader_t R m A) (h:E -> reader_t R m A) : reader_t R m A :=
-      ReaderT $ fun r => catch (un_reader_t aM r) $ run_reader_t r <.> h.
+      ReaderT $ fun r => catch (un_reader_t aM r) $ run_reader_t r '.' h.
     Global Instance reader_t_MonadError : MonadError E (reader_t R m) :=
       { throw := @reader_t_throw
       ; catch := @reader_t_catch

@@ -1,7 +1,6 @@
-Require Import Data.FunctionPre.
-
-Require Import Structures.Monad.
-Require Import Structures.Comonad.
+Require Import FP.Data.Function.
+Require Import FP.Structures.Monad.
+Require Import FP.Structures.Comonad.
 
 Import FunctionNotation.
 

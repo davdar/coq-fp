@@ -369,3 +369,25 @@ Section GeneralizedList.
     
               
 End GeneralizedList.
+
+Section Groupish.
+  Context {T} {T_GTimes : GTimes T} {T_GUnit : GUnit T}.
+
+  Definition gproductr := foldr gtimes gunit.
+  Definition gproductl := foldl gtimes gunit.
+End Groupish.
+
+Section Alternative.
+  Context {t} {F:Functor t} {A:Alternative t}.
+
+  Definition fchoices {A} : list (t A) -> t A := foldr fchoice fzero.
+End Alternative.
+
+Fixpoint replicateM {m A} {M:Monad m} (n:nat) (aM:m A) : m (list A) :=
+  match n with
+  | O => ret nil
+  | S n' =>
+      x <- aM ;;
+      xs <- replicateM n' aM ;;
+      ret $ cons x xs
+  end.

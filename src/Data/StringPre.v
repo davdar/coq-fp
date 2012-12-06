@@ -1,9 +1,9 @@
 Require Coq.Strings.String.
 
-Require Import Data.AsciiPre.
-Require Import Data.FunctionPre.
-Require Import Data.ListPre.
-Require Import Structures.Convertible.
+Require Import FP.Data.AsciiPre.
+Require Import FP.Data.Function.
+Require Import FP.Data.ListPre.
+Require Import FP.Structures.Convertible.
 
 Import FunctionNotation.
 Import ListNotation.

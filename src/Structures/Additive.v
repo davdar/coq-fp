@@ -1,31 +1,31 @@
-Require Import Structures.Monoid.
+Require Import FP.Structures.Monoid.
 
-Class Semiadditive t :=
-  { Semiadditive_Semigroup : Semigroup t }.
-Definition plus {t} {A:Semiadditive t} : t -> t -> t :=
-  gtimes (Semigroup:=Semiadditive_Semigroup).
+Class Plus T :=
+  { plus_gtimes :> GTimes T }.
+Definition plus {T} {T_Plus : Plus T} : T -> T -> T := gtimes.
 
-Class Additive t :=
-  { Additive_Monoid : Monoid t }.
-Definition zero {t} {A:Additive t} : t :=
-  gunit (Monoid:=Additive_Monoid).
-Instance Additive_Semiadditive {t} {A:Additive t} : Semiadditive t :=
-  { Semiadditive_Semigroup :=
-      Monoid_Semigroup (Monoid:=Additive_Monoid)
-  }.
+Class Zero T :=
+  { zero_gtimes :> GUnit T }.
+Definition zero {T} {T_Zero : Zero T} : T := gunit.
 
-Class InverseAdditive t :=
-  { InverseAdditive_InverseMonoid : InverseMonoid t }.
-Definition neg {t} {IA:InverseAdditive t} : t -> t :=
-  ginv (InverseMonoid:=InverseAdditive_InverseMonoid).
-Definition minus {t} {IA:InverseAdditive t} : t -> t -> t :=
-  gdiv (InverseMonoid:=InverseAdditive_InverseMonoid).
-Instance InverseAdditive_Additive {t} {IA:InverseAdditive t} : Additive t :=
-  { Additive_Monoid :=
-      InverseMonoid_Monoid (InverseMonoid:=InverseAdditive_InverseMonoid)
-  }.
+Class Minus T :=
+  { minus_gdiv :> GDiv T }.
+Definition minus {T} {T_Minus : Minus T} : T -> T -> T := gdiv.
+
+Class Neg T :=
+  { neg_ginv :> GInv T }.
+Definition neg {T} {T_Neg : Neg T} : T -> T := ginv.
 
 Module AdditiveNotation.
   Infix "+" := plus.
   Infix "-" := minus.
 End AdditiveNotation.
+
+Class Semiadditive T :=
+  { semiadditive_semigroup :> Semigroup T }.
+Class MinusSemiadditive T :=
+  { minus_semiadditive_div_semigroup :> DivSemigroup T }.
+Class Additive T :=
+  { additive_monoid :> Monoid T }.
+Class NegAdditive T :=
+  { neg_additive_inv_monoid :> InvMonoid T }.

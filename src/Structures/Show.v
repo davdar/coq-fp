@@ -10,7 +10,6 @@ Class ShowResult r :=
   { show_result_monoid :> Monoid r
   ; show_result_ascii_injection :> Injection ascii r
   }.
-Hint Immediate Build_ShowResult : typeclass_instances.
 
 Class Show t := { show : forall {r} {SR:ShowResult r}, t -> r }.
 

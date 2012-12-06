@@ -1,33 +1,31 @@
-Require Import Monoid.
+Require Import FP.Structures.Monoid.
 
-Class Semimultiplicative t :=
-  { Semimultiplicative_Semigroup : Semigroup t }.
-Definition times {t} {M:Semimultiplicative t} : t -> t -> t :=
-  gtimes (Semigroup:=Semimultiplicative_Semigroup).
+Class Times T :=
+  { times_gtimes :> GTimes T }.
+Definition times {T} {T_Times : Times T} : T -> T -> T := gtimes.
 
-Class Multiplicative t :=
-  { Multiplicative_Monoid : Monoid t }.
-Definition one {t} {M:Multiplicative t} : t :=
-  gunit (Monoid:=Multiplicative_Monoid).
-Instance Multiplicative_Semimultiplicative {t} {M:Multiplicative t} : Semimultiplicative t :=
-  { Semimultiplicative_Semigroup :=
-      Monoid_Semigroup (Monoid:=Multiplicative_Monoid)
-  }.
+Class One T :=
+  { one_gtimes :> GUnit T }.
+Definition zero {T} {T_One : One T} : T := gunit.
 
-Class InverseMultiplicative t :=
-  { InverseMultiplicative_InverseMonoid : InverseMonoid t }.
-Definition inv {t} {IM:InverseMultiplicative t} : t -> t :=
-  ginv (InverseMonoid:=InverseMultiplicative_InverseMonoid).
-Definition div {t} {IM:InverseMultiplicative t} : t -> t -> t :=
-  gdiv (InverseMonoid:=InverseMultiplicative_InverseMonoid).
-Instance InverseMultiplicative_Multiplicative
-    {t} {IM:InverseMultiplicative t} : Multiplicative t :=
-  { Multiplicative_Monoid :=
-      InverseMonoid_Monoid (InverseMonoid:=InverseMultiplicative_InverseMonoid)
-  }.
+Class Div T :=
+  { div_gdiv :> GDiv T }.
+Definition div {T} {T_Div : Div T} : T -> T -> T := gdiv.
 
+Class Inv T :=
+  { inv_ginv :> GInv T }.
+Definition inv {T} {T_Inv : Inv T} : T -> T := ginv.
 
 Module MultiplicativeNotation.
   Infix "*" := times.
   Infix "/" := div.
 End MultiplicativeNotation.
+
+Class Semimultiplicative T :=
+  { semimultiplicative_semigroup :> Semigroup T }.
+Class DivSemimultiplicative T :=
+  { div_semimultiplicative_div_semigroup :> DivSemigroup T }.
+Class Multiplicative T :=
+  { multiplicative_monoid :> Monoid T }.
+Class InvMultiplicative T :=
+  { inv_multiplicative_inv_monoid :> InvMonoid T }.

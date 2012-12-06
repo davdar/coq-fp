@@ -40,3 +40,6 @@ Module LensNotation.
   Infix "':='" := lset (at level 62, no associativity).
   Infix "':|'" := lupdate (at level 63, no associativity).
 End LensNotation.
+
+s | f <.> g ::= x
+s @ f <.> g

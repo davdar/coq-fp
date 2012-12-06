@@ -1,9 +1,8 @@
-Require Import Data.FunctionPre.
-
-Require Import Structures.Eqv.
-Require Import Structures.Functor.
-Require Import Structures.Applicative.
-Require Import Structures.Injection.
+Require Import FP.Data.Function.
+Require Import FP.Structures.Eqv.
+Require Import FP.Structures.Functor.
+Require Import FP.Structures.Applicative.
+Require Import FP.Structures.Injection.
 
 Import EqvNotation.
 Import FunctionNotation.
@@ -14,15 +13,40 @@ Class Monad m :=
   }.
 Local Infix ">>=" := bind (at level 50, left associativity).
 
-Definition revbind {m} {M:Monad m} {A B} : (A -> m B) -> m A ->  m B := flip bind.
+Section Monad.
+  Context {m} {M:Monad m}.
 
-Definition kleisli_compose {m} {M:Monad m} {A B C}
-    (g:B -> m C) (f:A -> m B) (a:A) : m C :=
-  f a >>= g.
+  Definition revbind {A B} : (A -> m B) -> m A ->  m B := flip bind.
+  Definition kleisli_compose {A B C} (g:B -> m C) (f:A -> m B) (a:A) : m C :=
+    f a >>= g.
+  Definition kleisli_revcompose {A B C} : (A -> m B) -> (B -> m C) -> A -> m C :=
+    flip kleisli_compose.
 
-Definition kleisli_revcompose {m} {M:Monad m} {A B C}
-    : (A -> m B) -> (B -> m C) -> A -> m C :=
-  flip kleisli_compose.
+  Definition join {A} : m (m A) -> m A := revbind id.
+  Definition mmap {A B} : (A -> B) -> m A -> m B :=
+    revbind '.' compose ret.
+  Definition mapply {A B} (fM:m (A -> B)) (aM:m A) : m B :=
+    fM >>= flip mmap aM.
+
+  Global Instance Monad_Applicative : Applicative m :=
+    { fret := @ret _ _
+    ; fapply := @mapply
+    }.
+
+  Section iso_Monad.
+    Variable n:Type -> Type.
+    Context {N:Monad n}.
+    Context {m_n_FBij:FunctorBijection m n}.
+
+    Definition iso_ret {A} : A -> m A := ffrom '.' ret.
+    Definition iso_bind {A B} (aM:m A) (f:A -> m B) : m B := ffrom $ bind (fto aM) (fto '.' f).
+
+    Definition iso_Monad : Monad m :=
+      {| ret := @iso_ret
+       ; bind := @iso_bind
+      |}.
+    End iso_Monad.
+End Monad.
 
 Module MonadNotation.
   Notation "x <- c1 ;; c2" := (bind c1 (fun x => c2))
@@ -38,40 +62,15 @@ Module MonadNotation.
 End MonadNotation.
 Import MonadNotation.
 
-Definition join {m} {M:Monad m} {A} : m (m A) -> m A := revbind id.
-Definition mmap {m} {M:Monad m} {A B} : (A -> B) -> m A -> m B :=
-  revbind <.> compose ret.
-Definition mapply {m} {M:Monad m} {A B} (fM:m (A -> B)) (aM:m A) : m B :=
-  fM >>= flip mmap aM.
-
-Instance Monad_Applicative {m} {M:Monad m} : Applicative m :=
-  { fret _a := ret
-  ; fapply _a _b := mapply
-  }.
-
-Definition iso_Monad {m} n {B:FunctorBijection m n} {nM:Monad n} : Monad m :=
-  {| ret _A := ffrom <.> ret
-   ; bind _A _B aM f := ffrom $ bind (fto aM) (fto <.> f)
-  |}.
-
 Class MonadLaws m {E:forall A {AE:Eqv A}, Eqv (m A)} {M:Monad m} :=
   { monad_bind_of_ret
       : forall {A B} {AE:Eqv A} {BE:Eqv B} {x:A} {f:A -> m B},
-          ret x >>= f '~= f x
+          ret x >>= f ~= f x
   ; monad_ret_of_bind
       : forall {A} {AE:Eqv A} {c:m A},
-          c >>= ret '~= c
+          c >>= ret ~= c
   ; monad_associativity
       : forall {A B c} {AE:Eqv A} {BE:Eqv B} {CE:Eqv c}
                {aM:m A} {f:A -> m B} {g:B -> m c},
-          aM >>= f >>= g '~= aM >>= fun x => f x >>= g
+          aM >>= f >>= g ~= aM >>= fun x => f x >>= g
   }.
-
-Fixpoint replicateM {m A} {M:Monad m} (n:nat) (aM:m A) : m (list A) :=
-  match n with
-  | O => ret nil
-  | S n' =>
-      x <- aM ;;
-      xs <- replicateM n' aM ;;
-      ret $ cons x xs
-  end.

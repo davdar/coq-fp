@@ -1,6 +1,6 @@
-Require Import Data.BoolPre.
-Require Import Data.Function.
-Require Import Relations.RelDec.
+Require Import FP.Data.BoolPre.
+Require Import FP.Data.Function.
+Require Import FP.Relations.RelDec.
 
 Import FunctionNotation.
 
@@ -11,7 +11,7 @@ Section EqDec.
 
   Global Instance Eq_RelDec : RelDec eq_dec eq.
 
-  Definition neg_eq_dec := negb <..> eq_dec.
+  Definition neg_eq_dec := negb '..' eq_dec.
 
   Context {RDC:RelDecCorrect eq_dec eq}.
 
@@ -20,10 +20,9 @@ Section EqDec.
 End EqDec.
 
 Module EqDecNotation.
-  Infix "'=!" := eq_dec (at level 35, no associativity).
-  Infix "'/=!" := neg_eq_dec (at level 35, no associativity).
+  Infix "=!" := eq_dec (at level 35, no associativity).
+  Infix "/=!" := neg_eq_dec (at level 35, no associativity).
 
-  Infix "'=?" := eq_dec_p (at level 35, no associativity).
-  Infix "'/=?" := neg_eq_dec_p (at level 35, no associativity).
+  Infix "=?" := eq_dec_p (at level 35, no associativity).
+  Infix "/=?" := neg_eq_dec_p (at level 35, no associativity).
 End EqDecNotation.
-

@@ -1,6 +1,5 @@
 Require Import FP.Data.ProdPre.
-Require Import FP.Data.FunctionPre.
-
+Require Import FP.Data.Function.
 Require Import FP.Structures.Functor.
 
 Import FunctionNotation.
@@ -11,16 +10,16 @@ Class Applicative t :=
   }.
 
 Definition apmap {t} {tA:Applicative t} {A B} : (A -> B) -> t A -> t B :=
-  fapply <.> fret.
+  fapply '.' fret.
 
 Instance Applicative_Functor {t} {tA:Applicative t} : Functor t :=
   { fmap _a _b := apmap }.
 
 Definition fapplyl {t A B} {F:Applicative t} : t A -> t B -> t A :=
-  fapply <.> fmap const.
+  fapply '.' fmap const.
 
 Definition fapplyr {t A B} {F:Applicative t} : t A -> t B ->  t B :=
-  fapply <.> fmap (const id).
+  fapply '.' fmap (const id).
 
 Class Field t :=
   { times : t -> t -> t }.

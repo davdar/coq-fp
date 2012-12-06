@@ -1,7 +1,7 @@
-Require Import Data.FunctionPre.
+Require Import FP.Data.Function.
 
-Require Import Relations.RelDec.
-Require Import Structures.RelationClasses.
+Require Import FP.Relations.RelDec.
+Require Import FP.Structures.RelationClasses.
 
 Import FunctionNotation.
 
@@ -9,14 +9,14 @@ Class Eqv T := { eqv : T -> T -> Prop }.
 Section Eqv.
   Context {T} {E:Eqv T}.
 
-  Definition not_eqv : T -> T -> Prop := not <..> eqv.
+  Definition not_eqv : T -> T -> Prop := not '..' eqv.
 End Eqv.
 
 Class EqvDec T := { eqv_dec : T -> T -> bool }.
 Section EqvDec.
   Context {T} {ED:EqvDec T}.
 
-  Definition neg_eqv_dec : T -> T -> bool := negb <..> eqv_dec.
+  Definition neg_eqv_dec : T -> T -> bool := negb '..' eqv_dec.
 
   Context {E:Eqv T}.
 
@@ -29,47 +29,38 @@ Section EqvDec.
 End EqvDec.
 
 Module EqvNotation.
-  Infix "'~=!" := eqv_dec (at level 35, no associativity).
-  Infix "'/~=!" := neg_eqv_dec (at level 35, no associativity).
+  Infix "~=!" := eqv_dec (at level 35, no associativity).
+  Infix "/~=!" := neg_eqv_dec (at level 35, no associativity).
 
-  Infix "'~=?" := eqv_dec_p (at level 35, no associativity).
-  Infix "'/~=?" := neg_eqv_dec_p (at level 35, no associativity).
+  Infix "~=?" := eqv_dec_p (at level 35, no associativity).
+  Infix "/~=?" := neg_eqv_dec_p (at level 35, no associativity).
 
-  Infix "'~=" := eqv (at level 70, no associativity).
-  Infix "'/~=" := not_eqv (at level 70, no associativity).
+  Infix "~=" := eqv (at level 70, no associativity).
+  Infix "/~=" := not_eqv (at level 70, no associativity).
 End EqvNotation.
 Import EqvNotation.
 
 (* Begin Context Aliases *)
 Class EqvWF T :=
-{ wf_eqv : Eqv T
-; wf_eqv_equivalence : Equivalence eqv
-}.
-Hint Immediate Build_EqvWF : typeclass_instances.
-Hint Immediate wf_eqv : typeclass_instances.
-Hint Immediate wf_eqv_equivalence : typeclass_instances.
+  { wf_eqv :> Eqv T
+  ; wf_eqv_equivalence :> Equivalence eqv
+  }.
 
 Class EqvWithDec T :=
-{ with_eqv : Eqv T
-; with_eqv_dec : EqvDec T
-}.
-Hint Immediate Build_EqvWithDec : typeclass_instances.
-Hint Immediate with_eqv : typeclass_instances.
-Hint Immediate with_eqv_dec : typeclass_instances.
+  { with_eqv :> Eqv T
+  ; with_eqv_dec :> EqvDec T
+  }.
 
 Class EqvWFWithDec T :=
-{ with_eqv_wf : EqvWF T
-; with_eqv_dec_wf : EqvDec T
-}.
-Hint Immediate Build_EqvWFWithDec : typeclass_instances.
-Hint Immediate with_eqv_wf : typeclass_instances.
-Hint Immediate with_eqv_dec_wf : typeclass_instances.
+  { with_eqv_wf :> EqvWF T
+  ; with_eqv_dec_wf :> EqvDec T
+  }.
 (* End Context Aliases *)
 
 Section morph_eqv_Equivalence.
   Context {T U} {TEWF:EqvWF T} {UE:EqvWF U}.
   Variable morph:U -> T.
-  Variable morph_resp : forall u1 u2, u1 '~= u2 <-> morph u1 '~= morph u2.
+  Variable morph_resp : forall u1 u2, u1 ~= u2 <-> morph u1 ~= morph u2.
 
   Definition morph_eqv_Equivalence : Equivalence (eqv (T:=U)).
   Proof. repeat constructor ;

@@ -2,9 +2,9 @@ Require Export FP.Data.SumPre.
 
 Require Import FP.Data.AsciiPre.
 Require Import FP.Data.BoolPre.
-Require Import FP.Data.FunctionPre.
 Require Import FP.Data.StringPre.
 
+Require Import FP.Data.Function.
 Require Import FP.Relations.RelDec.
 Require Import FP.Structures.EqDec.
 Require Import FP.Structures.Eqv.
@@ -35,8 +35,8 @@ Section EqDec.
 
   Definition sum_eq_dec (ab1:A+B) (ab2:A+B) : bool :=
     match ab1, ab2 with
-    | inl a1, inl a2 => a1 '=! a2
-    | inr b1, inr b2 => b1 '=! b2
+    | inl a1, inl a2 => a1 =! a2
+    | inr b1, inr b2 => b1 =! b2
     | _, _ => false
     end.
 
@@ -53,8 +53,8 @@ Section Eqv.
   Context {A B} {AE:Eqv A} {BE:Eqv B}.
 
   Inductive sum_eqv : A+B -> A+B -> Prop :=
-    | InlSumEqv : forall a1 a2 , a1 '~= a2 -> sum_eqv (inl a1) (inl a2)
-    | InrSumEqv : forall b1 b2, b1 '~= b2 -> sum_eqv (inr b1) (inr b2).
+    | InlSumEqv : forall a1 a2 , a1 ~= a2 -> sum_eqv (inl a1) (inl a2)
+    | InrSumEqv : forall b1 b2, b1 ~= b2 -> sum_eqv (inr b1) (inr b2).
 
   Global Instance sum_Eqv : Eqv (A+B) := { eqv := sum_eqv }.
 
@@ -69,8 +69,8 @@ Section EqvDec.
 
   Definition sum_eqv_dec (ab1:A+B) (ab2:A+B) : bool :=
     match ab1, ab2 with
-    | inl a1, inl a2 => a1 '~=! a2
-    | inr b1, inr b2 => b1 '~=! b2
+    | inl a1, inl a2 => a1 ~=! a2
+    | inr b1, inr b2 => b1 ~=! b2
     | _, _ => false
     end.
 
@@ -137,8 +137,8 @@ End Show.
 
 Section Type_Monoid.
   Definition sum_Type_Monoid : Monoid Type :=
-    {| Monoid_Semigroup := {| gtimes := sum |}
-     ; gunit := (Empty_set:Type)
+    {| monoid_times := sum
+     ; monoid_unit := (Empty_set:Type)
     |}.
 End Type_Monoid.
 
@@ -152,7 +152,7 @@ Section sum_t_Monad.
   Definition run_sum_t {B} : sum_t A m B -> m (A+B) := un_sum_t.
 
   Section Monad.
-    Definition sum_t_ret {B} : B -> sum_t A m B := SumT <.> ret <.> inr.
+    Definition sum_t_ret {B} : B -> sum_t A m B := SumT '.' ret '.' inr.
     Definition sum_t_bind {B C}
         (bMM:sum_t A m B) (f:B -> sum_t A m C) : sum_t A m C :=
       SumT $ begin
@@ -169,7 +169,7 @@ Section sum_t_Monad.
   End Monad.
 
   Section MonadError.
-    Definition sum_t_throw {B} : A -> sum_t A m B := SumT <.> ret <.> inl.
+    Definition sum_t_throw {B} : A -> sum_t A m B := SumT '.' ret '.' inl.
     Definition sum_t_catch {B}
         (bMM:sum_t A m B) (h:A -> sum_t A m B) : sum_t A m B :=
       SumT $ begin
@@ -215,8 +215,8 @@ Section sum_t_Monad.
     Definition sum_t_mfix {B C}
         (ff:(B -> sum_t A m C) -> B -> sum_t A m C) (b:B) : sum_t A m C :=
       let ff' (f':B -> m (A+C)) :=
-        let f := SumT <.> f' in
-        un_sum_t <.> ff f
+        let f := SumT '.' f' in
+        un_sum_t '.' ff f
       in
       SumT $ mfix ff' b.
     Global Instance sum_t_MonadFix : MonadFix (sum_t A m) :=
@@ -226,10 +226,10 @@ End sum_t_Monad.
 
 Instance sum_sum_t_FunctorInjection {A}
     : FunctorInjection (sum A) (sum_t A identity) :=
-  { finject := fun _ => SumT <.> Identity }.
+  { finject := fun _ => SumT '.' Identity }.
 Instance sum_t_sum_FunctorInjection {A}
     : FunctorInjection (sum_t A identity) (sum A) :=
-  { finject := fun _ => run_identity <.> run_sum_t }.
+  { finject := fun _ => run_identity '.' run_sum_t }.
 Instance sum_Monad {A} : Monad (sum A) := iso_Monad (sum_t A identity).
 Instance sum_MonadPlus {A} {AM:Monoid A} : MonadPlus (sum A) :=
   iso_MonadPlus (sum_t A identity).
