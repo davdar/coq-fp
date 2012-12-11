@@ -38,7 +38,7 @@ Section EqDec.
   Context {A B} {AED:EqDec A} {BED:EqDec B}.
 
   Definition prod_eq_dec (ab1:A*B) (ab2:A*B) : bool :=
-    let '((a1,b1),(a2,b2)) := (ab1,ab2) in a1 '=! a2 && b1 '=! b2.
+    let '((a1,b1),(a2,b2)) := (ab1,ab2) in a1 =! a2 && b1 =! b2.
   Global Instance prod_EqDec : EqDec (A*B) := { eq_dec := prod_eq_dec }.
 
   Context {ARDC:RelDecCorrect (T:=A) eq_dec eq}.
@@ -46,17 +46,6 @@ Section EqDec.
 
   Global Instance prod_Eq_RelDecCorrect : RelDecCorrect (T:=A*B) eq_dec eq.
   Admitted.
-  (*
-  Proof. constructor ; intros x y ;
-      destruct x ; destruct y ; simpl in * ; unfold prod_eq_dec ;
-      constructor ; intros.
-    apply andb_true_iff in H ; destruct H.
-      assert (a=a0) ; [ apply rel_dec_correct | subst ] ; auto.
-      assert (b=b0) ; [ apply rel_dec_correct | subst ] ; auto.
-    inversion H ; subst ; clear H.
-    apply andb_true_iff ; constructor ; apply rel_dec_correct ; reflexivity.
-  Qed.
-  *)
 End EqDec.
 
 Section Eqv.
@@ -64,7 +53,7 @@ Section Eqv.
 
   Inductive prod_eqv : A*B -> A*B -> Prop :=
     ProdEqv : forall a1 b1 a2 b2,
-      a1 '~= a2 -> b1 '~= b2 -> prod_eqv (a1,b1) (a2,b2).
+      a1 ~= a2 -> b1 ~= b2 -> prod_eqv (a1,b1) (a2,b2).
 
   Global Instance prod_Eqv : Eqv (A*B) := { eqv := prod_eqv }.
 
@@ -89,7 +78,7 @@ Section EqvDec.
   Context {A B} {AED:EqvDec A} {BED:EqvDec B}.
 
   Definition prod_eqv_dec (ab1:A*B) (ab2:A*B) : bool :=
-    let '((a1,b1),(a2,b2)) := (ab1,ab2) in a1 '~=! a2 && b1 '~=! b2.
+    let '((a1,b1),(a2,b2)) := (ab1,ab2) in a1 ~=! a2 && b1 ~=! b2.
 
   Global Instance prod_EqvDec : EqvDec (A*B) := { eqv_dec := prod_eqv_dec }.
 
@@ -98,25 +87,16 @@ Section EqvDec.
 
   Global Instance prod_Eqv_RelDecCorrect : RelDecCorrect (T:=A*B) eqv_dec eqv.
   Admitted.
-  (*
-  Proof. constructor ; destruct x ; destruct y ; constructor ; intros ;
-      simpl in * ; unfold prod_eqv_dec in *.
-    apply andb_true_iff in H ; destruct H.
-      constructor ; apply rel_dec_correct ; auto.
-    inversion H ; subst ; clear H.
-      apply andb_true_iff ; constructor ; apply rel_dec_correct ; auto.
-  Qed.
-  *)
 End EqvDec.
 
 Section Ord.
   Context {A B} {AL:Ord A} {BL:Ord B}.
 
   Inductive prod_lt : A*B -> A*B -> Prop :=
-    | FstLte : forall a1 b1 a2 b2,
-        a1 '< a2 -> prod_lt (a1,b1) (a2,b2)
     | SndLte : forall a1 b1 a2 b2,
-        a1 '~= a2 -> b1 '< b2 -> prod_lt (a1,b1) (a2,b2).
+        (a1 ~= a2) -> (b1 < b2) -> prod_lt (a1,b1) (a2,b2)
+    | FstLte : forall a1 b1 a2 b2,
+        (a1 < a2) -> prod_lt (a1,b1) (a2,b2).
 
   Global Instance prod_Ord : Ord (A*B) := { lt := prod_lt }.
 End Ord.
@@ -207,13 +187,17 @@ Section Traversable.
     { tsequence := @prod_sequence_fst _ }.
 
   Definition sequence_fst {A B} {u} {uA:Applicative u} : (u A*B) -> u (A*B) :=
-    fmap un_on_fst <.> tsequence <.> OnFst.
+    fmap un_on_fst '.' tsequence '.' OnFst.
 End Traversable.
 
 Section Type_Monoid.
+  Definition prod_Set_Monoid : Monoid Set :=
+    {| monoid_times := (prod:Set -> Set -> Set)
+     ; monoid_unit := unit
+    |}.
   Definition prod_Type_Monoid : Monoid Type :=
-    {| Monoid_Semigroup := {| gtimes := prod |}
-     ; gunit := (unit:Type)
+    {| monoid_times := prod
+     ; monoid_unit := (unit:Type)
     |}.
 End Type_Monoid.
 
@@ -228,8 +212,8 @@ Section Lens.
       let '(a,b) := p in
       Store (fun b => (a,b)) b.
 
-  Global Instance prod_HasLens_fst {A B S} {HL:HasLens A S} : HasLens (A*B) S :=
-    { get_lens := fst_lens '.' get_lens S }.
+  Global Instance prod_HasLens_fst {A B} : HasLens (A*B) A :=
+    { get_lens := fst_lens }.
   Global Instance prod_HasLens_snd {A B} : HasLens (A*B) B :=
     { get_lens := snd_lens }.
 End Lens.

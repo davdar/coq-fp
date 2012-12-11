@@ -1,7 +1,6 @@
 Require Export FP.Data.StringPre.
 
-Require Import FP.Data.FunctionPre.
-
+Require Import FP.Data.Function.
 Require Import FP.Data.Ascii.
 Require Import FP.Data.PrettyI.
 Require Import FP.Data.List.
@@ -74,8 +73,8 @@ End Show.
 
 Section Monoid.
   Global Instance string_Monoid : Monoid string :=
-    { Monoid_Semigroup := {| gtimes := String.append |}
-    ; gunit := EmptyString
+    { monoid_times := String.append
+    ; monoid_unit := EmptyString
     }.
 End Monoid.
 
@@ -103,4 +102,4 @@ Section Buildable.
     { mbuild := @string_mbuild }.
 End Buildable.
 
-Instance N_Pretty : Pretty N := { pretty := text_d <.> show }.
+Instance N_Pretty : Pretty N := { pretty := text_d '.' show }.

@@ -13,11 +13,8 @@ Module MonoidNotation.
 End MonoidNotation.
 Import MonoidNotation.
 
-Section Groupish.
-  Context {T} {T_GTimes : GTimes T} {T_GInv : GInv T}.
-  Definition gdiv_from_inv (t1:T) (t2:T) : T :=
-    t1 ** ginv t2.
-End Groupish.
+Definition div_from_inv {T} (times:T -> T -> T) (inv:T -> T) (t1:T) (t2:T) : T :=
+  times t1 (inv t2).
 
 Class Semigroup T :=
   { semigroup_times : T -> T -> T }.
@@ -38,9 +35,9 @@ Section DivSemigroup.
     { gdiv := div_semigroup_div }.
 End DivSemigroup.
 
-Class Monoid t :=
-  { monoid_unit : t
-  ; monoid_times : t -> t -> t
+Class Monoid T :=
+  { monoid_times : T -> T -> T
+  ; monoid_unit : T
   }.
 Section Monoid.
   Context {T} {T_Monoid : Monoid T}.
@@ -49,10 +46,27 @@ Section Monoid.
   Global Instance Monoid_GUnit : GUnit T :=
     { gunit := monoid_unit }.
 End Monoid.
-Class InvMonoid t :=
-  { inv_monoid_unit : t
-  ; inv_monoid_times : t -> t -> t
-  ; inv_monoid_inv : t -> t
+
+Class DivMonoid T :=
+  { div_monoid_times : T -> T -> T
+  ; div_monoid_unit : T
+  ; div_monoid_div : T -> T -> T
+  }.
+Section DivMonoid.
+  Context {T} {T_DivMonoid : DivMonoid T}.
+  Global Instance DivMonoid_Monoid : Monoid T :=
+    { monoid_times := div_monoid_times
+    ; monoid_unit := div_monoid_unit
+    }.
+  Global Instance DivMonoid_GDiv : GDiv T :=
+    { gdiv := div_monoid_div }.
+End DivMonoid.
+
+Class InvMonoid T :=
+  { inv_monoid_unit : T
+  ; inv_monoid_times : T -> T -> T
+  ; inv_monoid_inv : T -> T
+  ; inv_monoid_div : T -> T -> T
   }.
 Section InvMonoid.
   Context {T} {T_InverseMonoid : InvMonoid T}.
@@ -63,6 +77,6 @@ Section InvMonoid.
   Global Instance InvMonoid_GInv : GInv T :=
     { ginv := inv_monoid_inv }.
   Global Instance InvMonoid_GDiv : GDiv T :=
-    { gdiv := gdiv_from_inv }.
+    { gdiv := inv_monoid_div }.
 End InvMonoid.
                                       

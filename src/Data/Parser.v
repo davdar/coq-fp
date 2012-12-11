@@ -137,7 +137,7 @@ Instance parser_MonadFix {T m} {M:Monad m } {MF:MonadFix m}
 
 Definition parser T := parser_t T fuel.
 Definition run_parser {T A} (n:N) (ts:list T) : parser T A -> option (result T A) :=
-  run_fuel n <.> run_parser_t ts.
+  run_fuel n '.' run_parser_t ts.
 
 Fixpoint best_lex' {T A} (results:list (result T A)) : option (A * N * list T) :=
   match results with
@@ -147,7 +147,7 @@ Fixpoint best_lex' {T A} (results:list (result T A)) : option (A * N * list T) :
       match best_lex' rs with
       | None => (a, n, ts)
       | Some (a', n', ts') =>
-          if n '>=! n' then
+          if n >=! n' then
             (a, n, ts)
           else
             (a', n', ts')
@@ -155,7 +155,7 @@ Fixpoint best_lex' {T A} (results:list (result T A)) : option (A * N * list T) :
   end.
 
 Definition best_lex {T A} : list (result T A) -> option (A * list T) :=
-  fmap (fun x => let '(a, _, ts) := x in (a, ts)) <.> best_lex'.
+  fmap (fun x => let '(a, _, ts) := x in (a, ts)) '.' best_lex'.
 
 Definition lex {T m A} {M:Monad m} {MF:MonadFix m} (token_ps:list (parser_t T m A))
     : list T -> m (list A * list T) :=

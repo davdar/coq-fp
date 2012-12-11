@@ -1,6 +1,6 @@
 Require Import FP.Data.StringPre.
-Require Import FP.Data.FunctionPre.
 
+Require Import FP.Data.Function.
 Require Import FP.Data.Identity.
 Require Import FP.Data.Sum.
 Require Import FP.Data.Unit.
@@ -103,7 +103,7 @@ Arguments un_option_t {m A} _.
 
 Section MonadTrans.
   Definition option_t_lift {m} {M:Monad m} {A} : m A -> option_t m A :=
-    OptionT <.> fmap Some.
+    OptionT '.' fmap Some.
   Global Instance option_t_MonadTrans : MonadTrans option_t :=
     { lift := @option_t_lift }.
 End MonadTrans.
@@ -151,10 +151,10 @@ Section option_t_Monad.
   Section MonadError.
     Context {E} {ME:MonadError E m}.
 
-    Definition option_t_throw {A} : E -> option_t m A := lift <.> throw.
+    Definition option_t_throw {A} : E -> option_t m A := lift '.' throw.
     Definition option_t_catch {A}
         (aMM:option_t m A) : (E -> option_t m A) -> option_t m A :=
-      OptionT <.> catch (un_option_t aMM) <.> compose un_option_t.
+      OptionT '.' catch (un_option_t aMM) '.' compose un_option_t.
     Global Instance option_t_MonadError : MonadError E (option_t m) :=
       { throw := @option_t_throw
       ; catch := @option_t_catch
@@ -166,7 +166,7 @@ Section option_t_Monad.
 
     Definition option_t_ask : option_t m R := lift ask.
     Definition option_t_local {A} (f:R -> R) : option_t m A -> option_t m A :=
-      OptionT <.> local f <.> un_option_t.
+      OptionT '.' local f '.' un_option_t.
     Global Instance option_t_MonadReader : MonadReader R (option_t m) :=
       { ask := option_t_ask
       ; local := @option_t_local
@@ -187,10 +187,10 @@ End option_t_Monad.
 
 Instance option_option_t_FunctorInjection
     : FunctorInjection option (option_t identity) :=
-  { finject := fun _ => OptionT <.> Identity}.
+  { finject := fun _ => OptionT '.' Identity}.
 Instance option_t_option_FunctorInjection
     : FunctorInjection (option_t identity) option :=
-  { finject := fun _ => un_identity <.> un_option_t }.
+  { finject := fun _ => un_identity '.' un_option_t }.
 Instance option_Monad : Monad option := iso_Monad (option_t identity).
 Instance option_MonadPlus : MonadPlus option := iso_MonadPlus (option_t identity).
 

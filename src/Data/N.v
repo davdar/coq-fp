@@ -1,8 +1,8 @@
 Require Export FP.Data.NPre.
 
 Require Import FP.Data.AsciiPre.
-Require Import FP.Data.FunctionPre.
 
+Require Import FP.Data.Function.
 Require Import FP.Data.Nat.
 Require Import FP.Data.Positive.
 Require Import FP.Data.PrettyI.
@@ -51,7 +51,7 @@ End Ord.
 
 Section OrdDec.
   Definition N_ord_dec (z1:N) (z2:N) : comparison :=
-    if z1 '=! z2 then Eq
+    if z1 =! z2 then Eq
     else if BinNat.N.ltb z1 z2 then Lt
     else Gt.
   Global Instance N_OrdDec : OrdDec N := { ord_dec := N_ord_dec }.
@@ -65,26 +65,27 @@ Section Lattice.
 End Lattice.
 
 Section Show.
-  Definition N_show {R} {SR:ShowResult R} : N -> R := show <.> convert (to:=nat).
+  Definition N_show {R} {SR:ShowResult R} : N -> R := show '.' convert (to:=nat).
   Global Instance N_Show : Show N := { show := @N_show }.
 End Show.
 
 Section Additive.
-  Definition additive_N_Monoid : Monoid N :=
-    {| Monoid_Semigroup := {| gtimes := BinNat.N.add |}
-     ; gunit := BinNat.N.zero
+  Definition additive_N_DivMonoid : DivMonoid N :=
+    {| div_monoid_times := BinNat.N.add
+     ; div_monoid_unit := BinNat.N.zero
+     ; div_monoid_div := BinNat.N.sub
     |}.
-  Global Instance Additive_N : Additive N :=
-    { Additive_Monoid := additive_N_Monoid }.
+  Global Instance MinusAdditive_N : MinusAdditive N :=
+    { minus_additive_DivMonoid := additive_N_DivMonoid }.
 End Additive.
 
 Section Multiplicative.
   Definition multiplicative_N_Monoid : Monoid N :=
-    {| Monoid_Semigroup := {| gtimes := BinNat.N.mul |}
-     ; gunit := BinNat.N.one 
+    {| monoid_times := BinNat.N.mul
+     ; monoid_unit := BinNat.N.one 
     |}.
   Global Instance Multiplicative_N : Multiplicative N :=
-    { Multiplicative_Monoid := multiplicative_N_Monoid }.
+    { multiplicative_Monoid := multiplicative_N_Monoid }.
 End Multiplicative.
 
 Definition N_cofold {m} {M:Comonad m} {A} (f:N -> m A -> A) (aM:m A) (n:N) : A :=

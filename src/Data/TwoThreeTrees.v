@@ -177,13 +177,13 @@ Module TwoThreeTrees.
       match t with
       | Null_t => inl c
       | Two_t tl em tr =>
-          match k '<=>! fst em with
+          match k <=>! fst em with
           | Lt => locate k tl $ TwoLeftHole_c em tr c
           | Eq => inr (em, TwoHole_l tl tr c)
           | Gt => locate k tr $ TwoRightHole_c tl em c
           end
       | Three_t tl el tm er tr =>
-          match k '<=>! fst el, k '<=>! fst er with
+          match k <=>! fst el, k <=>! fst er with
           | Lt, _ => locate k tl $ ThreeLeftHole_c el tm er tr c
           | Eq, _ => inr (el, ThreeLeftHole_l tl tm er tr c)
           | Gt, Lt => locate k tm $ ThreeMiddleHole_c tl el er tr c
@@ -625,18 +625,18 @@ Module TwoThreeTrees.
 
   Definition map {K V W} (f:V -> W) : tree K V -> tree K W := map_with (const f).
 
-  Definition size {K V} : tree K V -> N := length <.> to_list.
+  Definition size {K V} : tree K V -> N := length '.' to_list.
 
   Definition reduce {K V} {M:Monoid V} : tree K V -> V :=
-    gproductl <.> List.map snd <.> to_list.
+    gproductl '.' List.map snd '.' to_list.
 
   Definition remove_unsafe {K} {kO:OrdDec K} {V}
       : K -> tree K V -> tree K V * option V :=
-    from_option (empty, None) <..> remove .
+    from_option (empty, None) '..' remove .
 
   Definition difference_unsafe {K} {kO:OrdDec K} {V W}
       : tree K V -> tree K W -> tree K V :=
-    from_option empty <..> difference.
+    from_option empty '..' difference.
 
   Definition set_map {A B} {bO:OrdDec B} (f:A -> B) (t:tree A unit) : tree B unit :=
     let fld (t:tree B unit) (e:A*unit) : tree B unit :=
@@ -689,13 +689,13 @@ Module TwoThreeTrees.
   Definition set_size {A} : tree A unit -> N := size.
 
   Definition set_reduce {A} {M:Monoid A} : tree A unit -> A :=
-    gproductl <.> List.map fst <.> to_list.
+    gproductl '.' List.map fst '.' to_list.
 
   Definition set_from_list {A} {aO:OrdDec A} : list A -> tree A unit :=
-    from_list <.> fmap (fun a => (a, tt)).
+    from_list '.' fmap (fun a => (a, tt)).
 
   Definition set_to_list {A} : tree A unit -> list A :=
-    fmap fst <.> to_list.
+    fmap fst '.' to_list.
 
   Definition set_cofold {A} {m} {M:Comonad m} {B} (f:A -> m B -> B) : m B -> tree A unit -> B :=
     tree_cofold (fun att bM => let (a,tt) := att in f a bM).
@@ -722,7 +722,7 @@ Module TwoThreeTrees.
 
   Definition set_sequence {u} {uA:Applicative u} {A} {aO:OrdDec A}
       : tree (u A) unit -> u (tree A unit) :=
-    fmap set_from_list <.> tsequence <.> set_to_list.
+    fmap set_from_list '.' tsequence '.' set_to_list.
 
   Definition set_show {A} {AS:Show A} {R} {SR:ShowResult R} (t:tree A unit) : R :=
     let show_inner :=

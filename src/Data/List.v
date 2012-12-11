@@ -2,15 +2,16 @@ Require Export FP.Data.ListPre.
 
 Require Import FP.Data.AsciiPre.
 Require Import FP.Data.BoolPre.
-Require Import FP.Data.FunctionPre.
 Require Import FP.Data.StringPre.
 
+Require Import FP.Data.Function.
 Require Import FP.Data.N.
 Require Import FP.Data.Option.
 Require Import FP.Data.State.
 Require Import FP.Data.Z.
 Require Import FP.Relations.RelDec.
 Require Import FP.Structures.Additive.
+Require Import FP.Structures.Alternative.
 Require Import FP.Structures.Applicative.
 Require Import FP.Structures.Comonad.
 Require Import FP.Structures.EqDec.
@@ -60,7 +61,7 @@ Section EqDec.
   Fixpoint list_eq_dec (xL:list A) (yL:list A) : bool :=
     match xL, yL with
     | nil, nil => true
-    | x::xL', y::yL' => x '=! y && list_eq_dec xL' yL'
+    | x::xL', y::yL' => x =! y && list_eq_dec xL' yL'
     | _, _ => false
     end.
 
@@ -77,7 +78,7 @@ Section Eqv.
 
   Inductive list_eqv : list A -> list A -> Prop :=
     | NilEqv : list_eqv nil nil
-    | ConsEqv : forall x y xL yL, x '~= y -> list_eqv xL yL -> list_eqv (x::xL) (y::yL).
+    | ConsEqv : forall x y xL yL, x ~= y -> list_eqv xL yL -> list_eqv (x::xL) (y::yL).
 
   Global Instance list_Eqv : Eqv (list A) := { eqv := list_eqv }.
 
@@ -93,7 +94,7 @@ Section EqvDec.
   Fixpoint list_eqv_dec (xL:list A) (yL:list A) : bool :=
     match xL, yL with
     | nil, nil => true
-    | x::xL', y::yL' => x '~=! y && list_eqv_dec xL' yL'
+    | x::xL', y::yL' => x ~=! y && list_eqv_dec xL' yL'
     | _, _ => false
     end.
 
@@ -112,9 +113,9 @@ Section Ord.
     | NilLte : forall x xL,
         list_lt nil (x::xL)
     | HeadLte : forall x y xL yL,
-        x '< y -> list_lt (x::xL) (y::yL)
+        x < y -> list_lt (x::xL) (y::yL)
     | TailLte : forall x y xL yL,
-        x '~= y -> list_lt xL yL -> list_lt (x::xL) (y::yL).
+        x ~= y -> list_lt xL yL -> list_lt (x::xL) (y::yL).
 
   Global Instance list_Ord : Ord (list A) := { lt := list_lt }.
 End Ord.
@@ -212,9 +213,9 @@ Section Pretty.
 End Pretty.
 
 Section Monoid.
-  Global Instance list_Monoid : forall {A}, Monoid (list A) :=
-    { Monoid_Semigroup := {| gtimes := app |}
-    ; gunit := nil
+  Global Instance list_Monoid {A} : Monoid (list A) :=
+    { monoid_times := app
+    ; monoid_unit := nil
     }.
 End Monoid.
 
@@ -282,7 +283,7 @@ Fixpoint unzip {A B} (xys:list (A*B)) : list A * list B :=
 Fixpoint nth {A} (n:N) (xs:list A) : option A :=
   match xs with
   | [] => None
-  | x::xs => if n '=! 0 then Some x else nth (n `BinNat.N.sub` 1) xs
+  | x::xs => if n =! 0 then Some x else nth (n - 1) xs
   end.
 
 Section Monad.
@@ -329,7 +330,7 @@ Section GeneralizedList.
 
   Definition lookup {T A B} {E:EqvDec A} {TF:Foldable (A*B) T} (a:A)
       : T -> option B :=
-    fmap snd <.> select (fun (p:A*B) => fst p '~=! a).
+    fmap snd '.' select (fun (p:A*B) => fst p ~=! a).
   
   Definition cat_options {T A U} {TF:Foldable (option A) T} {UB:Buildable A U}
       (t:T) : U :=

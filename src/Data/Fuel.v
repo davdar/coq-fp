@@ -23,16 +23,16 @@ Arguments un_fuel_t {m A} _.
 
 Section MonadTrans.
   Definition fuel_t_lift {m} {M:Monad m} {A} : m A -> fuel_t m A :=
-    FuelT <.> lift (m:=option_t m) <.> lift (m:=m).
+    FuelT '.' lift (m:=option_t m) '.' lift (m:=m).
 End MonadTrans. 
 
 Section fuel_t_Monad.
   Context {m} {M:Monad m}.
 
   Definition mk_fuel_t {A} : (N -> m (option A)) -> fuel_t m A :=
-    FuelT <.> ReaderT <.> compose OptionT.
+    FuelT '.' ReaderT '.' compose OptionT.
   Definition run_fuel_t {A} (n:N) : fuel_t m A -> m (option A) :=
-    run_option_t <.> run_reader_t n <.> un_fuel_t.
+    run_option_t '.' run_reader_t n '.' un_fuel_t.
   Definition fun_fuel_t {A} : fuel_t m A -> N -> m (option A) :=
     flip run_fuel_t.
 
@@ -77,6 +77,6 @@ End fuel_t_Monad.
 
 Definition fuel := fuel_t identity.
 Definition mk_fuel {A} : (N -> option A) -> fuel A :=
-  mk_fuel_t <.> compose Identity.
+  mk_fuel_t '.' compose Identity.
 Definition run_fuel {A} : N -> fuel A -> option A :=
-  compose run_identity <.> run_fuel_t.
+  compose run_identity '.' run_fuel_t.

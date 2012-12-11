@@ -1,5 +1,5 @@
 Require Import FP.Structures.Comonad.
-Require Import FP.Data.FunctionPre.
+Require Import FP.Data.Function.
 Require Import FP.Data.Identity.
 Require Import FP.Data.Susp.
 Require Import FP.Structures.Monad.
@@ -26,7 +26,7 @@ Definition pinc {m} {M:Monad m} {T} {P:Peano T} {MS:MonadState T m} : m T :=
 Definition Coloop m T {A} := (m A -> A) -> m A -> T -> A.
 
 Definition mk_loop {T A} (coloop:Coloop identity T) (f:A -> A) (a:A) : T -> A :=
-  coloop (f <.> run_identity) (Identity a).
+  coloop (f '.' run_identity) (Identity a).
 
 Definition mk_mloop {m} {M:Monad m} {T A}
     (coloop:Coloop identity T) (f:A -> m A) (a:A) : T -> m A :=

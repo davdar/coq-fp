@@ -3,7 +3,7 @@ Require Peano.
 Require Compare_dec.
 
 Require Import FP.Data.AsciiPre.
-Require Import FP.Data.FunctionPre.
+Require Import FP.Data.Function.
 
 Require Import FP.Relations.RelDec.
 Require Import FP.Structures.Additive.
@@ -63,8 +63,8 @@ Section Lattice.
 End Lattice.
 
 Section Show.
-  Require Import Coq.Program.Wf.
-  Require Import Omega.
+  Require Coq.Program.Wf.
+  Require Omega.
 
   Section nat_show.
 
@@ -100,20 +100,22 @@ Section Show.
 End Show.
 
 Section Additive.
-  Definition nat_additive_Monoid : Monoid nat :=
-    {| Monoid_Semigroup := {| gtimes := Peano.plus |}
-     ; gunit := O
+  Definition nat_additive_DivMonoid : DivMonoid nat :=
+    {| div_monoid_times := Peano.plus
+     ; div_monoid_unit := O
+     ; div_monoid_div := Peano.minus
     |}.
-  Global Instance nat_Additive : Additive nat :=
-    { Additive_Monoid := nat_additive_Monoid }.
+  Global Instance nat_MinusAdditive : MinusAdditive nat :=
+    { minus_additive_DivMonoid := nat_additive_DivMonoid }.
 End Additive.
 Section Multiplicative.
-  Definition nat_multiplicative_Monoid : Monoid nat :=
-    {| Monoid_Semigroup := {| gtimes := Peano.mult |}
-     ; gunit := S O
+  Definition nat_multiplicative_DivMonoid : DivMonoid nat :=
+    {| div_monoid_times := Peano.mult
+     ; div_monoid_unit := S O
+     ; div_monoid_div := NPeano.div
     |}.
-  Global Instance nat_Multiplicative : Multiplicative nat :=
-    { Multiplicative_Monoid := nat_multiplicative_Monoid }.
+  Global Instance nat_DivMultiplicative : DivMultiplicative nat :=
+    { div_multiplicative_DivMonoid := nat_multiplicative_DivMonoid }.
 End Multiplicative.
 
 Fixpoint nat_cofold {m} {C:Comonad m} {A} (f:nat -> m A -> A) (aM:m A) (n:nat) : A :=

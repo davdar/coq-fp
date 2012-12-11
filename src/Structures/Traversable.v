@@ -1,7 +1,7 @@
-Require Import Structures.Applicative.
-Require Import Data.Function.
-Require Import Structures.Functor.
-Require Import Structures.FunctorP.
+Require Import FP.Structures.Applicative.
+Require Import FP.Data.Function.
+Require Import FP.Structures.Functor.
+Require Import FP.Structures.FunctorP.
 
 Import FunctionNotation.
 Import FunctorNotation.
@@ -10,12 +10,12 @@ Class Traversable t :=
   { tsequence : forall {u} {uA:Applicative u} {A}, t (u A) -> u (t A) }.
 
 Definition tmap {t u} {tT:Traversable t} {tF:Functor t} {uA:Applicative u} {A B}
-  (f:A -> u B) : t A -> u (t B) := tsequence <.> fmap f.
+  (f:A -> u B) : t A -> u (t B) := tsequence '.' fmap f.
 
 Definition tsequence2 {t u v}
     {tF:Functor t} {tT:Traversable t} {uT:Traversable u} {vA:Applicative v} {A}
     : t (u (v A)) -> v (t (u A)) :=
-  tsequence <.> fmap tsequence.
+  tsequence '.' fmap tsequence.
 
 Definition tforeach {t u} {T:Traversable t} {F:Functor t} {uA:Applicative u} {A B} :
     t A -> (A -> u B) -> u (t B) := flip tmap.

@@ -1,7 +1,7 @@
-Require Import Data.FunctionPre.
-Require Import Structures.Monad.
-Require Import Structures.MonadTrans.
-Require Import Structures.Functor.
+Require Import FP.Data.Function.
+Require Import FP.Structures.Monad.
+Require Import FP.Structures.MonadTrans.
+Require Import FP.Structures.Functor.
 
 Import FunctionNotation.
 Import MonadNotation.
@@ -39,7 +39,7 @@ Instance kon_Continuation {m} {M:Monad m} : Continuation (kon_t m) :=
   { callcc :=
       fun A (kk:forall {R}, (A -> kon_t m R) -> kon_t m R) =>
         KonT $ fun R (k:A -> m R) =>
-          run_kon_t $ kk $ lift <.> k
+          run_kon_t $ kk $ lift '.' k
   }.
 
 Class Cont3 m :=
@@ -68,7 +68,7 @@ Instance kon_Cont3 {m} {M:Monad m} : Cont3 (kon_t3 m) :=
   { callcc3 :=
       fun A R (kk:(A -> kon_t3 m R R) -> kon_t3 m R R) =>
         KonT3 $ fun (k:A -> m R) =>
-          un_kon_t3 (kk (kon_t3_lift <.> k)) ret
+          un_kon_t3 (kk (kon_t3_lift '.' k)) ret
   }.
   
 
@@ -119,7 +119,7 @@ Instance kon_Cont {R} {m} {M:Monad m} : Cont R (kon_t' R m) :=
   { callcc' :=
       fun A (kk:forall {R'}, (R -> kon_t' R m R') -> (A -> kon_t' R m R) -> kon_t' R m R') =>
         KonT' $ fun R' (k_out:R -> m R') (k_in:A -> m R) =>
-          un_kon_t' (kk ret (lift <.> k_in)) k_out ret
+          un_kon_t' (kk ret (lift '.' k_in)) k_out ret
   }.
 
 Class Cont2 m :=
@@ -150,7 +150,7 @@ Instance Kon_Cont2 {m} {M:Monad m} : Cont2 (kon_t2 m) :=
   { callcc2 :=
       fun R A (kk:forall {R'}, (R -> kon_t2 m R R') -> (A -> kon_t2 m R R) -> kon_t2 m R R') =>
         KonT2 $ fun R' (k_out:R -> m R') (k_in:A -> m R) =>
-          un_kon_t2 (kk ret (lift_kon_t2 <.> k_in)) k_out ret
+          un_kon_t2 (kk ret (lift_kon_t2 '.' k_in)) k_out ret
   ; map_kont :=
       fun R R' A (f:R -> R') (g:R' -> R) (aMK:kon_t2 m R A) =>
         KonT2 $ fun R'' (k_out:R' -> m R'') (k_in:A -> m R') =>

@@ -35,8 +35,8 @@ Section state_t.
   Context {S:Type} {m} {M:Monad m}.
 
   Definition run_state_t {A} : S -> state_t S m A -> m (A * S) := flip un_state_t.
-  Definition eval_state_t {A} : S -> state_t S m A -> m A := fmap fst <..> run_state_t.
-  Definition exec_state_t {A} : S -> state_t S m A -> m S := fmap snd <..> run_state_t.
+  Definition eval_state_t {A} : S -> state_t S m A -> m A := fmap fst '..' run_state_t.
+  Definition exec_state_t {A} : S -> state_t S m A -> m S := fmap snd '..' run_state_t.
 
   Definition state_t_ret {A} (a:A) : state_t S m A := StateT $ fun s => ret (a,s).
   Definition state_t_bind {A B} (aM:state_t S m A) (f:A -> state_t S m B) : state_t S m B :=
@@ -62,10 +62,10 @@ Section state_t.
   Section MonadError.
     Context {E} {ME:MonadError E m}.
 
-    Definition state_t_throw {A} : E -> state_t S m A := lift <.> throw.
+    Definition state_t_throw {A} : E -> state_t S m A := lift '.' throw.
     Definition state_t_catch {A}
         (aM:state_t S m A) (h:E -> state_t S m A) : state_t S m A :=
-      StateT $ fun s => catch (un_state_t aM s) $ run_state_t s <.> h.
+      StateT $ fun s => catch (un_state_t aM s) $ run_state_t s '.' h.
     Global Instance state_t_MonadError : MonadError E (state_t S m) :=
       { throw := @state_t_throw
       ; catch := @state_t_catch
@@ -93,6 +93,6 @@ Section state_t.
 End state_t.
 
 Definition state S := state_t S identity.
-Definition run_state {S A} : S -> state S A -> (A*S) := run_identity <..> run_state_t.
-Definition eval_state {S A} : S -> state S A -> A := run_identity <..> eval_state_t.
-Definition exec_state {S A} : S -> state S A -> S := run_identity <..> exec_state_t.
+Definition run_state {S A} : S -> state S A -> (A*S) := run_identity '..' run_state_t.
+Definition eval_state {S A} : S -> state S A -> A := run_identity '..' eval_state_t.
+Definition exec_state {S A} : S -> state S A -> S := run_identity '..' exec_state_t.

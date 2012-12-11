@@ -2,8 +2,8 @@ Require BinNums.
 Require BinPos.
 
 Require Import FP.Data.AsciiPre.
-Require Import FP.Data.FunctionPre.
 
+Require Import FP.Data.Function.
 Require Import FP.Data.Nat.
 Require Import FP.Relations.RelDec.
 Require Import FP.Structures.Additive.
@@ -59,7 +59,7 @@ End Ord.
 
 Section OrdDec.
   Definition pos_ord_dec (z1:positive) (z2:positive) : comparison :=
-    if z1 '=! z2 then Eq
+    if z1 =! z2 then Eq
     else if BinPos.Pos.ltb z1 z2 then Lt
     else Gt.
   Global Instance pos_OrdDec : OrdDec positive := { ord_dec := pos_ord_dec }.
@@ -73,24 +73,26 @@ Section Lattice.
 End Lattice.
 
 Section Show.
-  Definition pos_show {R} {SR:ShowResult R} : positive -> R := show <.> convert (to:=nat).
+  Definition pos_show {R} {SR:ShowResult R} : positive -> R := show '.' convert (to:=nat).
   Global Instance pos_Show : Show positive := { show := @pos_show }.
 End Show.
 
 Section Semiadditive.
-  Definition pos_additive_Semigroup : Semigroup positive :=
-    {| gtimes := BinPos.Pos.add |}.
-  Global Instance Semiadditive_N : Semiadditive positive :=
-    { Semiadditive_Semigroup := pos_additive_Semigroup }.
+  Definition pos_additive_DivSemigroup : DivSemigroup positive :=
+    {| div_semigroup_times := BinPos.Pos.add
+     ; div_semigroup_div := BinPos.Pos.sub
+    |}.
+  Global Instance MinusSemiadditive_N : MinusSemiadditive positive :=
+    { minus_semiadditive_DivSemigroup := pos_additive_DivSemigroup }.
 End Semiadditive.
 
 Section Multiplicative.
   Definition multiplicative_pos_Monoid : Monoid positive :=
-    {| Monoid_Semigroup := {| gtimes := BinPos.Pos.mul |}
-     ; gunit := BinNums.xH
+    {| monoid_times := BinPos.Pos.mul
+     ; monoid_unit := BinNums.xH
     |}.
   Global Instance Multiplicative_N : Multiplicative positive :=
-    { Multiplicative_Monoid := multiplicative_pos_Monoid }.
+    { multiplicative_Monoid := multiplicative_pos_Monoid }.
 End Multiplicative.
 
 Fixpoint pos_cofold' {m} {M:Comonad m} {A}

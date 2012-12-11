@@ -2,7 +2,7 @@ Require Import FP.Data.Identity.
 Require Import FP.Data.Susp.
 Require Import FP.Structures.Comonad.
 Require Import FP.Structures.Monad.
-Require Import FP.Data.FunctionPre.
+Require Import FP.Data.Function.
 Require Import FP.Data.Cont.
 Require Import FP.Structures.MonadCont.
 
@@ -25,7 +25,7 @@ Section Foldable.
 
   Definition revfold {B}
       (f:A -> B -> B) : B -> T -> B :=
-    run_cont <..> 
+    run_cont '..' 
       mfold begin fun (a:A) (b:B) =>
         callcc $ fun (k:B -> cont B B) =>
           b <- k b ;;

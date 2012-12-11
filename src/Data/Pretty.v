@@ -51,7 +51,7 @@ Axiom undefined : forall {A}, A.
 
 Definition fits : Z -> list (N*fmode*doc) -> fuel bool :=
   mfix2 $ fun fits w ps =>
-    if w '<! 0%Z then
+    if w <! 0%Z then
       ret false
     else
       match ps with

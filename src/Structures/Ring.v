@@ -1,7 +1,8 @@
-Require Import Monoid.
+Require Import FP.Structures.Additive.
+Require Import FP.Structures.Multiplicative.
 
-Class Ring t :=
-  { ring_addition : InverseMonoid t
-  ; ring_multiplication : Monoid t
+Class Ring T :=
+  { ring_addition : MinusAdditive T
+  ; ring_multiplication : Multiplicative T
   }.
 

@@ -57,7 +57,7 @@ End Ord.
 
 Section OrdDec.
   Definition Z_ord_dec (z1:Z) (z2:Z) : comparison :=
-    if z1 '=! z2 then Eq
+    if z1 =! z2 then Eq
     else if BinInt.Z.ltb z1 z2 then Lt
     else Gt.
   Global Instance Z_OrdDec : OrdDec Z := { ord_dec := Z_ord_dec }.
@@ -71,31 +71,28 @@ Section Lattice.
 End Lattice.
 
 Section Show.
-  Definition Z_show {R} {SR:ShowResult R} : Z -> R := show <.> convert (to:=nat).
+  Definition Z_show {R} {SR:ShowResult R} : Z -> R := show '.' convert (to:=nat).
   Global Instance Z_Show : Show Z := { show := @Z_show }.
 End Show.
 
 Section Additive.
-  Definition Z_additive_InverseMonoid : InverseMonoid Z :=
-    {| InverseMonoid_Monoid := 
-        {| Monoid_Semigroup :=
-             {| gtimes := BinInt.Z.add |}
-         ; gunit := BinInt.Z.zero
-        |}
-     ; ginv := BinInt.Z.opp
-     ; gdiv := BinInt.Z.sub
+  Definition Z_additive_InvMonoid : InvMonoid Z :=
+    {| inv_monoid_times := BinInt.Z.add
+     ; inv_monoid_unit := BinInt.Z.zero
+     ; inv_monoid_inv := BinInt.Z.opp
+     ; inv_monoid_div := BinInt.Z.sub
     |}.
-  Global Instance Z_InverseAdditive : InverseAdditive Z :=
-    { InverseAdditive_InverseMonoid := Z_additive_InverseMonoid }.
+  Global Instance Z_InverseAdditive : NegAdditive Z :=
+    { neg_additive_InvMonoid := Z_additive_InvMonoid }.
 End Additive.
 
 Section Multiplicative.
   Definition Z_multiplicative_Monoid : Monoid Z :=
-    {| Monoid_Semigroup := {| gtimes := BinInt.Z.mul |}
-     ; gunit := BinInt.Z.one
+    {| monoid_times := BinInt.Z.mul
+     ; monoid_unit := BinInt.Z.one
     |}.
   Global Instance Z_Multiplicative : Multiplicative Z :=
-    { Multiplicative_Monoid := Z_multiplicative_Monoid }.
+    { multiplicative_Monoid := Z_multiplicative_Monoid }.
 End Multiplicative.
 
 Definition Z_coloopr {m} {M:Comonad m} {A} (f:m A -> A) (aM:m A) (z:Z) : A :=

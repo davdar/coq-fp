@@ -22,10 +22,28 @@ Module AdditiveNotation.
 End AdditiveNotation.
 
 Class Semiadditive T :=
-  { semiadditive_semigroup :> Semigroup T }.
+  { semiadditive_Semigroup :> Semigroup T }.
+Instance Semiadditive_Plus {T} {S:Semiadditive T} : Plus T := {}.
+
 Class MinusSemiadditive T :=
-  { minus_semiadditive_div_semigroup :> DivSemigroup T }.
+  { minus_semiadditive_DivSemigroup :> DivSemigroup T }.
+Instance MinusSemiadditive_Plus {T} {S:MinusSemiadditive T} : Plus T := {}.
+Instance MinusSemiadditive_Minus {T} {S:MinusSemiadditive T} : Minus T := {}.
+
 Class Additive T :=
-  { additive_monoid :> Monoid T }.
+  { additive_Monoid :> Monoid T }.
+Instance Additive_Plus {T} {S:Additive T} : Plus T := {}.
+Instance Additive_Zero {T} {S:Additive T} : Zero T := {}.
+
+Class MinusAdditive T :=
+  { minus_additive_DivMonoid :> DivMonoid T }.
+Instance MinusAdditive_Plus {T} {S:MinusAdditive T} : Plus T := {}.
+Instance MinusAdditive_Zero {T} {S:MinusAdditive T} : Zero T := {}.
+Instance MinusAdditive_Minus {T} {S:MinusAdditive T} : Minus T := {}.
+
 Class NegAdditive T :=
-  { neg_additive_inv_monoid :> InvMonoid T }.
+  { neg_additive_InvMonoid :> InvMonoid T }.
+Instance NegAdditive_Plus {T} {S:NegAdditive T} : Plus T := {}.
+Instance NegAdditive_Zero {T} {S:NegAdditive T} : Zero T := {}.
+Instance NegAdditive_Neg {T} {S:NegAdditive T} : Neg T := {}.
+Instance NegAdditive_Minus {T} {S:NegAdditive T} : Minus T := {}.

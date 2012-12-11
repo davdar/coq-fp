@@ -1,8 +1,8 @@
-Require Import Structures.Monad.
-Require Import Structures.MonadCont.
-Require Import Structures.MonadTrans.
-Require Import Data.Function.
-Require Import Data.Identity.
+Require Import FP.Structures.Monad.
+Require Import FP.Structures.MonadCont.
+Require Import FP.Structures.MonadTrans.
+Require Import FP.Data.Function.
+Require Import FP.Data.Identity.
 
 Import FunctionNotation.
 Import MonadNotation.
@@ -15,7 +15,7 @@ Definition run_cont_t {m} {M:Monad m} {A} (c:cont_t A m A) : m A :=
   un_cont_t c ret.
 
 Definition cont_t_ret {R} {m} {M:Monad m} {A} : A -> cont_t R m A :=
-  ContT <.> apply_to.
+  ContT '.' apply_to.
 Definition cont_t_bind {R} {m} {M:Monad m} {A B}
     (aM:cont_t R m A) (f:A -> cont_t R m B) : cont_t R m B :=
   ContT $ fun (k:B -> m R) =>
@@ -47,6 +47,6 @@ Instance cont_t_MoandCont {R} {m} {M:Monad m} : MonadCont R (cont_t R m) :=
 
 Definition cont R := cont_t R identity.
 Definition mk_cont {A R} (kk:(A -> R) -> R) : cont R A :=
-  ContT $ fun k => Identity $ kk $ run_identity <.> k.
+  ContT $ fun k => Identity $ kk $ run_identity '.' k.
 Definition run_cont {A} : cont A A -> A :=
-  run_identity <.> run_cont_t.
+  run_identity '.' run_cont_t.

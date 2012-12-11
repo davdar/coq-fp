@@ -10,16 +10,15 @@ Arguments Store {S A} _ _.
 Arguments store_context {S A} _ _.
 Arguments store_pos {S A} _.
 
-(* Seek to a relative location *)
-Definition seeks {S A} (f:S -> S) (st:store S A) : store S A :=
-  let '(Store g s) := st in Store g (f s).
+Section store.
+  Context {S A:Type}.
+  Definition run_store (st:store S A) : A :=
+    let '(Store g s) := st in g s.
 
-(* Seek to an absolute location *)
-Definition seek {S A} (s:S) : store S A -> store S A := seeks $ const s.
+  (* Update the focused state *)
+  Definition store_update (f:S -> S) (st:store S A) : store S A :=
+    let '(Store g s) := st in Store g (f s).
 
-(* Peek at a relative location *)
-Definition peeks {S A} (f:S -> S) (st:store S A) : A :=
-  let '(Store g s) := st in g $ f s.
-
-(* Peek at an absolute location *)
-Definition peek {S A} (s:S) : store S A -> A := peeks $ const s.
+  (* Set the focuses state *)
+  Definition store_set : S -> store S A -> store S A := store_update '.' const.
+End store.

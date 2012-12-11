@@ -1,7 +1,6 @@
 Require Export FP.Data.AsciiPre.
 
-Require Import FP.Data.FunctionPre.
-
+Require Import FP.Data.Function.
 Require Import FP.Data.Bool.
 Require Import FP.Data.List.
 Require Import FP.Data.N.
@@ -70,11 +69,11 @@ Definition carriage_return := "013"%char.
 Section predicates.
   Definition is_alpha (c:ascii) : bool:=
     let n := convert (to:=N) c in
-    65%N '<=! n '<=! 90%N || 97%N '<=! n '<=! 122%N.
+    65 <=! n <=! 90 || 97 <=! n <=! 122.
 
   Definition is_numeric (c:ascii) : bool :=
     let n := convert (to:=N) c in
-    48%N '<=! n '<=! 57%N.
+    48 <=! n <=! 57.
 
   Definition is_whitespace : ascii -> bool :=
     foldl orf (const false) $ fmap eqv_dec $

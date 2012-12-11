@@ -1,12 +1,12 @@
 Require Import Data.StringPre.
-Require Import Data.FunctionPre.
 
-Require Import Relations.RelDec.
-Require Import Structures.EqDec.
-Require Import Structures.Eqv.
-Require Import Structures.Ord.
-Require Import Structures.RelationClasses.
-Require Import Structures.Show.
+Require Import FP.Data.Function.
+Require Import FP.Relations.RelDec.
+Require Import FP.Structures.EqDec.
+Require Import FP.Structures.Eqv.
+Require Import FP.Structures.Ord.
+Require Import FP.Structures.RelationClasses.
+Require Import FP.Structures.Show.
 
 Import StringNotation.
 

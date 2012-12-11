@@ -24,7 +24,7 @@ Section Iterable.
     iter (fun (bM:m B) (a:A) => b <- bM ;; f b a) (ret b).
 
   Definition reviter {B} (f:B -> A -> B) : B -> T -> B :=
-    run_cont <..> 
+    run_cont '..' 
       miter begin fun (b:B) (a:A) =>
         callcc $ fun (k:B -> cont B B) =>
           b <- k b ;;

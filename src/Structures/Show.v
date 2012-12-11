@@ -7,9 +7,12 @@ Require Import FP.Structures.Monoid.
 Import MonoidNotation.
 
 Class ShowResult r :=
-  { show_result_monoid :> Monoid r
-  ; show_result_ascii_injection :> Injection ascii r
+  { show_result_Monoid : Monoid r
+  ; show_result_Injection_ascii : Injection ascii r
   }.
+Hint Resolve Build_ShowResult : typeclass_instances.
+Hint Immediate show_result_Monoid : typeclass_instances.
+Hint Immediate show_result_Injection_ascii : typeclass_instances.
 
 Class Show t := { show : forall {r} {SR:ShowResult r}, t -> r }.
 

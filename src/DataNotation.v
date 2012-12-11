@@ -9,7 +9,7 @@ Require FP.Data.Z.
 Require FP.Data.Lens.
 
 Export FP.Data.AsciiPre.CharNotation.
-Export FP.Data.FunctionPre.FunctionNotation.
+Export FP.Data.Function.FunctionNotation.
 Export FP.Data.ListPre.ListNotation.
 Export FP.Data.NPre.NNotation.
 Export FP.Data.Nat.NatNotation.

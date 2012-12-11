@@ -87,8 +87,8 @@ Section Ord.
   Context {A B} {AL:Ord A} {BL:Ord B}.
 
   Inductive sum_lt : A+B -> A+B -> Prop :=
-    | InlSumLte : forall a1 a2, a1 '< a2 -> sum_lt (inl a1) (inl a2)
-    | InrSumLte : forall b1 b2, b1 '< b2 -> sum_lt (inr b1) (inr b2)
+    | InlSumLte : forall a1 a2, a1 < a2 -> sum_lt (inl a1) (inl a2)
+    | InrSumLte : forall b1 b2, b1 < b2 -> sum_lt (inr b1) (inr b2)
     | MisSumLte : forall a1 b2, sum_lt (inl a1) (inr b2).
       
   Global Instance sum_Ord : Ord (A+B) := { lt := sum_lt }.
@@ -136,6 +136,10 @@ Section Show.
 End Show.
 
 Section Type_Monoid.
+  Definition sum_Set_Monoid : Monoid Set :=
+    {| monoid_times := (sum:Set -> Set -> Set)
+     ; monoid_unit := Empty_set
+    |}.
   Definition sum_Type_Monoid : Monoid Type :=
     {| monoid_times := sum
      ; monoid_unit := (Empty_set:Type)

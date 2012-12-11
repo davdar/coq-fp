@@ -1,10 +1,13 @@
-Require Import Structures.Additive.
-Require Import Structures.Multiplicative.
-Require Import Data.Sum.
-Require Import Data.Prod.
+Require Import FP.Structures.Additive.
+Require Import FP.Structures.Multiplicative.
+Require Import FP.Data.Sum.
+Require Import FP.Data.Prod.
 
 Instance Additive_Type : Additive Type :=
-  { Additive_Monoid := sum_Type_Monoid }.
-
+  { additive_Monoid := sum_Type_Monoid }.
 Instance Multiplicative_Type : Multiplicative Type :=
-  { Multiplicative_Monoid := prod_Type_Monoid }.
+  { multiplicative_Monoid := prod_Type_Monoid }.
+Instance Additive_Set : Additive Set :=
+  { additive_Monoid := sum_Set_Monoid }.
+Instance Multiplicative_Set : Multiplicative Set :=
+  { multiplicative_Monoid := prod_Set_Monoid }.
