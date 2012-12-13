@@ -10,6 +10,7 @@ Require Import FP.Data.Unit.
 
 Import FunctionNotation.
 Import LatticeNotation.
+Import OrdNotation.
 
 Definition ext_bot := option.
 
@@ -70,8 +71,8 @@ Section ext_top_bot.
 
   Definition ext_top_bot_to_sum {A} (e:ext_top_bot A) : unit + A + unit :=
     match un_ext_top_bot e with
-    | None => inl (inl tt)
-    | Some None => inr tt
+    | None => inr tt
+    | Some None => inl (inl tt)
     | Some (Some a) => inl (inr a)
     end.
 
@@ -111,7 +112,7 @@ Section ext_top_bot.
   End OrdDec.
 
   Section Lattice.
-    Context {A} {L:Lattice A}.
+    Context {A} {L:Lattice A} {O:Ord A} {LWF:LatticeWF A}.
 
     Definition ext_top_bot_meet (e1:ext_top_bot A) (e2:ext_top_bot A)
         : ext_top_bot A := ExtTopBot $
@@ -144,5 +145,60 @@ Section ext_top_bot.
       { ltop := ext_top_bot_top
       ; lbot := ext_top_bot_bot
       }.
+
+    Definition ext_top_bot_meet_ineq
+        : forall e1 e2:ext_top_bot A, (e1 /\ e2) <= e1 `and` (e1 /\ e2) <= e2.
+      intros ; simpl.
+      destruct e1 as [e1], e2 as [e2] ; simpl in * ;
+      destruct e1 as [e1|], e2 as [e2|] ; simpl in * ;
+      [ destruct e1 as [e1|], e2 as [e2|]
+      | destruct e1 as [e1|]
+      | destruct e2 as [e2|]
+      | idtac ] ; simpl in * ;
+      unfold ext_top_bot_meet ; unfold lte ; simpl ;
+      unfold ext_top_bot_to_sum ; unfold on ; simpl ;
+        repeat
+          match goal with
+          | _ => auto
+          end.
+      destruct (lmeet_ineq e1 e2) as [meet_l meet_r].
+      destruct meet_l, meet_r.
+      split.
+        left ; econstructor ; econstructor ; auto.
+        left ; econstructor ; econstructor ; auto.
+      split.
+        left ; econstructor ; econstructor ; auto.
+        right ; econstructor ; econstructor ; auto.
+      split.
+        right ; econstructor ; econstructor ; auto.
+        left ; econstructor ; econstructor ; auto.
+      split.
+        right ; econstructor ; econstructor ; auto.
+        right ; econstructor ; econstructor ; auto.
+      split.
+        left ; econstructor ; econstructor.
+        right ; econstructor ; econstructor ; reflexivity.
+      split.
+        right ; econstructor ; econstructor ; reflexivity.
+        left ; econstructor ; econstructor.
+      split.
+        right ; econstructor ; econstructor ; reflexivity.
+        right ; econstructor ; econstructor ; reflexivity.
+      split.
+        right ; econstructor ; econstructor ; reflexivity.
+        left ; econstructor ; econstructor.
+      split.
+        right ; econstructor ; econstructor ; reflexivity.
+        left ; econstructor ; econstructor.
+      split.
+        left ; econstructor ; econstructor.
+        right ; econstructor ; econstructor ; reflexivity.
+      split.
+        left ; econstructor ; econstructor.
+        right ; econstructor ; econstructor ; reflexivity.
+      split.
+        right ; econstructor ; econstructor ; reflexivity.
+        right ; econstructor ; econstructor ; reflexivity.
+      Qed.
   End Lattice.
 End ext_top_bot.

@@ -40,25 +40,12 @@ Module EqvNotation.
 End EqvNotation.
 Import EqvNotation.
 
-(* Begin Context Aliases *)
-Class EqvWF T :=
-  { wf_eqv :> Eqv T
-  ; wf_eqv_equivalence :> Equivalence eqv
+Class EqvWF T {E:Eqv T} :=
+  { eqv_equivalence :> Equivalence eqv
   }.
-
-Class EqvWithDec T :=
-  { with_eqv :> Eqv T
-  ; with_eqv_dec :> EqvDec T
-  }.
-
-Class EqvWFWithDec T :=
-  { with_eqv_wf :> EqvWF T
-  ; with_eqv_dec_wf :> EqvDec T
-  }.
-(* End Context Aliases *)
 
 Section morph_eqv_Equivalence.
-  Context {T U} {TEWF:EqvWF T} {UE:EqvWF U}.
+  Context {T U} {TE:Eqv T} {UE:Eqv U} {TEWF:EqvWF T} {UEWF:EqvWF U}.
   Variable morph:U -> T.
   Variable morph_resp : forall u1 u2, u1 ~= u2 <-> morph u1 ~= morph u2.
 
