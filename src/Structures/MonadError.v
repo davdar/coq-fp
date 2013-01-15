@@ -14,7 +14,7 @@ Section MonadError.
 
   Definition catch_with {A} : (E -> m A) -> m A -> m A := flip catch.
 
-  Context {e_Injection : Injection string E}.
+  Context {mor} {e_Injection : Injection string E mor}.
 
   Definition throw_msg {A} : string -> m A := throw '.' inject.
 End MonadError.

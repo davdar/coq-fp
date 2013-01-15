@@ -25,6 +25,8 @@ Section ext_top.
     | Some a => inl a
     end.
 
+  Global Instance ext_top_Injection_sum {A} : Injection (ext_top A) (A + unit).
+
   Section EqDec.
     Context {A} {E:EqDec A}.
 
@@ -146,6 +148,12 @@ Section ext_top_bot.
       ; lbot := ext_top_bot_bot
       }.
 
+    Definition foo {A} {OA:Ord A} (a:option (option A))
+                                  (b:option (option A)) : Prop :=
+              a <= b -> ExtTopBot a <= ExtTopBot b.
+    Axiom bar :
+      forall {A} {OA:Ord A} (a:option (option A)) (b:option (option A)), foo a b.
+
     Definition ext_top_bot_meet_ineq
         : forall e1 e2:ext_top_bot A, (e1 /\ e2) <= e1 `and` (e1 /\ e2) <= e2.
       intros ; simpl.
@@ -155,12 +163,28 @@ Section ext_top_bot.
       | destruct e1 as [e1|]
       | destruct e2 as [e2|]
       | idtac ] ; simpl in * ;
-      unfold ext_top_bot_meet ; unfold lte ; simpl ;
-      unfold ext_top_bot_to_sum ; unfold on ; simpl ;
+      unfold ext_top_bot_meet ; simpl in *;
         repeat
           match goal with
+          | [ |- and _ _ ] => split
+                                (*
+          | [ |- or (sum_lt (inl (inr (?a /\ ?b))) (inl (inr ?a))) _ ] => left
+*)
+          | [ |- _ < _ ] => econstructor
+          | [ |- sum_lt _ _ ] => econstructor
+          | [ |- _ < _ ] => econstructor
+          | [ |- (?a /\ ?b) < ?a ] => econstructor
           | _ => auto
           end.
+      apply bar.
+      destruct (lmeet_ineq e1 e2).
+      apply lmeet_ineq.
+      
+      econstructor.
+          
+      unfold sum_lt.
+      simpl.
+      rewrite (inl_resp_eqv _ _.
       destruct (lmeet_ineq e1 e2) as [meet_l meet_r].
       destruct meet_l, meet_r.
       split.

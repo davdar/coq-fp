@@ -8,18 +8,10 @@ Section RelDec.
   Class RelDecCorrect (D:T -> T -> bool) (R: T -> T -> Prop) : Prop :=
     { rel_dec_correct : forall {x y}, D x y = true <-> R x y }.
 
-  (* Context Alias *)
-  Class RelDecWithCorrect D R : Type :=
-  { with_rel_dec : RelDec D R
-  ; with_rel_dec_correct : RelDecCorrect D R
-  }.
 End RelDec.
-Hint Immediate Build_RelDecWithCorrect : typeclass_instances.
-Hint Immediate with_rel_dec : typeclass_instances.
-Hint Immediate with_rel_dec_correct : typeclass_instances.
 
 Section neg_rel_dec_correct.
-  Context {T D R} {RDC:RelDecWithCorrect (T:=T) D R}.
+  Context {T D R} {RDC:RelDecCorrect (T:=T) D R}.
 
   Definition neg_rel_dec_correct : forall {x y}, D x y = false <-> ~R x y.
   Proof. intros x y. destruct (consider_bool (D x y)) ; constructor ; intros ;
@@ -38,7 +30,7 @@ Section neg_rel_dec_correct.
 End neg_rel_dec_correct.
 
 Section rel_dec_p.
-  Context {T D R} {RDWC:RelDecWithCorrect (T:=T) D R}.
+  Context {T D R} {RDWC:RelDecCorrect (T:=T) D R}.
 
   Definition rel_dec_p (x:T) (y:T) : {R x y} + {~R x y}.
   Proof. destruct (consider_bool (D x y)) as [H | H].

@@ -149,7 +149,7 @@ Section Show.
   Section list_show.
     Variable (R:Type) (SR:ShowResult R).
 
-    Fixpoint list_show_inner (xL:list A) :=
+    Fixpoint list_show_inner (xL:list A) : R :=
       match xL with
       | nil => gunit
       | x::xL' =>

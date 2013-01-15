@@ -7,8 +7,9 @@ Require Import FP.Structures.Monoid.
 Import MonoidNotation.
 
 Class ShowResult r :=
-  { show_result_Monoid : Monoid r
-  ; show_result_Injection_ascii : Injection ascii r
+  { show_result_mor : ascii -> r
+  ; show_result_Monoid : Monoid r
+  ; show_result_Injection_ascii : Injection ascii r show_result_mor
   }.
 Hint Resolve Build_ShowResult : typeclass_instances.
 Hint Immediate show_result_Monoid : typeclass_instances.

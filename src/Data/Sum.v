@@ -19,7 +19,10 @@ Require Import FP.Structures.RelationClasses.
 Require Import FP.Structures.Show.
 Require Import FP.Structures.Injection.
 Require Import FP.Data.Identity.
+Require Import FP.Relations.Function.
+Require Import FP.Relations.Setoid.
 
+Import RespectNotation.
 Import CharNotation.
 Import EqDecNotation.
 Import EqvNotation.
@@ -33,6 +36,12 @@ Import LatticeNotation.
 Local Infix "+" := sum.
 
 Create HintDb sum_db.
+
+Section Injection.
+  Context {A B:Type}.
+  Global Instance sum_Injection_inl : Injection A (A+B) inl := {}.
+  Global Instance sum_Injection_inr : Injection B (A+B) inr := {}.
+End Injection.
 
 Section EqDec.
   Context {A B} {AED:EqDec A} {BED:EqDec B}.
@@ -97,6 +106,20 @@ Section Eqv.
     unfold Transitive ; intros.
       destruct x as [xl | xr], y as [yl | yr], z as [zl | zr] ; repeat mysimp.
     Qed.
+
+  Global Instance sum_InjectionRespect_eqv_inl : InjectionRespect A (A+B) inl eqv eqv.
+    constructor ; unfold Proper ; unfold "==>"%signature ; unfold "<==" ; intros ;
+      simpl in *.
+    constructor ; auto.
+    inversion H ; auto.
+    Qed.
+
+  Global Instance sum_InjectionRespect_eqv_inr : InjectionRespect B (A+B) inr eqv eqv.
+    constructor ; unfold Proper ; unfold "==>"%signature ; unfold "<==" ; intros ;
+      simpl in *.
+    constructor ; auto.
+    inversion H ; auto.
+    Qed.
 End Eqv.
 
 Section EqvDec.
@@ -158,7 +181,9 @@ Section Ord.
       | [ H1 : ?a < ?b, H2 : ?b < ?c |- ?a < ?c ] =>
           transitivity b ; [exact H1 | exact H2]
       | [ H1 : ?a ~= ?a', H2 : ?b ~= ?b', H3 : ?a < ?b |- ?a' < ?b' ] =>
-          apply (lt_resp_eqv a a' b b' H1 H2 H3)
+          eapply (lt_resp_eqv _ _ H1 _ _ H2) ; auto
+      | [ H1 : ?a' ~= ?a, H2 : ?b' ~= ?b, H3 : ?a < ?b |- ?a' < ?b' ] =>
+          eapply (lt_resp_eqv _ _ H1 _ _ H2) ; auto
       | _ => auto
       end.
     constructor.
@@ -167,8 +192,20 @@ Section Ord.
       destruct x; repeat mysimp.
     unfold Transitive ; intros.
       destruct x, y, z ; repeat mysimp.
-    intros.
+    unfold Proper ; unfold respectful ; intros t1 t2 e1 t3 t4 e2 ;
+      constructor ; intros ;
       destruct t1, t2, t3, t4 ; repeat mysimp.
+    Qed.
+
+  Global Instance sum_InjectionRespect_lt_inl : InjectionRespect A (A+B) inl lt lt.
+    constructor ; unfold Proper ; unfold "==>"%signature ; unfold "<==" ; intros.
+    constructor ; auto.
+    inversion H ; auto.
+    Qed.
+  Global Instance sum_InjectionRespect_lt_inr : InjectionRespect B (A+B) inr lt lt.
+    constructor ; unfold Proper ; unfold "==>"%signature ; unfold "<==" ; intros.
+    constructor ; auto.
+    inversion H ; auto.
     Qed.
 End Ord.
 
@@ -250,40 +287,15 @@ Section Lattice.
   Context {AO:Ord A} {BO:Ord B}.
   Context {ALWF:LatticeWF A} {BLWF:LatticeWF B}.
 
-  Lemma inl_lte : forall (a:A) (b:A), @inl A B a <= inl b <-> a <= b.
-    intros ; constructor ; intros.
-      destruct H.
-        inversion H ; subst ; clear H.
-          left ; auto.
-        inversion H ; subst ; clear H.
-          right ; auto.
-      destruct H.
-        left ; constructor ; auto.
-        right ; constructor ; auto.
-    Qed.
-
-  Lemma inr_lte : forall (a:B) (b:B), @inr A B a <= inr b <-> a <= b.
-    intros ; constructor ; intros.
-      destruct H.
-        inversion H ; subst ; clear H.
-          left ; auto.
-        inversion H ; subst ; clear H.
-          right ; auto.
-      destruct H.
-        left ; constructor ; auto.
-        right ; constructor ; auto.
-    Qed.
-
-
   Lemma inlr_lte : forall (a:A) (b:B), inl a <= inr b.
     left ; constructor. Qed.
 
   Global Instance sum_LatticeWF : LatticeWF (A+B).
     Local Ltac mysimp :=
       match goal with
-      | [ |- inl _ <= inl _ ] => apply inl_lte
+      | [ |- inl _ <= inl _ ] => eapply inject_resp_eta
       | [ |- inl _ <= inr _ ] => apply inlr_lte
-      | [ |- inr _ <= inr _ ] => apply inr_lte
+      | [ |- inr _ <= inr _ ] => eapply inject_resp_eta
       | [ |- (?a /\ _) <= ?a ] => apply lmeet_ineq
       | [ |- (_ /\ ?a) <= ?a ] => apply lmeet_ineq
       | [ |- ?a <= (?a \/ _) ] => apply ljoin_ineq
@@ -308,6 +320,7 @@ Section Lattice.
     }.
 
   Context {ABLWF:BoundedLatticeWF A} {BBLWF:BoundedLatticeWF B}.
+
   Global Instance sum_BoundedLatticeWF : BoundedLatticeWF (A+B).
     constructor ; intros.
       destruct t.
@@ -321,7 +334,6 @@ Section Lattice.
           right ; constructor ; auto.
         left ; constructor.
     Qed.
-
 End Lattice.
 
 Section Show.

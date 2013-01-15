@@ -2,6 +2,7 @@ Require Import FP.Data.Function.
 
 Require Import FP.Relations.RelDec.
 Require Import FP.Structures.RelationClasses.
+Require Import FP.Structures.Injection.
 
 Import FunctionNotation.
 
@@ -11,6 +12,10 @@ Section Eqv.
 
   Definition not_eqv : T -> T -> Prop := not '..' eqv.
 End Eqv.
+
+Class EqvWF T {E:Eqv T} :=
+  { eqv_equivalence :> Equivalence eqv
+  }.
 
 Class EqvDec T := { eqv_dec : T -> T -> bool }.
 Section EqvDec.
@@ -40,21 +45,24 @@ Module EqvNotation.
 End EqvNotation.
 Import EqvNotation.
 
-Class EqvWF T {E:Eqv T} :=
-  { eqv_equivalence :> Equivalence eqv
-  }.
+Section inj_eqv_Equivalence.
+  Context {T U minj}
+          {TE:Eqv T} {UE:Eqv U} {TEWF:EqvWF T}
+          {Bij:Injection U T minj}
+          {BijR:InjectionRespect U T minj eqv eqv}.
 
-Section morph_eqv_Equivalence.
-  Context {T U} {TE:Eqv T} {UE:Eqv U} {TEWF:EqvWF T} {UEWF:EqvWF U}.
-  Variable morph:U -> T.
-  Variable morph_resp : forall u1 u2, u1 ~= u2 <-> morph u1 ~= morph u2.
-
-  Definition morph_eqv_Equivalence : Equivalence (eqv (T:=U)).
-  Proof. repeat constructor ;
-    unfold Reflexive ; unfold Symmetric ; unfold Transitive ; intros.
-    apply morph_resp. reflexivity.
-    apply morph_resp. apply morph_resp in H. symmetry. auto.
-    apply morph_resp. apply morph_resp in H. apply morph_resp in H0.
-    transitivity (morph y) ; auto.
+  Definition inj_eqv_Equivalence : Equivalence (eqv (T:=U)).
+    Ltac mysimp :=
+      match goal with
+      | [ x : U |- ?x ~= ?x ] => apply (inject_resp_beta (mor:=minj))
+      | [ x : U, y : U |- ?x ~= ?y ] => apply (inject_resp_beta (mor:=minj))
+      | [ x : U, y : U, H : ?x ~= ?y |- _ ] => apply (inject_resp_eta (mor:=minj)) in H
+      | _ => auto
+      end.
+    constructor.
+    unfold Reflexive ; intros ; repeat mysimp ; reflexivity.
+    unfold Symmetric ; intros ; repeat mysimp ; symmetry ; auto.
+    unfold Transitive ; intros x y z t1 t2 ; repeat mysimp ;
+      transitivity (minj y) ; auto.
   Qed.
-End morph_eqv_Equivalence.
+End inj_eqv_Equivalence.
