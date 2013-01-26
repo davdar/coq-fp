@@ -36,7 +36,7 @@ Section Monad.
   Section iso_Monad.
     Variable n:Type -> Type.
     Context {N:Monad n}.
-    Context {m_n_FBij:FunctorBijection m n}.
+    Context {m_n_FBij:HasFunctorBijection m n}.
 
     Definition iso_ret {A} : A -> m A := ffrom '.' ret.
     Definition iso_bind {A B} (aM:m A) (f:A -> m B) : m B := ffrom $ bind (fto aM) (fto '.' f).

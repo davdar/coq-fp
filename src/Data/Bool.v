@@ -12,8 +12,8 @@ Import StringNotation.
 
 Section EqDec.
   Global Instance bool_EqDec : EqDec bool := { eq_dec := Bool.eqb }.
-  Global Instance bool_Eq_RelDecCorrect : RelDecCorrect (T:=bool) eq_dec eq.
-  Proof. constructor ; destruct x ; destruct y ; simpl ; constructor ; auto. Qed.
+  Global Instance bool_Eq_RelDecCorrect : RelDecCorrect bool eq eq_dec.
+  Proof. constructor ; destruct x ; destruct y ; auto. Qed.
 End EqDec.
 
 Section Eqv.
@@ -22,7 +22,7 @@ End Eqv.
 
 Section EqvDec.
   Global Instance bool_EqvDec : EqvDec bool := { eqv_dec := eq_dec }.
-  Global Instance bool_Eqv_RelDecCorrect : RelDecCorrect (T:=bool) eqv_dec eqv.
+  Global Instance bool_Eqv_RelDecCorrect : RelDecCorrect bool eqv eqv_dec.
   Proof. apply bool_Eq_RelDecCorrect. Qed.
 End EqvDec.
 

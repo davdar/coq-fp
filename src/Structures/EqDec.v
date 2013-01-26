@@ -1,6 +1,7 @@
 Require Import FP.Data.BoolPre.
 Require Import FP.Data.Function.
 Require Import FP.Relations.RelDec.
+Require Import FP.Structures.Injection.
 
 Import FunctionNotation.
 
@@ -9,11 +10,9 @@ Class EqDec T := { eq_dec : T -> T -> bool }.
 Section EqDec.
   Context {T} {E:EqDec T}.
 
-  Global Instance Eq_RelDec : RelDec eq_dec eq.
-
   Definition neg_eq_dec := negb '..' eq_dec.
 
-  Context {RDC:RelDecCorrect eq_dec eq}.
+  Context {RDC:RelDecCorrect T eq eq_dec}.
 
   Definition eq_dec_p : forall x y:T, {x=y}+{x<>y} := rel_dec_p.
   Definition neg_eq_dec_p : forall x y:T, {x<>y}+{x=y} := neg_rel_dec_p.

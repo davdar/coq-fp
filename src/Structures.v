@@ -28,6 +28,5 @@ Require Export FP.Structures.Multiplicative.
 Require Export FP.Structures.Ord.
 Require Export FP.Structures.Peano.
 Require Export FP.Structures.Reducible.
-Require Export FP.Structures.RelationClasses.
 Require Export FP.Structures.Show.
 Require Export FP.Structures.Traversable.

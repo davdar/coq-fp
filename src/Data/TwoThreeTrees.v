@@ -799,7 +799,7 @@ Instance two3map_FiniteMapI {K} {oK:OrdDec K} : FiniteMapI K (two3map K) :=
 Instance two3tree_Traversable {K} : Traversable (two3map K) :=
   { tsequence := @TwoThreeTrees.sequence _ }.
 
-Instance two3map_EqvDec {K V} {KE:OrdDec K} {VE:EqvDec V} : EqvDec (two3map K V) :=
+Instance two3map_EqvDec {K V} {KE:EqvDec K} {KO:OrdDec K} {VE:EqvDec V} : EqvDec (two3map K V) :=
   { eqv_dec := eqv_dec (T:=list (K*V)) `on` mto_list }.
 Instance two3map_OrdDec {K V} {KO:OrdDec K} {VO:OrdDec V} : OrdDec (two3map K V) :=
   { ord_dec := ord_dec `on` mto_list }.
@@ -839,7 +839,7 @@ Instance two3set_FiniteSetI : FiniteSetI OrdDec two3set :=
 Instance two3set_Traversable : TraversableP OrdDec two3set :=
   { tsequence_p := @TwoThreeTrees.set_sequence }.
 
-Instance two3set_EqvDec {E} {OE:OrdDec E} : EqvDec (two3set E) :=
+Instance two3set_EqvDec {E} {EE:EqvDec E} {OE:OrdDec E} : EqvDec (two3set E) :=
   { eqv_dec := eqv_dec `on` sto_list }.
 Instance two3set_OrdDec {E} {OE:OrdDec E} : OrdDec (two3set E) :=
   { ord_dec := ord_dec `on` sto_list }.

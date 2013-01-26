@@ -6,6 +6,7 @@ Require Import FP.Structures.Peano.
 Require Import FP.Structures.Lattice.
 Require Import FP.Structures.Injection.
 Require Import FP.Structures.Ord.
+Require Import FP.Structures.Eqv.
 Require Import FP.Structures.Additive.
 
 Import OrdNotation.
@@ -50,7 +51,7 @@ Module TwoThreeTreesWF.
     : WellFormed (tree K V) := { wf := tree_wf }.
 
   Section wf.
-    Context {K} {KOrd:OrdDec K} {KO:Ord K} {KLat:Lattice K} {LWF:LatticeWF K}.
+    Context {K} {KE:Eqv K} {KOrd:OrdDec K} {KO:Ord K} {KLat:Lattice K} {LWF:LatticeWF K}.
     Context {V:Type}.
 
     Definition empty_wf : with_wf (tree K V).
@@ -73,6 +74,7 @@ Module TwoThreeTreesWF.
       econstructor.
       eauto.
 
+      Abort All.
         
   End wf.
 

@@ -13,7 +13,6 @@ Require Import FP.Structures.Lattice.
 Require Import FP.Structures.Monoid.
 Require Import FP.Structures.Multiplicative.
 Require Import FP.Structures.Ord.
-Require Import FP.Structures.RelationClasses.
 Require Import FP.Structures.Show.
 Require Import FP.Structures.Comonad.
 Require Import FP.Structures.Foldable.
@@ -33,7 +32,7 @@ End NatNotation.
 
 Section EqDec.
   Global Instance nat_EqDec : EqDec nat := { eq_dec := EqNat.beq_nat }.
-  Global Instance nat_Eq_RelDecCorrect : RelDecCorrect (T:=nat) eq_dec eq.
+  Global Instance nat_Eq_RelDecCorrect : RelDecCorrect nat eq eq_dec.
   Proof. constructor ; apply EqNat.beq_nat_true_iff. Qed.
 End EqDec.
 
@@ -43,7 +42,7 @@ End Eqv.
 
 Section EqvDec.
   Global Instance nat_EqvDec : EqvDec nat := { eqv_dec := eq_dec }.
-  Global Instance nat_Eqv_RelDecCorrect : RelDecCorrect (T:=nat) eqv_dec eqv.
+  Global Instance nat_Eqv_RelDecCorrect : RelDecCorrect nat eqv eqv_dec.
   Proof. apply nat_Eq_RelDecCorrect. Qed.
 End EqvDec.
 

@@ -50,11 +50,9 @@ Section fuel_t_Monad.
   End MonadFix.
 
   Global Instance fuel_t_reader_t_FunctorInjection
-      : FunctorInjection (fuel_t m) (reader_t N (option_t m)) :=
-    { finject := @un_fuel_t _ }.
+      : FunctorInjection (fuel_t m) (reader_t N (option_t m)) (@un_fuel_t _) := {}.
   Global Instance reader_t_fuel_t_FunctorInjection
-      : FunctorInjection (reader_t N (option_t m)) (fuel_t m) :=
-    { finject := @FuelT _}.
+      : FunctorInjection (reader_t N (option_t m)) (fuel_t m) (@FuelT _) := {}.
 
   Global Instance fuel_t_Monad
       : Monad (fuel_t m) :=

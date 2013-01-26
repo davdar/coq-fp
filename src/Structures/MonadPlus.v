@@ -22,7 +22,7 @@ Instance MonadPlus_Alternative m {MP:MonadPlus m} : Alternative m :=
 
 Section iso_MonadPlus.
   Variable (n:Type -> Type).
-  Context {m} {B:FunctorBijection m n} {nMP:MonadPlus n}.
+  Context {m} {B:HasFunctorBijection m n} {nMP:MonadPlus n}.
 
   Definition iso_MonadPlus_mzero {A} : m A := ffrom mzero.
   Definition iso_MonadPlus_mplus {A B} (aM:m A) (bM:m B) : m (A+B) :=

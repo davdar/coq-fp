@@ -15,14 +15,13 @@ Require Import FP.Structures.MonadFix.
 Require Import FP.Structures.MonadPlus.
 Require Import FP.Structures.Monoid.
 Require Import FP.Structures.Ord.
-Require Import FP.Structures.RelationClasses.
 Require Import FP.Structures.Show.
 Require Import FP.Structures.Injection.
 Require Import FP.Data.Identity.
 Require Import FP.Relations.Function.
 Require Import FP.Relations.Setoid.
 
-Import RespectNotation.
+Import MorphismNotation.
 Import CharNotation.
 Import EqDecNotation.
 Import EqvNotation.
@@ -35,12 +34,17 @@ Import LatticeNotation.
 
 Local Infix "+" := sum.
 
-Create HintDb sum_db.
-
 Section Injection.
   Context {A B:Type}.
-  Global Instance sum_Injection_inl : Injection A (A+B) inl := {}.
-  Global Instance sum_Injection_inr : Injection B (A+B) inr := {}.
+  Global Instance sum_HasInjection_inl : HasInjection A (A+B) :=
+    { inject := inl }.
+  Global Instance sum_HasInjection_inr : HasInjection B (A+B) :=
+    { inject := inr }.
+
+  Global Instance sum_InjectionRespect_inl_eq : InjectionRespect A (A+B) inl eq eq.
+    constructor ; unfold Proper ; simpl in * ; intros ; congruence. Qed.
+  Global Instance sum_InjectionRespect_inr_eq : InjectionRespect B (A+B) inr eq eq.
+    constructor ; unfold Proper ; simpl in * ; intros ; congruence. Qed.
 End Injection.
 
 Section EqDec.
@@ -55,16 +59,16 @@ Section EqDec.
 
   Global Instance sum_EqDec : EqDec (A+B) := { eq_dec := sum_eq_dec }.
 
-  Context {ARDC:RelDecCorrect (T:=A) eq_dec eq}.
-  Context {BRDC:RelDecCorrect (T:=B) eq_dec eq}.
+  Context {ARDC:RelDecCorrect A eq eq_dec}.
+  Context {BRDC:RelDecCorrect B eq eq_dec}.
 
-  Global Instance sum_Eq_RelDecCorrect : RelDecCorrect (T:=A+B) eq_dec eq.
-    constructor ; intros.
-    destruct x as [xl | xr], y as [yl | yr] ; constructor ; intros ;
+  Global Instance sum_Eq_RelDecCorrect : RelDecCorrect (A+B) eq eq_dec.
+  Proof. constructor ; intros ;
+    destruct x as [xl | xr], y as [yl | yr] ; intros ;
       simpl in * ; repeat
         match goal with
-        | [ H : _ =! _ = true |- _ ] => rewrite rel_dec_correct in H
-        | [ |- _ =! _ = true ] => apply rel_dec_correct
+        | [ H : _ =! _ = true |- _ ] => apply dec_correct in H
+        | [ |- _ =! _ = true ] => apply rel_correct
         | _ => auto
         end ; try congruence.
     Qed.
@@ -108,15 +112,13 @@ Section Eqv.
     Qed.
 
   Global Instance sum_InjectionRespect_eqv_inl : InjectionRespect A (A+B) inl eqv eqv.
-    constructor ; unfold Proper ; unfold "==>"%signature ; unfold "<==" ; intros ;
-      simpl in *.
+    constructor ; unfold Proper ; simpl in * ; intros.
     constructor ; auto.
     inversion H ; auto.
     Qed.
 
   Global Instance sum_InjectionRespect_eqv_inr : InjectionRespect B (A+B) inr eqv eqv.
-    constructor ; unfold Proper ; unfold "==>"%signature ; unfold "<==" ; intros ;
-      simpl in *.
+    constructor ; unfold Proper ; simpl in * ; intros.
     constructor ; auto.
     inversion H ; auto.
     Qed.
@@ -134,18 +136,22 @@ Section EqvDec.
 
   Global Instance sum_EqvDec : EqvDec (A+B) := { eqv_dec := sum_eqv_dec }.
 
-  Context {AE:Eqv A} {ARDC:RelDecCorrect (T:=A) eqv_dec eqv}.
-  Context {BE:Eqv B} {BRDC:RelDecCorrect (T:=B) eqv_dec eqv}.
+  Context {AE:Eqv A} {ARDC:RelDecCorrect A eqv eqv_dec}.
+  Context {BE:Eqv B} {BRDC:RelDecCorrect B eqv eqv_dec}.
 
-  Global Instance sum_Eqv_RelDecCorrect : RelDecCorrect (T:=A+B) eqv_dec eqv.
-    constructor ; intros.
-    destruct x as [xl | xr], y as [yl | yr] ; constructor ; intros ;
+  Global Instance sum_Eqv_RelDecCorrect : RelDecCorrect (A+B) eqv eqv_dec.
+  Proof. constructor ; intros ;
+    destruct x as [xl | xr], y as [yl | yr] ; intros ;
       simpl in * ; repeat 
         match goal with
-        | [ |- _ ~=! _ = true ] => apply rel_dec_correct
-        | [ |- sum_eqv _ _ ] => constructor
-        | [ H : _ ~=! _ = true |- _ ] => rewrite rel_dec_correct in H
-        | [ H : sum_eqv _ _ |- _ ] => inversion H ; clear H
+        | [ H : inl _ ~=! _ = _ |- _ ] => unfold "~=!" in H ; simpl in H
+        | [ H : inr _ ~=! _ = _ |- _ ] => unfold "~=!" in H ; simpl in H
+        | [ |- inl _ ~=! _ = _ ] => unfold "~=!" ; simpl
+        | [ |- inr _ ~=! _ = _ ] => unfold "~=!" ; simpl
+        | [ |- _ ~=! _ = true ] => apply rel_correct
+        | [ |- _ ~= _ ] => constructor
+        | [ H : _ ~=! _ = true |- _ ] => apply dec_correct in H
+        | [ H : _ ~= _ |- _ ] => inversion H ; clear H
         | _ => auto
         end ; try congruence.
     Qed.
@@ -161,7 +167,8 @@ Section Ord.
       
   Global Instance sum_Ord : Ord (A+B) := { lt := sum_lt }.
 
-  Context {ALWF:OrdWF A} {BLWF:OrdWF B}.
+  Context {EA:Eqv A} {EAWF:EqvWF A} {ALWF:OrdWF A}.
+  Context {EB:Eqv B} {EBWF:EqvWF B} {BLWF:OrdWF B}.
 
   Global Instance sum_OrdWF : OrdWF (A+B).
     Local Ltac mysimp :=
@@ -187,23 +194,21 @@ Section Ord.
       | _ => auto
       end.
     constructor.
-    apply sum_EqvWF.
-    unfold Irreflexive ; unfold Reflexive ; unfold complement ; intros.
+    unfold Irreflexive, Reflexive, complement ; intros.
       destruct x; repeat mysimp.
     unfold Transitive ; intros.
       destruct x, y, z ; repeat mysimp.
-    unfold Proper ; unfold respectful ; intros t1 t2 e1 t3 t4 e2 ;
-      constructor ; intros ;
+    unfold Proper ; simpl ; intros t1 t2 e1 t3 t4 e2 ineq ;
       destruct t1, t2, t3, t4 ; repeat mysimp.
     Qed.
 
   Global Instance sum_InjectionRespect_lt_inl : InjectionRespect A (A+B) inl lt lt.
-    constructor ; unfold Proper ; unfold "==>"%signature ; unfold "<==" ; intros.
+    constructor ; unfold Proper ; simpl in * ; intros.
     constructor ; auto.
     inversion H ; auto.
     Qed.
   Global Instance sum_InjectionRespect_lt_inr : InjectionRespect B (A+B) inr lt lt.
-    constructor ; unfold Proper ; unfold "==>"%signature ; unfold "<==" ; intros.
+    constructor ; unfold Proper ; simpl in * ; intros.
     constructor ; auto.
     inversion H ; auto.
     Qed.
@@ -228,36 +233,36 @@ Section OrdDec.
 
   Global Instance sum_OrdDec : OrdDec (A+B) := { ord_dec := sum_ord_dec }.
 
-  Context {AO:Ord A} {BO:Ord B}.
-  Context {ARDC:RelDecCorrect (T:=A) lt_dec lt}.
-  Context {BRDC:RelDecCorrect (T:=B) lt_dec lt}.
+  Context {AE:Eqv A} {AO:Ord A} {BE:Eqv B} {BO:Ord B}.
+  Context {ARDC:OrdDecCorrect A}.
+  Context {BRDC:OrdDecCorrect B}.
 
-  Lemma inl_lt_dec : forall a b, inl a <! inl b = true <-> a <! b = true.
-    constructor ; intros ; unfold lt_dec in * ; simpl in * ; auto. Qed.
-  Lemma inr_lt_dec : forall a b, inr a <! inr b = true <-> a <! b = true.
-    constructor ; intros ; unfold lt_dec in * ; simpl in * ; auto. Qed.
-  Lemma false_lt_dec : forall a b, inr a <! inl b = true -> False.
-    intros ; unfold lt_dec in * ; simpl in * ; congruence. Qed.
-  Global Instance sum_Ord_RelDecCorrect : RelDecCorrect (T:=A+B) lt_dec lt.
-    constructor ; intros.
-    destruct x, y ; constructor ; intros ; repeat
-      match goal with
-      | [ |- inl _ < inl _ ] => constructor
-      | [ |- inr _ < inr _ ] => constructor
-      | [ |- inl _ < inr _ ] => constructor
-      | [ |- inl _ <! inl _ = true ] => apply inl_lt_dec
-      | [ |- inr _ <! inr _ = true ] => apply inr_lt_dec
-      | [ |- _ <! _ = true ] => apply rel_dec_correct
-      | [ H : inl _ <! inl _ = true |- _ ] => apply inl_lt_dec in H
-      | [ H : inr _ <! inr _ = true |- _ ] => apply inr_lt_dec in H
-      | [ H : inr ?a <! inl ?b = true |- _ ] => exfalso ; apply (false_lt_dec a b H)
-      | [ H : _ <! _ = true |- _ ] => apply rel_dec_correct in H
-      | [ H : inl _ < inl _ |- _ ] => inversion H ; subst ; clear H
-      | [ H : inr _ < inl _ |- _ ] => inversion H
-      | [ H : inr _ < inr _ |- _ ] => inversion H ; subst ; clear H
-      | _ => auto
-      end.
-    Qed.
+  Global Instance sum_OrdDecCorrect : OrdDecCorrect (A+B).
+  Proof. constructor ; intros x y ; destruct x, y ; intros ; simpl in * ;
+      repeat
+        match goal with
+        | [ H : inl _ ~= inl _ |- _ ] => inversion H ; subst ; clear H
+        | [ H : inl _ ~= inr _ |- _ ] => inversion H
+        | [ H : inr _ ~= inl _ |- _ ] => inversion H
+        | [ H : inr _ ~= inr _ |- _ ] => inversion H ; subst ; clear H
+        | [ |- inl _ ~= inl _ ] => constructor
+        | [ |- inr _ ~= inr _ ] => constructor
+        | [ H : inl _ < inl _ |- _ ] => inversion H ; subst ; clear H
+        | [ H : inl _ < inr _ |- _ ] => inversion H ; subst ; clear H
+        | [ H : inr _ < inl _ |- _ ] => inversion H
+        | [ H : inr _ < inr _ |- _ ] => inversion H ; subst ; clear H
+        | [ |- inl _ < inl _ ] => constructor
+        | [ |- inl _ < inr _ ] => constructor
+        | [ |- inr _ < inr _ ] => constructor
+        | [ H : _ <=>! _ = Eq |- _ ] => apply ord_dec_correct_eqv in H
+        | [ H : _ <=>! _ = Lt |- _ ] => apply ord_dec_correct_lt in H
+        | [ H : _ <=>! _ = Gt |- _ ] => apply ord_dec_correct_gt in H
+        | [ |- _ <=>! _ = Eq ] => apply ord_rel_correct_eqv
+        | [ |- _ <=>! _ = Lt ] => apply ord_rel_correct_lt
+        | [ |- _ <=>! _ = Gt ] => apply ord_rel_correct_gt
+        | _ => auto
+        end ; try congruence.
+   Qed.
 End OrdDec.
 
 Section Lattice.
@@ -284,7 +289,9 @@ Section Lattice.
     ; ljoin := sum_join
     }.
 
-  Context {AO:Ord A} {BO:Ord B}.
+  Context {EA:Eqv A} {AO:Ord A} {EB:Eqv B} {BO:Ord B}.
+  Context {EAWF:EqvWF A} {OAWF:OrdWF A}.
+  Context {EBWF:EqvWF B} {OBWF:OrdWF B}.
   Context {ALWF:LatticeWF A} {BLWF:LatticeWF B}.
 
   Lemma inlr_lte : forall (a:A) (b:B), inl a <= inr b.
@@ -293,9 +300,9 @@ Section Lattice.
   Global Instance sum_LatticeWF : LatticeWF (A+B).
     Local Ltac mysimp :=
       match goal with
-      | [ |- inl _ <= inl _ ] => eapply inject_resp_eta
+      | [ |- inl _ <= inl _ ] => eapply InjectionRespect_eta
       | [ |- inl _ <= inr _ ] => apply inlr_lte
-      | [ |- inr _ <= inr _ ] => eapply inject_resp_eta
+      | [ |- inr _ <= inr _ ] => eapply InjectionRespect_eta
       | [ |- (?a /\ _) <= ?a ] => apply lmeet_ineq
       | [ |- (_ /\ ?a) <= ?a ] => apply lmeet_ineq
       | [ |- ?a <= (?a \/ _) ] => apply ljoin_ineq
@@ -303,8 +310,7 @@ Section Lattice.
       | [ |- ?a <= ?a ] => reflexivity
       | _ => auto
       end.
-    constructor ; intros.
-    eauto with typeclass_instances.
+    constructor ; intros ; unfold lmeet, ljoin in * ; simpl in *.
     destruct t1, t2 ; constructor ; simpl ; repeat mysimp.
     destruct t1, t2 ; constructor ; simpl ; repeat mysimp.
     Qed.
@@ -322,7 +328,7 @@ Section Lattice.
   Context {ABLWF:BoundedLatticeWF A} {BBLWF:BoundedLatticeWF B}.
 
   Global Instance sum_BoundedLatticeWF : BoundedLatticeWF (A+B).
-    constructor ; intros.
+    constructor ; eauto with typeclass_instances ; intros.
       destruct t.
         left ; constructor.
         destruct (ltop_ineq b).
@@ -452,14 +458,13 @@ Section sum_t_Monad.
 End sum_t_Monad.
 
 Instance sum_sum_t_FunctorInjection {A}
-    : FunctorInjection (sum A) (sum_t A identity) :=
-  { finject := fun _ => SumT '.' Identity }.
+  : FunctorInjection (sum A) (sum_t A identity)
+                     (fun _ => SumT '.' Identity) := {}.
 Instance sum_t_sum_FunctorInjection {A}
-    : FunctorInjection (sum_t A identity) (sum A) :=
-  { finject := fun _ => run_identity '.' run_sum_t }.
+  : FunctorInjection (sum_t A identity) (sum A)
+                     (fun _ => run_identity '.' run_sum_t) := {}.
 Instance sum_Monad {A} : Monad (sum A) := iso_Monad (sum_t A identity).
 Instance sum_MonadPlus {A} {AM:Monoid A} : MonadPlus (sum A) :=
   iso_MonadPlus (sum_t A identity).
 Instance sum_MonadError {A} : MonadError A (sum A) :=
   iso_MonadError (sum_t A identity).
-  

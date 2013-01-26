@@ -25,8 +25,6 @@ Section ext_top.
     | Some a => inl a
     end.
 
-  Global Instance ext_top_Injection_sum {A} : Injection (ext_top A) (A + unit).
-
   Section EqDec.
     Context {A} {E:EqDec A}.
 
@@ -68,7 +66,7 @@ Section ext_top_bot.
   Global Arguments ExtTopBot {A} _.
   Global Arguments un_ext_top_bot {A} _.
 
-  Global Instance ext_top_bot_Injection {A} : Injection A (ext_top_bot A) :=
+  Global Instance ext_top_bot_Injection {A} : HasInjection A (ext_top_bot A) :=
     { inject := ExtTopBot '.' Some '.' Some }.
 
   Definition ext_top_bot_to_sum {A} (e:ext_top_bot A) : unit + A + unit :=
@@ -114,7 +112,7 @@ Section ext_top_bot.
   End OrdDec.
 
   Section Lattice.
-    Context {A} {L:Lattice A} {O:Ord A} {LWF:LatticeWF A}.
+    Context {A} {E:Eqv A} {EWF:EqvWF A} {O:Ord A} {OWF:OrdWF A} {L:Lattice A} {LWF:LatticeWF A}.
 
     Definition ext_top_bot_meet (e1:ext_top_bot A) (e2:ext_top_bot A)
         : ext_top_bot A := ExtTopBot $
@@ -148,81 +146,5 @@ Section ext_top_bot.
       ; lbot := ext_top_bot_bot
       }.
 
-    Definition foo {A} {OA:Ord A} (a:option (option A))
-                                  (b:option (option A)) : Prop :=
-              a <= b -> ExtTopBot a <= ExtTopBot b.
-    Axiom bar :
-      forall {A} {OA:Ord A} (a:option (option A)) (b:option (option A)), foo a b.
-
-    Definition ext_top_bot_meet_ineq
-        : forall e1 e2:ext_top_bot A, (e1 /\ e2) <= e1 `and` (e1 /\ e2) <= e2.
-      intros ; simpl.
-      destruct e1 as [e1], e2 as [e2] ; simpl in * ;
-      destruct e1 as [e1|], e2 as [e2|] ; simpl in * ;
-      [ destruct e1 as [e1|], e2 as [e2|]
-      | destruct e1 as [e1|]
-      | destruct e2 as [e2|]
-      | idtac ] ; simpl in * ;
-      unfold ext_top_bot_meet ; simpl in *;
-        repeat
-          match goal with
-          | [ |- and _ _ ] => split
-                                (*
-          | [ |- or (sum_lt (inl (inr (?a /\ ?b))) (inl (inr ?a))) _ ] => left
-*)
-          | [ |- _ < _ ] => econstructor
-          | [ |- sum_lt _ _ ] => econstructor
-          | [ |- _ < _ ] => econstructor
-          | [ |- (?a /\ ?b) < ?a ] => econstructor
-          | _ => auto
-          end.
-      apply bar.
-      destruct (lmeet_ineq e1 e2).
-      apply lmeet_ineq.
-      
-      econstructor.
-          
-      unfold sum_lt.
-      simpl.
-      rewrite (inl_resp_eqv _ _.
-      destruct (lmeet_ineq e1 e2) as [meet_l meet_r].
-      destruct meet_l, meet_r.
-      split.
-        left ; econstructor ; econstructor ; auto.
-        left ; econstructor ; econstructor ; auto.
-      split.
-        left ; econstructor ; econstructor ; auto.
-        right ; econstructor ; econstructor ; auto.
-      split.
-        right ; econstructor ; econstructor ; auto.
-        left ; econstructor ; econstructor ; auto.
-      split.
-        right ; econstructor ; econstructor ; auto.
-        right ; econstructor ; econstructor ; auto.
-      split.
-        left ; econstructor ; econstructor.
-        right ; econstructor ; econstructor ; reflexivity.
-      split.
-        right ; econstructor ; econstructor ; reflexivity.
-        left ; econstructor ; econstructor.
-      split.
-        right ; econstructor ; econstructor ; reflexivity.
-        right ; econstructor ; econstructor ; reflexivity.
-      split.
-        right ; econstructor ; econstructor ; reflexivity.
-        left ; econstructor ; econstructor.
-      split.
-        right ; econstructor ; econstructor ; reflexivity.
-        left ; econstructor ; econstructor.
-      split.
-        left ; econstructor ; econstructor.
-        right ; econstructor ; econstructor ; reflexivity.
-      split.
-        left ; econstructor ; econstructor.
-        right ; econstructor ; econstructor ; reflexivity.
-      split.
-        right ; econstructor ; econstructor ; reflexivity.
-        right ; econstructor ; econstructor ; reflexivity.
-      Qed.
   End Lattice.
 End ext_top_bot.

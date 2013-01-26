@@ -1,58 +1,47 @@
-Require Import Data.BoolPre.
+Require Import FP.Data.BoolPre.
+Require Import FP.Data.Function.
+Require Import FP.Structures.Injection.
+
+Import FunctionNotation.
 
 Section RelDec.
-  Context {T:Type}.
+  Context (T:Type).
   
-  Class RelDec (D:T -> T -> bool) (R:T -> T -> Prop) : Type := {}.
-
-  Class RelDecCorrect (D:T -> T -> bool) (R: T -> T -> Prop) : Prop :=
-    { rel_dec_correct : forall {x y}, D x y = true <-> R x y }.
-
+  Class RelDecCorrect (R: T -> T -> Prop) (D:T -> T -> bool) : Prop :=
+    { rel_correct : forall {x y}, R x y -> D x y = true
+    ; dec_correct : forall {x y}, D x y = true -> R x y
+    }.
 End RelDec.
+Arguments rel_correct {T R D RelDecCorrect x y _}.
+Arguments dec_correct {T R D RelDecCorrect x y _}.
 
 Section neg_rel_dec_correct.
-  Context {T D R} {RDC:RelDecCorrect (T:=T) D R}.
+  Context {T R D} {RDC:RelDecCorrect T R D}.
 
-  Definition neg_rel_dec_correct : forall {x y}, D x y = false <-> ~R x y.
-  Proof. intros x y. destruct (consider_bool (D x y)) ; constructor ; intros ;
-    repeat
-      match goal with
-      | [ |- ~ _ ] => unfold not ; intros
-      | [ H1 : ?P, H2 : ~?P |- _ ] => specialize (H2 H1) ; contradiction
-      | [ H1 : ?P = true, H2 : ?P = false |- _ ] => rewrite H1 in H2 ; discriminate
-      | [ H1 : ?P <> true |- ?P = false ] => apply not_true_is_false ; exact H1
-      | [ H1 : ?rel_dec ?a ?b = true, H2 : ~?R ?a ?b |- _ ] =>
-          apply rel_dec_correct in H1
-      | [ H1 : ?rel_dec ?a ?b = false, H2 : ?R ?a ?b |- _ ] =>
-          apply rel_dec_correct in H2
-      end ; eauto.
-  Qed.
+  Definition neg_rel_correct : forall {x y}, ~R x y -> D x y = false.
+    intros.
+    destruct (consider_bool (D x y)) ; auto.
+    apply dec_correct in e.
+    specialize (H e).
+    contradiction.
+    Qed.
+  Definition neg_dec_correct : forall {x y}, D x y = false -> ~R x y.
+    unfold "~" ; intros.
+    apply rel_correct in H0.
+    congruence.
+    Qed.
 End neg_rel_dec_correct.
 
 Section rel_dec_p.
-  Context {T D R} {RDWC:RelDecCorrect (T:=T) D R}.
+  Context {T R D} {RDWC:RelDecCorrect T R D}.
 
   Definition rel_dec_p (x:T) (y:T) : {R x y} + {~R x y}.
-  Proof. destruct (consider_bool (D x y)) as [H | H].
-    apply rel_dec_correct in H ; eauto.
-    apply neg_rel_dec_correct in H ; eauto.
+    destruct (consider_bool (D x y)) as [H | H].
+    apply dec_correct in H ; eauto.
+    apply neg_dec_correct in H ; eauto.
   Qed.
 
   Definition neg_rel_dec_p (x:T) (y:T) : {~R x y} + {R x y}.
   Proof. destruct (rel_dec_p x y) ; [ right | left ] ; auto. Qed.
 End rel_dec_p.
 
-Section morph_RelDec.
-  Context {T U} D R {RD:RelDec (T:=T) D R} (morph:U -> T).
-
-  Definition morph_dec (x:U) (y:U) : bool := D (morph x) (morph y).
-  Definition morph_rel (x:U) (y:U) : Prop := R (morph x) (morph y).
-  Definition morph_RelDec : RelDec morph_dec morph_rel. constructor. Defined.
-
-  Context {RDC:RelDecCorrect D R}.
-
-  Definition morph_RelDecCorrect : RelDecCorrect morph_dec morph_rel.
-  Proof. constructor ; intros ;
-    unfold morph_dec in * ; unfold morph_rel in * ; apply rel_dec_correct ; auto.
-  Qed.
-End morph_RelDec.

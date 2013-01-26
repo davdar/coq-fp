@@ -15,7 +15,6 @@ Require Import FP.Structures.Lattice.
 Require Import FP.Structures.Monoid.
 Require Import FP.Structures.Multiplicative.
 Require Import FP.Structures.Ord.
-Require Import FP.Structures.RelationClasses.
 Require Import FP.Structures.Show.
 Require Import FP.Structures.Comonad.
 Require Import FP.Structures.Foldable.

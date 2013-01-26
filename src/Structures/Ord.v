@@ -1,44 +1,38 @@
 Require Import FP.Data.BoolPre.
 Require Import FP.Data.Function.
-Require Import FP.Structures.RelationClasses.
 Require Import FP.Structures.Injection.
 Require Import FP.Relations.Function.
 Require Import FP.Structures.Eqv.
 Require Import FP.Relations.Setoid.
 Require Import FP.Relations.RelDec.
-Open Scope signature_scope.
 
 Import BoolNotation.
-Import RespectNotation.
 Import FunctionNotation.
+Import MorphismNotation.
 
-Class Ord T :=
-  { ord_Eqv :> Eqv T
-  ; lt : T -> T -> Prop
-  }.
-Class OrdWF T {O:Ord T} :=
-  { ord_wf_EqvWF :> EqvWF T
-  ; lt_Irreflexive :> Irreflexive lt
+Class Ord T := { lt : T -> T -> Prop}.
+Arguments lt {T Ord} _ _ : simpl never.
+
+Require Import Coq.Classes.Morphisms.
+Class OrdWF T {T_Eqv:Eqv T} {T_Ord:Ord T} :=
+  { lt_Irreflexive :> Irreflexive lt
   ; lt_Transitive :> Transitive lt
-  ; lt_resp_eqv :> Proper (eqv ==> eqv ==> iff) lt
+  ; lt_resp_eqv :> Proper (eqv ==> eqv ==> impl) lt
   }.
 
-Class OrdDec T :=
-  { ord_dec_EqvDec :> EqvDec T
-  ; ord_dec : T -> T -> comparison
-  }.
+Class OrdDec T := { ord_dec : T -> T -> comparison}.
 
-Class OrdDecCorrect T {O:Ord T} {OD:OrdDec T} :=
-  { ord_dec_correct_eq : forall (x:T) (y:T),
-      ord_dec x y = Eq <-> eqv x y
-  ; ord_dec_correct_lt : forall (x:T) (y:T),
-      ord_dec x y = Lt <-> lt x y
-  ; ord_dec_correct_gt : forall (x:T) (y:T),
-      ord_dec x y = Gt <-> lt y x
+Class OrdDecCorrect T {T_Eqv:Eqv T} {T_Ord:Ord T} {T_OrdDec:OrdDec T} :=
+  { ord_rel_correct_eqv : forall {x:T} {y:T}, eqv x y -> ord_dec x y = Eq
+  ; ord_rel_correct_lt : forall {x:T} {y:T}, lt x y -> ord_dec x y = Lt
+  ; ord_rel_correct_gt : forall {x:T} {y:T}, lt y x -> ord_dec x y = Gt
+  ; ord_dec_correct_eqv : forall {x:T} {y:T}, ord_dec x y = Eq -> eqv x y
+  ; ord_dec_correct_lt : forall {x:T} {y:T}, ord_dec x y = Lt -> lt x y
+  ; ord_dec_correct_gt : forall {x:T} {y:T}, ord_dec x y = Gt -> lt y x
   }.
 
 Section Ord.
-  Context {T} {O:Ord T} {WF:OrdWF T}.
+  Context {T} {T_Eqv:Eqv T} {T_EqvWF:EqvWF T} {T_Ord:Ord T} {T_OrdWF:OrdWF T}.
 
   Global Instance lt_Asymmetric : Asymmetric lt.
     unfold Asymmetric ; intros.
@@ -68,84 +62,80 @@ Section Ord.
     Qed.
 
   Global Instance lte_resp_eqv : Proper (eqv ==> eqv ==> iff) lte.
-    unfold Proper ; unfold "==>" ; intros ; constructor ; intros lteH ;
-      destruct lteH.
-    left ; rewrite <- H ; rewrite <- H0 ; auto.
-    right ; rewrite <- H ; rewrite <- H0 ; auto.
-    left ; rewrite H ; rewrite H0 ; auto.
-    right ; rewrite H ; rewrite H0 ; auto.
+    unfold Proper, "==>" ; intros x x' x_eqv y y' y_eqv ;
+    constructor ; intros xy_lte ; destruct xy_lte.
+    left ; rewrite <- x_eqv ; rewrite <- y_eqv ; auto.
+    right ; rewrite <- x_eqv ; rewrite <- y_eqv ; auto.
+    left ; rewrite x_eqv ; rewrite y_eqv ; auto.
+    right ; rewrite x_eqv ; rewrite y_eqv ; auto.
     Qed.
 End Ord.
 
 Section Injection.
-  Context {A B mor} {AO:Ord A} {BO:Ord B} {Inj:Injection A B mor}
-          {InjResp_eqv:InjectionRespect A B mor eqv eqv}
-          {InjResp_lt:InjectionRespect A B mor lt lt}.
+  Context {A} {A_Eqv:Eqv A} {A_Ord:Ord A}.
+  Context {B} {B_Eqv:Eqv B} {B_Ord:Ord B}.
+  Context {inj:A->B}.
+  Context {InjResp_eqv:InjectionRespect A B inj eqv eqv}.
+  Context {InjResp_lt:InjectionRespect A B inj lt lt}.
 
-  Global Instance inject_resp_lte : InjectionRespect A B mor lte lte.
-    constructor ; unfold Proper ; unfold "==>"%signature ; unfold "<==" ; intros.
-    destruct H.
-      left ; eapply inject_resp_eta ; auto.
-      right ; eapply inject_resp_eta ; auto.
-    destruct H.
-      left ; eapply inject_resp_beta ; auto.
-      right ; eapply inject_resp_beta ; auto.
+  Global Instance inject_resp_lte : InjectionRespect A B inj lte lte.
+    constructor ; unfold Proper ; simpl ; intros x y xy_lte ;
+    destruct xy_lte.
+      left ; eapply InjectionRespect_eta ; auto.
+      right ; eapply InjectionRespect_eta ; auto.
+      left ; eapply InjectionRespect_beta ; auto.
+      right ; eapply InjectionRespect_beta ; auto.
     Qed.
 End Injection.
 
 Section OrdDec.
-  Context {T} {tOD:OrdDec T}.
+  Context {T} {T_OrdDec:OrdDec T}.
 
   Definition lt_dec x y :=
     match ord_dec x y with Lt => true  | Eq => false | Gt => false end.
   Definition lte_dec x y :=
     match ord_dec x y with Lt => true  | Eq => true  | Gt => false end.
 
-  Context {O:Ord T}.
-  Context {ORDC:OrdDecCorrect T}.
+  Context {T_Eqv:Eqv T} {T_Ord:Ord T}.
+  Context {T_ODC:OrdDecCorrect T}.
 
-  Global Instance lt_RelDecCorrect : RelDecCorrect (T:=T) lt_dec lt.
-    constructor ; intros ; constructor ; intros.
-    unfold lt_dec in H.
+  Global Instance lt_RelDecCorrect : RelDecCorrect T lt lt_dec.
+  Proof. constructor ; intros x y H ; unfold lt_dec in * ;
       remember (ord_dec x y) as o ; destruct o ; try congruence.
-      apply ord_dec_correct_lt ; auto.
-    unfold lt_dec.
-      remember (ord_dec x y) as o ; destruct o ; try congruence ; exfalso.
-      pose (proj2 (ord_dec_correct_lt x y) H) ; congruence.
-      pose (proj2 (ord_dec_correct_lt x y) H) ; congruence.
-    Qed.
+    pose (ord_rel_correct_lt H) ; congruence.
+    pose (ord_rel_correct_lt H) ; congruence.
+    apply ord_dec_correct_lt ; auto.
+  Qed.
 
-  Global Instance lte_RelDecCorrect : RelDecCorrect (T:=T) lte_dec lte.
-    constructor ; intros ; constructor ; intros.
-    unfold lte_dec in H.
+  Global Instance lte_RelDecCorrect : RelDecCorrect T lte lte_dec.
+  Proof. constructor ; intros x y H ; unfold lte_dec in * ;
       remember (ord_dec x y) as o ; destruct o ; try congruence.
-        right ; apply ord_dec_correct_eq ; auto.
-        left ; apply ord_dec_correct_lt ; auto.
-    unfold lte_dec.
-      remember (ord_dec x y) as o ; destruct o ; try congruence.
-      destruct H ; exfalso.
-        pose (proj2 (ord_dec_correct_lt x y) H) ; congruence.
-        pose (proj2 (ord_dec_correct_eq x y) H) ; congruence.
-    Qed.
+    destruct H as [ ltH | eqvH ].
+      pose (ord_rel_correct_lt ltH) ; congruence.
+      pose (ord_rel_correct_eqv eqvH) ; congruence.
+    right ; apply ord_dec_correct_eqv ; auto. 
+    left ; apply ord_dec_correct_lt ; auto.
+  Qed.
 
   Definition ord_dec_p (x:T) (y:T) : {lt x y}+{eqv x y}+{lt y x}.
+  Proof.
     remember (ord_dec x y) as o ; destruct o.
-    left ; right ; apply (ord_dec_correct_eq x y) ; auto.
-    left ; left ; apply (ord_dec_correct_lt x y) ; auto.
-    right ; apply (ord_dec_correct_gt x y) ; auto.
+    left ; right ; apply ord_dec_correct_eqv ; auto.
+    left ; left ; apply ord_dec_correct_lt ; auto.
+    right ; apply ord_dec_correct_gt ; auto.
     Qed.
   Definition lt_dec_p (x:T) (y:T) : {lt x y}+{~lt x y}.
+  Proof.
     remember (lt_dec x y) as o ; destruct o.
-    left ; apply rel_dec_correct ; auto.
-    right ; apply neg_rel_dec_correct ; auto.
-    Qed.
+    left ; apply dec_correct ; auto.
+    right ; apply neg_dec_correct ; auto.
+  Qed.
   Definition lte_dec_p (x:T) (y:T) : {lte x y}+{~lte x y}.
+  Proof.
     remember (lte_dec x y) as o ; destruct o.
-    left ; apply rel_dec_correct ; auto.
-    right ; apply neg_rel_dec_correct ; auto.
-    Qed.
-  
-
+    left ; apply dec_correct ; auto.
+    right ; apply neg_dec_correct ; auto.
+  Qed.
 End OrdDec.
 
 Module OrdNotation.

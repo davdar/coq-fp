@@ -1,14 +1,18 @@
 Require Import FP.Structures.Ord.
+Require Import FP.Structures.Injection.
+Require Import FP.Structures.Eqv.
 Require Import FP.Data.Function.
 
 Import OrdNotation.
 Import FunctionNotation.
+Import EqvNotation.
 
 Class Lattice T :=
-  { lattice_OrdDec :> OrdDec T
-  ; lmeet : T -> T -> T
+  { lmeet : T -> T -> T
   ; ljoin : T -> T -> T
   }.
+Arguments lmeet {T Lattice} _ _ : simpl never.
+Arguments ljoin {T Lattice} _ _ : simpl never.
 
 Module LatticeNotation.
   Infix "/\" := lmeet.
@@ -16,9 +20,8 @@ Module LatticeNotation.
 End LatticeNotation.
 Import LatticeNotation.
 
-Class LatticeWF T {O:Ord T} {L:Lattice T} :=
-  { lattic_wf_OrdWF :> OrdWF T
-  ; lmeet_ineq : forall t1 t2, ((t1 /\ t2) <= t1) `and` ((t1 /\ t2) <= t2)
+Class LatticeWF T {E:Eqv T} {O:Ord T} {L:Lattice T} :=
+  { lmeet_ineq : forall t1 t2, ((t1 /\ t2) <= t1) `and` ((t1 /\ t2) <= t2)
   ; ljoin_ineq : forall t1 t2, (t1 <= (t1 \/ t2)) `and` (t2 <= (t1 \/ t2))
   }.
 
@@ -28,7 +31,7 @@ Class BoundedLattice T :=
   ; lbot : T
   }.
 
-Class BoundedLatticeWF T {O:Ord T} {L:BoundedLattice T} :=
+Class BoundedLatticeWF T {E:Eqv T} {O:Ord T} {L:Lattice T} {BL:BoundedLattice T} :=
   { ltop_ineq : forall t, t <= ltop
   ; lbot_ineq : forall t, lbot <= t
   }.

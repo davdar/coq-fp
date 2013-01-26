@@ -1,76 +1,74 @@
 Require Import FP.Data.Function.
+Require Import FP.Relations.Function.
 Require Import FP.Relations.Setoid.
 
 Import FunctionNotation.
+Import MorphismNotation.
 
-Class Injection T U (mor:T -> U) := { inject := mor }.
-Instance refl_Injection {T} : Injection T T id := {}.
-
-Class Bijection T U mto mfrom :=
-  { bijection_Injection_T_U : Injection T U mto
-  ; bijection_Injection_U_T : Injection U T mfrom
-  }.
-Hint Resolve Build_Bijection : typeclass_instances.
-Hint Immediate (@bijection_Injection_T_U _ _) : typeclass_instances.
-Hint Immediate (@bijection_Injection_U_T _ _) : typeclass_instances.
-
-Definition to {T U mto mfrom} {B:Bijection T U mto mfrom} : T -> U := mto.
-Definition from {T U mto mfrom} {B:Bijection T U mto mfrom} : U -> T := mfrom.
-
-Class InjectionRespect T U mor R1 R2 {Bij:Injection T U mor} :=
-  { inject_resp_eta :> Proper (R1 ==> R2) mor
-  ; inject_resp_beta :> Proper (R1 <== R2) mor
+Class InjectionRespect T U (inj:T->U) R1 R2 :=
+  { InjectionRespect_eta :> Proper (R1 ==> R2) inj
+  ; InjectionRespect_beta :> Proper (R1 <== R2) inj
   }.
 
-Class InjectionInverse T U mfrom mto R :=
-  { inject_inverse : forall x, R x (mfrom (mto x))
-Class BijectionRespect T U mto mfrom R1 R2 {Bij:Bijection T U mto mfrom} :=
-  { bijection_wf_InjectionRespect_T_U : InjectionRespect T U mto R1 R2
-  ; bijection_wf_InjectionRespect_U_T : InjectionRespect U T mfrom R2 R1
-  ; bijection_rel_from_to : forall x, R1 x (from (to x))
-  ; bijection_rel_to_from : forall x, R2 x (to (from x))
+Class InjectionDistribute T U
+      (inj:T->U) (T_op:T -> T -> T) (U_op:U -> U -> U) (R:U -> U -> Prop) :=
+  { InjectionDistribute_law :
+      forall t1 t2, inj (t1 `T_op` t2) `R` (inj t1 `U_op` inj t2)
+  }.
+
+Class InjectionInverse T U (to:T->U) (from:U->T) R :=
+  { InjectionInverse_inv : forall x, R x (from (to x))
+  }.
+
+Class HasInjection T U := { inject : T -> U }.
+
+Class BijectionRespect T U to from R1 R2 :=
+  { BijectionRespect_to : InjectionRespect T U to R1 R2
+  ; BijectionRespect_from : InjectionRespect U T from R2 R1
   }.
 Hint Resolve Build_BijectionRespect : typeclass_instances.
-Hint Immediate (@bijection_wf_InjectionRespect_T_U _ _) : typeclass_instances.
-Hint Immediate (@bijection_wf_InjectionRespect_U_T _ _) : typeclass_instances.
+Hint Immediate (@BijectionRespect_to _ _) : typeclass_instances.
+Hint Immediate (@BijectionRespect_from _ _) : typeclass_instances.
 
-Section resp.
-  Context {A B mto mfrom R1 R2}
-          {Bij:Bijection A B mto mfrom}
-          {BijWF:BijectionRespect A B mto mfrom R1 R2}.
+Class BijectionCorrect T U to from R1 R2 :=
+  { BijectionCorrect_to : InjectionInverse T U to from R1
+  ; BijectionCorrect_from : InjectionInverse U T from to R2
+  }.
 
-  Global Instance iso_Injection_from_to : Injection A A (mfrom '.' mto).
-    constructor. Qed.
-  Global Instance iso_Injection_to_from : Injection B B (mto '.' mfrom).
-    constructor. Qed.
-  Global Instance iso_InjectionRespect_from_to
-      : InjectionRespect A A (mfrom '.' mto) R1 R1.
-    constructor ; unfold Proper ; unfold "==>" ; unfold "<==" ; unfold compose ;
-      intros.
-    repeat (apply inject_resp_eta) ; auto.
-    repeat (apply inject_resp_beta in H) ; auto.
-    Qed.
+Class HasBijection T U :=
+  { HasBijection_to : HasInjection T U
+  ; HasBijection_from : HasInjection U T
+  }.
+Hint Resolve Build_HasBijection : typeclass_instances.
+Hint Immediate HasBijection_to : typeclass_instances.
+Hint Immediate HasBijection_from : typeclass_instances.
 
-  Global Instance iso_InjectionRespect_to_from
-      : InjectionRespect B B (mto '.' mfrom) R2 R2.
-    constructor ; unfold Proper ; unfold "==>" ; unfold "<==" ; unfold compose ;
-      intros.
-    repeat (apply inject_resp_eta) ; auto.
-    repeat (apply inject_resp_beta in H) ; auto.
-    Qed.
-End resp.
 
-Class FunctorInjection (T U:Type -> Type) := { finject : forall {A}, T A -> U A }.
-Instance refl_FunctorInjection {T} : FunctorInjection T T :=
-  { finject := fun _ => id }.
-
-Class FunctorBijection T U :=
-  { functor_bijection_FunctorInjection_T_U : FunctorInjection T U
-  ; functor_bijection_FunctorInjection_U_T : FunctorInjection U T
+Class FunctorInjection (t u:Type -> Type) (finj:forall {A}, t A -> u A) := {}.
+Class FunctorBijection t u to from :=
+  { FunctorBijection_to : FunctorInjection t u to
+  ; FunctorBijection_from : FunctorInjection u t from
   }.
 Hint Resolve Build_FunctorBijection : typeclass_instances.
-Hint Immediate (@functor_bijection_FunctorInjection_T_U _ _) : typeclass_instances.
-Hint Immediate (@functor_bijection_FunctorInjection_U_T _ _) : typeclass_instances.
+Hint Immediate (@FunctorBijection_to _ _) : typeclass_instances.
+Hint Immediate (@FunctorBijection_from _ _) : typeclass_instances.
 
-Definition fto {T U} {B:FunctorBijection T U} {A} : T A -> U A := finject.
-Definition ffrom {T U} {B:FunctorBijection T U} {A} : U A -> T A := finject.
+Class HasFunctorInjection (t u:Type -> Type) := { finject : forall {A}, t A -> u A }.
+Instance FunctorInjection_HasFunctorInjection
+    t u finj {FInj:FunctorInjection t u finj} : HasFunctorInjection t u :=
+  { finject := finj }.
+
+Class HasFunctorBijection (t u:Type -> Type) :=
+  { HasFunctorBijection_to : HasFunctorInjection t u
+  ; HasFunctorBijection_from : HasFunctorInjection u t
+  }.
+Hint Resolve Build_HasFunctorBijection : typeclass_instances.
+Hint Immediate HasFunctorBijection_to : typeclass_instances.
+Hint Immediate HasFunctorBijection_from : typeclass_instances.
+
+Section HasFunctorBijection.
+  Context {t u} {T_U_FBij:HasFunctorBijection t u}.
+
+  Definition fto {A} : t A -> u A := finject.
+  Definition ffrom {A} : u A -> t A := finject.
+End HasFunctorBijection.

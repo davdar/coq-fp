@@ -26,7 +26,6 @@ Require Import FP.Structures.Monoid.
 Require Import FP.Structures.Multiplicative.
 Require Import FP.Structures.Ord.
 Require Import FP.Structures.Peano.
-Require Import FP.Structures.RelationClasses.
 Require Import FP.Structures.Show.
 Require Import FP.Structures.Traversable.
 Require Import FP.Data.PrettyI.
@@ -67,9 +66,9 @@ Section EqDec.
 
   Global Instance list_EqDec : EqDec (list A) := { eq_dec := list_eq_dec }.
 
-  Context {ARDC:RelDecCorrect (T:=A) eq_dec eq}.
+  Context {ARDC:RelDecCorrect A eq eq_dec}.
 
-  Global Instance list_Eq_RelDecCorrect : RelDecCorrect (T:=list A) eq_dec eq.
+  Global Instance list_Eq_RelDecCorrect : RelDecCorrect (list A) eq eq_dec.
   Admitted.
 End EqDec.
 
@@ -82,14 +81,14 @@ Section Eqv.
 
   Global Instance list_Eqv : Eqv (list A) := { eqv := list_eqv }.
 
-  Context {AEE:Equivalence (A:=A) eqv}.
+  Context {AEE:EqvWF A}.
 
-  Global Instance list_Equivalence : Equivalence (A:=list A) eqv.
+  Global Instance list_Equivalence : EqvWF (list A).
   Admitted.
 End Eqv.
 
 Section EqvDec.
-  Context {A B} {AED:EqvDec A} {BED:EqvDec B}.
+  Context {A} {AED:EqvDec A}.
 
   Fixpoint list_eqv_dec (xL:list A) (yL:list A) : bool :=
     match xL, yL with
@@ -100,14 +99,14 @@ Section EqvDec.
 
   Global Instance list_EqvDec : EqvDec (list A) := { eqv_dec := list_eqv_dec }.
 
-  Context {AE:Eqv A} {ARDC:RelDecCorrect (T:=A) eqv_dec eqv}.
+  Context {AE:Eqv A} {ARDC:RelDecCorrect A eqv eqv_dec}.
 
-  Global Instance list_Eqv_RelDecCorrect : RelDecCorrect (T:=list A) eqv_dec eqv.
+  Global Instance list_Eqv_RelDecCorrect : RelDecCorrect (list A) eqv eqv_dec.
   Admitted.
 End EqvDec.
 
 Section Ord.
-  Context {A} {AL:Ord A}.
+  Context {A} {AE:Eqv A} {AL:Ord A}.
 
   Inductive list_lt : list A -> list A -> Prop :=
     | NilLte : forall x xL,

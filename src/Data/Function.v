@@ -5,17 +5,21 @@ Definition apply {A B} (f:A -> B) (x:A) : B := f x.
 Definition apply_to {A B} : A -> (A -> B) -> B := flip apply.
 
 Definition compose {A B C} (g:B -> C) (f:A -> B) (a:A) : C := g (f a).
+Arguments compose {A B C} _ _ / _.
 Definition compose2 {A B C D}
     : (C -> D) -> (A -> B -> C) -> A -> B -> D :=
   compose compose compose.
+Arguments compose2 {A B C D} _ _ / _ _.
 Definition compose3 {A B C D E}
     : (D -> E) -> (A -> B -> C -> D) -> A -> B -> C -> E :=
   compose compose2 compose.
+Arguments compose3 {A B C D E} _ _ / _ _ _.
 
 Definition const {A B} (a:A) (_:B) : A := a.
 Definition const2 {A B C} : A -> B -> C -> A := compose const const.
 
 Definition on {A B C} (f:B -> B -> C) (i:A -> B)  (x:A) (y:A) := f (i x) (i y).
+Arguments on {A B C} _ _ / _ _.
 
 Definition uncurry {A B C} (f:A -> B -> C) (p:A*B) : C :=
   let (a,b) := p in f a b.
@@ -40,3 +44,12 @@ Module FunctionNotation.
   Notation "x ` f ` y" := (f x y)
     (at level 98, f at next level, right associativity, only parsing).
 End FunctionNotation.
+
+Require Coq.Program.Basics.
+
+Definition impl : Prop -> Prop -> Prop := Basics.impl.
+Arguments impl / _ _.
+Arguments Basics.impl / _ _.
+Definition follows : Prop -> Prop -> Prop := Basics.flip impl.
+Arguments follows / _ _.
+Arguments Basics.flip {A B C} _ / _ _.

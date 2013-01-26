@@ -14,14 +14,14 @@ Section MonadError.
 
   Definition catch_with {A} : (E -> m A) -> m A -> m A := flip catch.
 
-  Context {mor} {e_Injection : Injection string E mor}.
+  Context {e_HasInjection : HasInjection string E}.
 
   Definition throw_msg {A} : string -> m A := throw '.' inject.
 End MonadError.
 
 Section iso_MonadError.
   Variable n:Type -> Type.
-  Context {m} {B:FunctorBijection m n} {E} {nME:MonadError E n}.
+  Context {m} {B:HasFunctorBijection m n} {E} {nME:MonadError E n}.
   Definition iso_MonadError_throw {A} : E -> m A := ffrom '.' throw.
   Definition iso_MonadError_catch {A} (aM:m A) (h:E -> m A) : m A :=
     ffrom $ catch (fto aM) (fto '.' h).

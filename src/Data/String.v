@@ -11,7 +11,6 @@ Require Import FP.Structures.Injection.
 Require Import FP.Structures.Monoid.
 Require Import FP.Structures.Ord.
 Require Import FP.Structures.Foldable.
-Require Import FP.Structures.RelationClasses.
 Require Import FP.Structures.Show.
 Require Import FP.Structures.Monad.
 Require Import FP.Data.N.
@@ -32,7 +31,7 @@ Section EqDec.
   Definition string_eq_dec := eq_dec `on` string2list.
 
   Global Instance string_EqDec : EqDec string := { eq_dec := string_eq_dec }.
-  Global Instance string_Eq_RelDecCorrect : RelDecCorrect (T:=string) eq_dec eq.
+  Global Instance string_Eq_RelDecCorrect : RelDecCorrect string eq eq_dec.
   Admitted.
 End EqDec.
 
@@ -42,7 +41,7 @@ End Eqv.
 
 Section EqvDec.
   Global Instance string_EqvDec : EqvDec string := { eqv_dec := eq_dec }.
-  Global Instance string_Eqv_RelDecCorrect : RelDecCorrect (T:=string) eqv_dec eqv.
+  Global Instance string_Eqv_RelDecCorrect : RelDecCorrect string eqv eqv_dec.
   Admitted.
 End EqvDec.
 
@@ -79,7 +78,7 @@ Section Monoid.
 End Monoid.
 
 Section Injection.
-  Global Instance string_ascii_Injection : Injection ascii string :=
+  Global Instance string_ascii_HasInjection : HasInjection ascii string :=
     { inject c := String c EmptyString }.
 End Injection.
 

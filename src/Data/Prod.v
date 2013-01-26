@@ -16,10 +16,10 @@ Require Import FP.Structures.Functor.
 Require Import FP.Data.PrettyI.
 Require Import FP.Structures.Monoid.
 Require Import FP.Structures.Ord.
-Require Import FP.Structures.RelationClasses.
 Require Import FP.Structures.Show.
 Require Import FP.Structures.Traversable.
 Require Import FP.Structures.HasLens.
+Require Import FP.Relations.Setoid.
 
 Import LensNotation.
 Import CharNotation.
@@ -41,10 +41,10 @@ Section EqDec.
     let '((a1,b1),(a2,b2)) := (ab1,ab2) in a1 =! a2 && b1 =! b2.
   Global Instance prod_EqDec : EqDec (A*B) := { eq_dec := prod_eq_dec }.
 
-  Context {ARDC:RelDecCorrect (T:=A) eq_dec eq}.
-  Context {BRDC:RelDecCorrect (T:=B) eq_dec eq}.
+  Context {ARDC:RelDecCorrect A eq eq_dec}.
+  Context {BRDC:RelDecCorrect B eq eq_dec}.
 
-  Global Instance prod_Eq_RelDecCorrect : RelDecCorrect (T:=A*B) eq_dec eq.
+  Global Instance prod_Eq_RelDecCorrect : RelDecCorrect (A*B) eq eq_dec.
   Admitted.
 End EqDec.
 
@@ -57,10 +57,10 @@ Section Eqv.
 
   Global Instance prod_Eqv : Eqv (A*B) := { eqv := prod_eqv }.
 
-  Context {AEE:Equivalence (A:=A) eqv} {BEE:Equivalence (A:=B) eqv}.
+  Context {AEE:EqvWF A} {BEE:EqvWF B}.
 
-  Global Instance prod_Equivalence : Equivalence (A:=A*B) eqv.
-  Proof. constructor.
+  Global Instance prod_Equivalence : EqvWF (A*B).
+  Proof. repeat constructor.
     unfold Reflexive ; intros.
       destruct x. constructor ; reflexivity.
     unfold Symmetric ; intros.
@@ -82,15 +82,16 @@ Section EqvDec.
 
   Global Instance prod_EqvDec : EqvDec (A*B) := { eqv_dec := prod_eqv_dec }.
 
-  Context {AE:Eqv A} {ARDC:RelDecCorrect (T:=A) eqv_dec eqv}.
-  Context {BE:Eqv B} {BRDC:RelDecCorrect (T:=B) eqv_dec eqv}.
+  Context {AE:Eqv A} {ARDC:RelDecCorrect A eqv eqv_dec}.
+  Context {BE:Eqv B} {BRDC:RelDecCorrect B eqv eqv_dec}.
 
-  Global Instance prod_Eqv_RelDecCorrect : RelDecCorrect (T:=A*B) eqv_dec eqv.
+  Global Instance prod_Eqv_RelDecCorrect : RelDecCorrect (A*B) eqv eqv_dec.
   Admitted.
 End EqvDec.
 
 Section Ord.
-  Context {A B} {AL:Ord A} {BL:Ord B}.
+  Context {A} {AE:Eqv A} {AL:Ord A}.
+  Context {B} {BL:Ord B}.
 
   Inductive prod_lt : A*B -> A*B -> Prop :=
     | SndLte : forall a1 b1 a2 b2,

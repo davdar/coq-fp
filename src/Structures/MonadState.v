@@ -16,7 +16,7 @@ Definition modify {m S} {M:Monad m} {MS:MonadState S m} (f:S -> S) : m unit :=
 
 Section iso_MonadState.
   Variable (n:Type -> Type).
-  Context {m} {B:FunctorBijection m n} {S} {nMR:MonadState S n}.
+  Context {m} {B:HasFunctorBijection m n} {S} {nMR:MonadState S n}.
 
   Definition iso_MonadState_get : m S := ffrom get.
   Definition iso_MonadState_put (s:S) : m unit := ffrom $ put s.

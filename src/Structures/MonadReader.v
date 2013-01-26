@@ -10,7 +10,7 @@ Class MonadReader R m :=
 
 Section iso_MonadReader.
   Variable n:Type -> Type.
-  Context {m} {B:FunctorBijection m n} {R} {nMR:MonadReader R n}.
+  Context {m} {B:HasFunctorBijection m n} {R} {nMR:MonadReader R n}.
 
   Definition iso_MonadReader_ask : m R := ffrom ask.
   Definition iso_MonadReader_local {A} (f:R -> R) : m A -> m A :=
