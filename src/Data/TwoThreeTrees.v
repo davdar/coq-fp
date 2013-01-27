@@ -63,12 +63,14 @@ Module TwoThreeTrees.
     Definition single (e:K*V) : tree := Two_t Null_t e Null_t.
     Definition singleton (k:K) (v:V) : tree := Two_t Null_t (k,v) Null_t.
 
+    (*
     Fixpoint height (t:tree) : N :=
       match t with
       | Null_t => zero
       | Two_t tl _ tr => height tl `lmax` height tr
       | Three_t tl _ tm _ tr => height tl `lmax` height tm `lmax` height tr
       end.
+*)
 
     (* a context of a two-three tree. this is the type of taking a tree and
      * replacing a sub-tree with a hole.
@@ -164,7 +166,7 @@ Module TwoThreeTrees.
        *)
       | ThreeRightHole_l : tree -> K*V -> tree -> tree -> context -> location.
 
-    Definition fillLocation (e:K*V) (l:location) : tree :=
+    Definition fill_location (e:K*V) (l:location) : tree :=
       match l with
       | TwoHole_l tl tr c => zip (Two_t tl e tr) c
       | ThreeLeftHole_l tl tm vr tr c => zip (Three_t tl e tm vr tr) c
@@ -196,16 +198,16 @@ Module TwoThreeTrees.
        returns the greatest pair as well as either a single context if
        the element was a two node, or the pair's sibling and a context
        if it was a three node. *)
-    Fixpoint locateGreatest (t:tree) (c:context)
+    Fixpoint locate_greatest (t:tree) (c:context)
         : option ((K*V) * (context + (K*V) * context)) :=
       match t with
       | Null_t => None
       | Two_t tl em tr =>
-          locateGreatest tr (TwoRightHole_c tl em c)
+          locate_greatest tr (TwoRightHole_c tl em c)
           <|>
           ret (em, inl c)
       | Three_t tl el tm er tr =>
-          locateGreatest tr (ThreeRightHole_c tl el tm er c)
+          locate_greatest tr (ThreeRightHole_c tl el tm er c)
           <|>
           ret (er, inr (el, c))
       end.
@@ -285,14 +287,14 @@ Module TwoThreeTrees.
     Definition insert_with (f:V -> V -> V) (k:K) (v:V) (t:tree) : tree :=
       match locate k t Top_c with
       | inl c => insertUp (Null_t, (k,v), Null_t) c
-      | inr ((_,v'), l) => fillLocation (k,f v v') l
+      | inr ((_,v'), l) => fill_location (k,f v v') l
       end.
 
     (* update an element in the tree *)
     Definition update (k:K) (f:V -> V) (t:tree) : tree :=
       match locate k t Top_c with
       | inl c => t
-      | inr ((_,v), l) => fillLocation (k,f v) l
+      | inr ((_,v), l) => fill_location (k,f v) l
       end.
 
     (* if remove results in a tree which is too short, propegate the gap into the
@@ -443,7 +445,7 @@ Module TwoThreeTrees.
           (* element found at a two-node *)
           | TwoHole_l tl tr c =>
               let mkContext g c' := TwoLeftHole_c g tr c' in
-              match locateGreatest tl Top_c with
+              match locate_greatest tl Top_c with
               (* no children: turn into a hole and propagate *)
               | None =>
                   removeUp Null_t c
@@ -457,7 +459,7 @@ Module TwoThreeTrees.
           (* element found on left side of three-node *)
           | ThreeLeftHole_l tl tm er tr c =>
               let mkContext g c' := ThreeLeftHole_c g tm er tr c' in
-              match locateGreatest tl Top_c with
+              match locate_greatest tl Top_c with
               (* no children: turn into a two-node *)
               | None =>
                   Some $ zip (single er) c
@@ -471,7 +473,7 @@ Module TwoThreeTrees.
           (* element found on right side of three-node *)
           | ThreeRightHole_l tl el tm tr c =>
               let mkContext g c' := ThreeMiddleHole_c tl el g tr c' in
-              match locateGreatest tm Top_c with
+              match locate_greatest tm Top_c with
               (* no children: turn into a two-node *)
               | None =>
                   Some $ zip (single el) c
@@ -571,15 +573,25 @@ Module TwoThreeTrees.
             text_d "}"
           end
       end.
-
-
-
   End variable.
   Arguments Null_t {K V}.
   Arguments Two_t {K V} _ _ _.
   Arguments Three_t {K V} _ _ _ _ _.
+  Arguments Top_c {K V}.
+  Arguments TwoLeftHole_c {K V} _ _ _.
+  Arguments TwoRightHole_c {K V} _ _ _.
+  Arguments ThreeLeftHole_c {K V} _ _ _ _ _.
+  Arguments ThreeMiddleHole_c {K V} _ _ _ _ _.
+  Arguments ThreeRightHole_c {K V} _ _ _ _ _.
+  Arguments TwoHole_l {K V} _ _ _.
+  Arguments ThreeLeftHole_l {K V} _ _ _ _ _.
+  Arguments ThreeRightHole_l {K V} _ _ _ _ _.
   Arguments empty {K V}.
   Arguments singleton {K V} k v.
+  Arguments zip {K V} _ _.
+  Arguments fuse {K V} _ _.
+  Arguments fill_location {K V} _ _.
+  Arguments locate {K kO V} _ _ _.
   Arguments remove {K kO V} k t.
   Arguments to_list {K V} t.
   Arguments tree_cofold {K V} {m} {M} {B} f z t.

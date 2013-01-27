@@ -82,6 +82,16 @@ Section Lattice.
   Qed.
 End Lattice.
 
+Section BoundedLattice.
+  Global Instance unit_BoundedLattice : BoundedLattice unit :=
+    { ltop := tt
+    ; lbot := tt
+    }.
+  Global Instance unit_BoundedLatticeWF : BoundedLatticeWF unit.
+  Proof. constructor ; intros ; destruct t ; simpl in * ; reflexivity.
+  Qed.
+End BoundedLattice.
+
 Section Show.
   Section unit_show.
     Variable (R:Type) (SR:ShowResult R).

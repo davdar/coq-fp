@@ -21,6 +21,7 @@ Class InjectionInverse T U (to:T->U) (from:U->T) R :=
   }.
 
 Class HasInjection T U := { inject : T -> U }.
+Arguments inject {T U HasInjection} _ : simpl never.
 
 Class BijectionRespect T U to from R1 R2 :=
   { BijectionRespect_to : InjectionRespect T U to R1 R2

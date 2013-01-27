@@ -30,6 +30,8 @@ Class BoundedLattice T :=
   ; ltop : T
   ; lbot : T
   }.
+Arguments ltop {T BoundedLattice} : simpl never.
+Arguments lbot {T BoundedLattice} : simpl never.
 
 Class BoundedLatticeWF T {E:Eqv T} {O:Ord T} {L:Lattice T} {BL:BoundedLattice T} :=
   { ltop_ineq : forall t, t <= ltop

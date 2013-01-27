@@ -63,6 +63,25 @@ Section DerivingInjResp_inv.
   Qed.
 End DerivingInjResp_inv.
 
+Section DerivingInjectionInverse_ext.
+  Context {T:Type}.
+  Context {U:Type}.
+  Variable (to:T->U) (from:U->T).
+  Variable (R1:T->T->Prop) (R2:T->T->Prop).
+  Context {Refl1:Reflexive R1}.
+  Context {Refl2:Reflexive R2}.
+  Context {InjInv:InjectionInverse T U to from R1}.
+  Context {Pr:Proper (R1 ==> R1 ==> impl) R2}.
+
+  Definition DerivingInjectionInverse_ext : InjectionInverse T U to from R2.
+  Proof. constructor ; intros.
+    eapply Pr.
+    reflexivity.
+    apply InjectionInverse_inv.
+    reflexivity.
+  Qed.
+End DerivingInjectionInverse_ext.
+
 Section DerivingInjectionDistribute.
   Context {T:Type}.
   Context {U:Type}.
@@ -212,6 +231,37 @@ Section DerivingLatticeWF.
   Qed.
 End DerivingLatticeWF.
 
+Section DerivingBoundedLatticeWF.
+  Context {T:Type}.
+  Context {T_Eqv:Eqv T} {T_EqvWF:EqvWF T}.
+  Context {T_Ord:Ord T} {T_OrdWF:OrdWF T}.
+  Context {T_Lattice:Lattice T}.
+  Context {T_BoundedLattice:BoundedLattice T}.
+  Context {U:Type}.
+  Context {U_Eqv:Eqv U} {U_EqvWF:EqvWF U}.
+  Context {U_Ord:Ord U} {U_OrdWF:OrdWF U}.
+  Context {U_Lattice:Lattice U}.
+  Context {U_BoundedLattice:BoundedLattice U} {U_BoundedLatticeWF:BoundedLatticeWF U}.
+  Variable (to:T->U) (from:U->T).
+  Context {InjResp_eqv:InjectionRespect T U to eqv eqv}.
+  Context {InjResp_lt:InjectionRespect T U to lt lt}.
+  Context {InjInv2:InjectionInverse U T from to eqv}.
+  Variable (poof_top:ltop = (from ltop)).
+  Variable (poof_bot:lbot = (from lbot)).
+
+  Definition DerivingBoundedLatticeWF : BoundedLatticeWF T.
+  Proof. constructor ; intros.
+    rewrite poof_top.
+      eapply InjectionRespect_beta.
+      rewrite <- InjectionInverse_inv.
+      apply ltop_ineq.
+    rewrite poof_bot.
+      eapply InjectionRespect_beta.
+      rewrite <- InjectionInverse_inv.
+      apply lbot_ineq.
+  Qed.
+End DerivingBoundedLatticeWF.
+
 Module Type DerivingTheKitchenSink1_Arg.
   Parameter T : Type -> Type.
   Parameter U : Type -> Type.
@@ -223,6 +273,9 @@ End DerivingTheKitchenSink1_Arg.
 
 Module DerivingTheKitchenSink1 (X:DerivingTheKitchenSink1_Arg).
   Import X.
+  Arguments to {A} _ /.
+  Arguments from {A} _ /.
+
   Section Context.
     Context {A:Type}.
     Context {U_EqDec:EqDec (U A)} {U_RDC_eq:RelDecCorrect (U A) eq eq_dec}.
@@ -231,6 +284,7 @@ Module DerivingTheKitchenSink1 (X:DerivingTheKitchenSink1_Arg).
     Context {U_Ord:Ord (U A)} {U_OrdWF:OrdWF (U A)}.
     Context {U_OrdDec:OrdDec (U A)} {U_ODC:OrdDecCorrect (U A)}.
     Context {U_Lattice:Lattice (U A)} {U_LatticeWF:LatticeWF (U A)}.
+    Context {U_BLattice:BoundedLattice (U A)} {U_BLatticeWF:BoundedLatticeWF (U A)}.
 
     Global Instance DTKS_EqDec : EqDec (T A) := { eq_dec := eq_dec `on` to }.
     Global Instance DTKS_EqDec_RDC : RelDecCorrect (T A) eq eq_dec :=
@@ -245,6 +299,9 @@ Module DerivingTheKitchenSink1 (X:DerivingTheKitchenSink1_Arg).
       DerivingInjResp_inv from to eqv eqv eq eq_refl.
     Global Instance DTKS_EqvWF : EqvWF (T A) :=
       DerivingEqvWF to.
+    Global Instance DTKS_InjectionInverse_from_eqv
+        : InjectionInverse (U A) (T A) from to eqv :=
+      DerivingInjectionInverse_ext from to eq eqv.
 
     Global Instance DTKS_EqvDec : EqvDec (T A) := { eqv_dec := eqv_dec `on` to }.
     Global Instance DTKS_EqvDec_RDC : RelDecCorrect (T A) eqv eqv_dec :=
@@ -282,5 +339,12 @@ Module DerivingTheKitchenSink1 (X:DerivingTheKitchenSink1_Arg).
       DerivingInjectionDistribute_ext to ljoin ljoin eq eqv.
     Global Instance DTKS_LatticeWF : LatticeWF (T A) :=
       DerivingLatticeWF to.
+
+    Global Instance DTKS_BoundedLattice : BoundedLattice (T A) :=
+      { ltop := from ltop
+      ; lbot := from lbot
+      }.
+    Global Instance DTKS_BoundedLatticeWF : BoundedLatticeWF (T A) :=
+      DerivingBoundedLatticeWF to from eq_refl eq_refl.
   End Context.
 End DerivingTheKitchenSink1.

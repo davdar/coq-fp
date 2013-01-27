@@ -38,36 +38,7 @@ Import MonadNotation.
 Arguments Some {A} _.
 Arguments None {A}.
 
-(*
-Section Injection.
-  Context {A:Type}.
-  Global Instance option_Injection_Some : Injection A (option A) Some := {}.
-  Global Instance option_InjectionResp_Some_eq
-      : InjectionRespect A (option A) Some eq eq.
-    constructor ; unfold Proper ; simpl in * ; intros ; congruence. Qed.
-End Injection.
-*)
-  (*
-  Global Instance option_InjectionRespect_Some_lt
-    : InjectionRespect A (option A) Some lt lt.
-  Proof. constructor.
-    unfold Proper ; simpl ; intros.
-      constructor ; auto.
-    unfold Proper ; simpl ; intros.
-      inversion H ; auto.
-  Qed.
-*)
-(*
-  Global Instance option_InjectionResp_Some_eqv
-      : InjectionRespect A (option A) Some eqv eqv.
-    constructor ; unfold Proper ; simpl in * ; intros.
-    constructor ; auto.
-    inversion H ; auto.
-    Qed.
-*)
-
-
-Section Bijection_sum.
+Section sum_Bijection.
   Context {A:Type}.
 
   Definition option_to_sum (aM:option A) : unit + A :=
@@ -75,7 +46,7 @@ Section Bijection_sum.
     | None => inl tt
     | Some a => inr a
     end.
-  Global Instance option_InjectionResp_sum_eq
+  Global Instance option_to_sum_InjectionResp_eq
       : InjectionRespect (option A) (unit+A) option_to_sum eq eq.
     constructor ; unfold Proper ; simpl in * ; intros ; try congruence.
     destruct x,y ; simpl in * ; congruence.
@@ -86,127 +57,24 @@ Section Bijection_sum.
     | inl tt => None
     | inr a => Some a
     end.
-  Global Instance sum_InjectionResp_option_eq
-     : InjectionRespect (unit+A) (option A) sum_to_option eq eq.
-    constructor ; unfold Proper ; simpl in * ; intros ; try congruence.
-    destruct x,y ; simpl in *.
-      destruct u,u0 ; congruence.
-      destruct u ; congruence.
-      destruct u ; congruence.
-      congruence.
-    Qed.
-
-  Global Instance option_InjectionInverse_sum_eq
-      : InjectionInverse (option A) (unit+A) option_to_sum sum_to_option eq.
-    constructor ; intros.
-    destruct x ; simpl in * ; reflexivity.
-    Qed.
-
-  Global Instance sum_InjectionInverse_option_eq
+  Global Instance sum_to_option_InjectionInverse_eq
       : InjectionInverse (unit+A) (option A) sum_to_option option_to_sum eq.
     constructor ; intros.
     destruct x ; [ destruct u | idtac ] ; simpl in * ; auto.
     Qed.
-End Bijection_sum.
+End sum_Bijection.
 
 Module option_DTKS1_Arg <: DerivingTheKitchenSink1_Arg.
-  Definition T := option.
-  Definition U := fun A => (unit:Type)+A.
-  Definition to := @option_to_sum.
-  Definition from := @sum_to_option.
-  Definition InjResp : forall A, InjectionRespect (T A) (U A) (to _) eq eq := _.
-  Definition InjInv : forall A, InjectionInverse (U A) (T A) (from _) (to _) eq := _.
+  Definition T A := option A.
+  Definition U A := (unit:Type)+A.
+  Definition to {A} (x:T A) := option_to_sum x.
+  Definition from {A} (x:U A) := sum_to_option x.
+  Definition InjResp A : InjectionRespect (T A) (U A) to eq eq := _.
+  Definition InjInv A : InjectionInverse (U A) (T A) from to eq := _.
 End option_DTKS1_Arg.
 
 Module option_DTKS1 := DerivingTheKitchenSink1 option_DTKS1_Arg.
 Import option_DTKS1.
-
-(*
-Section EqDec.
-  Context {A} {EqDec_A:EqDec A}.
-  Global Instance option_EqDec : EqDec (option A) :=
-    { eq_dec := eq_dec `on` option_to_sum }.
-
-  Context {EDC:RelDecCorrect A eq eq_dec}.
-  Global Instance option_RelDecCorrect_eq_dec : RelDecCorrect (option A) eq eq_dec :=
-    DerivingEqRDC option_to_sum eq_refl.
-End EqDec.
-Section Eqv.
-  Context {A} {Eqv_A:Eqv A}.
-  Global Instance option_Eqv : Eqv (option A) :=
-    { eqv := eqv `on` option_to_sum }.
-  Global Instance option_InjectionResp_sum_eqv
-      : InjectionRespect (option A) (unit+A) option_to_sum eqv eqv :=
-    DerivingInjResp option_to_sum eqv eqv eq_refl.
-  Global Instance sum_InjectionResp_option_eqv
-      : InjectionRespect (unit+A) (option A) sum_to_option eqv eqv :=
-    DerivingInjResp_inv sum_to_option option_to_sum eqv eqv eq_refl eq.
-
-  Context {A_EqvWF:EqvWF A}.
-  Global Instance option_EqvWF : EqvWF (option A) := DerivingEqvWF option_to_sum.
-End Eqv.
-Section EqvDec.
-  Context {A} {EqvDec_A:EqvDec A}.
-  Global Instance option_EqvDec : EqvDec (option A) :=
-    { eqv_dec := eqv_dec `on` option_to_sum }.
-
-  Context {Eqv_A:Eqv A} {RDC:RelDecCorrect A eqv eqv_dec}.
-  Global Instance option_Eqv_RelDecCorrect : RelDecCorrect (option A) eqv eqv_dec :=
-    DerivingRelDec option_to_sum eqv eqv_dec eqv eqv_dec eq_refl.
-End EqvDec.
-
-Section Ord.
-  Context {A} {Ord_A:Ord A}.
-  Global Instance option_Ord : Ord (option A) :=
-    { lt := lt `on` option_to_sum }.
-  Global Instance option_InjectionRespect_sum_lt
-      : InjectionRespect (option A) (unit + A) option_to_sum lt lt :=
-    DerivingInjResp option_to_sum lt lt eq_refl.
-
-  Global Instance sum_InjectionRespect_option_lt
-      : InjectionRespect (unit + A) (option A) sum_to_option lt lt :=
-    DerivingInjResp_inv sum_to_option option_to_sum lt lt eq_refl eq.
-
-  Context {Eqv_A:Eqv A} {EqvWF_A:EqvWF A} {OrdWF_A:OrdWF A}.
-  Global Instance option_OrdWF : OrdWF (option A) := DerivingOrdWF option_to_sum.
-End Ord.
-Section OrdDec.
-  Context {A} {OrdDec_A:OrdDec A}.
-  Global Instance option_OrdDec : OrdDec (option A) :=
-    { ord_dec := ord_dec `on` option_to_sum }.
-
-  Context {A_Eqv:Eqv A} {A_Ord:Ord A}.
-  Context {A_ODC:OrdDecCorrect A}.
-  Global Instance option_OrdDecCorrect : OrdDecCorrect (option A) :=
-    DerivingOrdDecCorrect option_to_sum eq_refl.
-End OrdDec.
-
-Section Lattice.
-  Context {A} {A_Eqv:Eqv A} {A_EqvWF:EqvWF A} {A_Ord:Ord A} {A_OrdWF:OrdWF A}.
-  Context {A_Lattice:Lattice A} {A_LatticeWF:LatticeWF A}.
-  Global Instance option_Lattice : Lattice (option A) :=
-    { lmeet := sum_to_option '..' (lmeet `on` option_to_sum)
-    ; ljoin := sum_to_option '..' (ljoin `on` option_to_sum)
-    }.
-  Global Instance option_InjectionDistribute_meet_eq
-      : InjectionDistribute (option A) (unit+A) option_to_sum lmeet lmeet eq :=
-    DerivingInjectionDistribute
-      option_to_sum sum_to_option lmeet lmeet eq eq eq_refl.
-  Global Instance option_InjectionDistribute_meet_eqv
-      : InjectionDistribute (option A) (unit+A) option_to_sum lmeet lmeet eqv :=
-    DerivingInjectionDistribute_eqv option_to_sum lmeet lmeet eq eqv.
-
-  Global Instance option_InjectionDistribute_join_eq
-      : InjectionDistribute (option A) (unit+A) option_to_sum ljoin ljoin eq :=
-    DerivingInjectionDistribute
-      option_to_sum sum_to_option ljoin ljoin eq eq eq_refl.
-  Global Instance option_InjectionDistribute_join_eqv
-      : InjectionDistribute (option A) (unit+A) option_to_sum ljoin ljoin eqv :=
-    DerivingInjectionDistribute_eqv option_to_sum ljoin ljoin eq eqv.
-  Global Instance option_LatticeWF: LatticeWF (option A) :=
-    DerivingLatticeWF option_to_sum.
-End Lattice.
-*)
 
 Definition from_option {A} (a:A) (aM:option A) : A :=
   match aM with
