@@ -34,19 +34,6 @@ Import LatticeNotation.
 
 Local Infix "+" := sum.
 
-Section Injection.
-  Context {A B:Type}.
-  Global Instance sum_HasInjection_inl : HasInjection A (A+B) :=
-    { inject := inl }.
-  Global Instance sum_HasInjection_inr : HasInjection B (A+B) :=
-    { inject := inr }.
-
-  Global Instance sum_InjectionRespect_inl_eq : InjectionRespect A (A+B) inl eq eq.
-    constructor ; unfold Proper ; simpl in * ; intros ; congruence. Qed.
-  Global Instance sum_InjectionRespect_inr_eq : InjectionRespect B (A+B) inr eq eq.
-    constructor ; unfold Proper ; simpl in * ; intros ; congruence. Qed.
-End Injection.
-
 Section EqDec.
   Context {A B} {AED:EqDec A} {BED:EqDec B}.
 
@@ -341,6 +328,45 @@ Section Lattice.
         left ; constructor.
     Qed.
 End Lattice.
+
+Section Injection.
+  Context {A B:Type} {AE:Eqv A} {BE:Eqv B} {AO:Ord A} {BO:Ord B}.
+  Global Instance sum_HasInjection_inl : HasInjection A (A+B) :=
+    { inject := inl }.
+  Global Instance sum_HasInjection_inr : HasInjection B (A+B) :=
+    { inject := inr }.
+
+  Global Instance sum_InjectionRespect_inl_eq : InjectionRespect A (A+B) inl eq eq.
+    constructor ; unfold Proper ; simpl in * ; intros ; congruence. Qed.
+  Global Instance sum_InjectionRespect_inr_eq : InjectionRespect B (A+B) inr eq eq.
+    constructor ; unfold Proper ; simpl in * ; intros ; congruence. Qed.
+
+  Global Instance sum_inl_InjectionRespect_eqv : InjectionRespect A (A+B) inl eqv eqv.
+  Proof.
+    constructor ; unfold Proper ; simpl ; intros.
+    constructor ; auto.
+    inversion H ; auto.
+  Qed.
+  Global Instance sum_inr_InjectionRespect_eqv : InjectionRespect B (A+B) inr eqv eqv.
+  Proof.
+    constructor ; unfold Proper ; simpl ; intros.
+    constructor ; auto.
+    inversion H ; auto.
+  Qed.
+
+  Global Instance sum_inl_InjectionRespect_lt : InjectionRespect A (A+B) inl lt lt.
+  Proof.
+    constructor ; unfold Proper ; simpl ; intros.
+    constructor ; auto.
+    inversion H ; auto.
+  Qed.
+  Global Instance sum_inr_InjectionRespect_lt : InjectionRespect B (A+B) inr lt lt.
+  Proof.
+    constructor ; unfold Proper ; simpl ; intros.
+    constructor ; auto.
+    inversion H ; auto.
+  Qed.
+End Injection.
 
 Section Show.
   Context {A B} {AS:Show A} {BS:Show B}.

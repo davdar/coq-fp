@@ -178,19 +178,19 @@ Module TwoThreeTrees.
     Fixpoint locate (k:K) (t:tree) (c:context) : context + (K*V) * location :=
       match t with
       | Null_t => inl c
-      | Two_t tl em tr =>
-          match k <=>! fst em with
-          | Lt => locate k tl $ TwoLeftHole_c em tr c
-          | Eq => inr (em, TwoHole_l tl tr c)
-          | Gt => locate k tr $ TwoRightHole_c tl em c
+      | Two_t tl (km,vm) tr =>
+          match k <=>! km with
+          | Lt => locate k tl $ TwoLeftHole_c (km,vm) tr c
+          | Eq => inr ((km,vm), TwoHole_l tl tr c)
+          | Gt => locate k tr $ TwoRightHole_c tl (km,vm) c
           end
-      | Three_t tl el tm er tr =>
-          match k <=>! fst el, k <=>! fst er with
-          | Lt, _ => locate k tl $ ThreeLeftHole_c el tm er tr c
-          | Eq, _ => inr (el, ThreeLeftHole_l tl tm er tr c)
-          | Gt, Lt => locate k tm $ ThreeMiddleHole_c tl el er tr c
-          | _, Eq => inr (er, ThreeRightHole_l tl el tm tr c)
-          | _, Gt => locate k tr $ ThreeRightHole_c tl el tm er c
+      | Three_t tl (kl,vl) tm (kr,vr) tr =>
+          match k <=>! kl, k <=>! kr with
+          | Lt, _ => locate k tl $ ThreeLeftHole_c (kl,vl) tm (kr,vr) tr c
+          | Eq, _ => inr ((kl,vl), ThreeLeftHole_l tl tm (kr,vr) tr c)
+          | Gt, Lt => locate k tm $ ThreeMiddleHole_c tl (kl,vl) (kr,vr) tr c
+          | _, Eq => inr ((kr,vr), ThreeRightHole_l tl (kl,vl) tm tr c)
+          | _, Gt => locate k tr $ ThreeRightHole_c tl (kl,vl) tm (kr,vr) c
           end
       end.
 

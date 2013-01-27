@@ -117,7 +117,7 @@ Module ext_top_bot_DTKS1 := DerivingTheKitchenSink1 ext_top_bot_DTKS1_Arg.
 Import ext_top_bot_DTKS1.
 
 Section Injection.
-  Context {A:Type} {E:Eqv A}.
+  Context {A:Type} {E:Eqv A} {O:Ord A} {BL:BoundedLattice A}.
 
   Global Instance ext_top_bot_HasInjection : HasInjection A (ext_top_bot A) :=
     { inject := ExtTopBot '.' Some '.' Some }.
@@ -130,13 +130,26 @@ Section Injection.
   Global Instance ext_top_bot_InjectionRespect_inject_eqv
       : InjectionRespect A (ext_top_bot A) inject eqv eqv.
   Proof. constructor ; unfold Proper ; simpl ; intros.
-    unfold eqv, inject ; simpl ; unfold ext_top_bot_to_sum ; simpl.
-    rewrite <- H.
-    (* here. set up injection respect relations for sum and option then here.  try to generalize.  then proceed with 23trees. *)
-    DerivingInjResp inject eqv eqv _.
-  Proof. unfold eqv ; simpl.
-
-  Context {A_Ord:Ord A} {A_BoundedLattice:BoundedLattice A}.
+    apply InjectionRespect_beta ; simpl.
+      unfold ext_top_bot_to_sum, inject ; simpl.
+      repeat apply InjectionRespect_eta ; auto.
+      auto.
+    apply InjectionRespect_eta in H ; simpl in H.
+      unfold ext_top_bot_to_sum, inject in H ; simpl in H.
+      repeat apply InjectionRespect_beta in H ; auto.
+  Qed.
+  Global Instance ext_top_bot_inject_InjectionRespect_lt
+      : InjectionRespect A (ext_top_bot A) inject lt lt.
+  Proof.
+    constructor ; unfold Proper ; simpl ; intros.
+    apply InjectionRespect_beta ; simpl.
+      unfold ext_top_bot_to_sum, inject ; simpl.
+      repeat apply InjectionRespect_eta ; auto.
+      auto.
+    apply InjectionRespect_eta in H ; simpl in H.
+      unfold ext_top_bot_to_sum, inject in H ; simpl in H.
+      repeat apply InjectionRespect_beta in H ; auto.
+    Qed.
 
   Lemma ext_top_bot_inject_ineq :
     forall (a:A), lbot < (inject (U:=ext_top_bot A)) a < ltop.
