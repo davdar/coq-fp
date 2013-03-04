@@ -1,81 +1,28 @@
-Require Export FP.Data.AsciiPre.
+Require Coq.Strings.Ascii.
 
-Require Import FP.Data.Function.
-Require Import FP.Data.Bool.
-Require Import FP.Data.List.
 Require Import FP.Data.N.
-Require Import FP.Data.Prod.
-Require Import FP.Structures.EqDec.
-Require Import FP.Structures.Eqv.
-Require Import FP.Structures.Functor.
-Require Import FP.Structures.Monoid.
-Require Import FP.Structures.Ord.
-Require Import FP.Structures.Show.
 Require Import FP.Structures.Convertible.
 
+Definition ascii := Ascii.ascii.
+Definition Ascii := Ascii.Ascii.
+
+Module CharNotation.
+  Delimit Scope char_scope with char.
+End CharNotation.
 Import CharNotation.
-Import EqvNotation.
-Import FunctionNotation.
-Import MonoidNotation.
-Import OrdNotation.
-Import BoolNotation.
-Import ListNotation.
-Import NNotation.
 
-Section EqDec.
-  Definition ascii_eq_dec := eq_dec `on` ascii2prod.
+Definition ascii2prod c :=
+  let '(Ascii b1 b2 b3 b4 b5 b6 b7 b8) := c in (b1, b2, b3, b4, b5, b6, b7, b8).
+Definition prod2ascii p :=
+  let '(b1, b2, b3, b4, b5, b6, b7, b8) := p in (Ascii b1 b2 b3 b4 b5 b6 b7 b8).
+Instance ascii_N_Convertible : Convertible ascii N :=
+  { convert := Ascii.N_of_ascii }.
+Instance N_ascii_Convertible : Convertible N ascii :=
+  { convert := Ascii.ascii_of_N }.
 
-  Global Instance ascii_EqDec : EqDec ascii := { eq_dec := ascii_eq_dec }.
-End EqDec.
-
-Section Eqv.
-  Global Instance ascii_Eqv : Eqv ascii := { eqv := eq }.
-End Eqv.
-
-Section EqvDec.
-  Global Instance ascii_EqvDec : EqvDec ascii := { eqv_dec := eq_dec }.
-End EqvDec.
-
-Section Ord.
-  Definition ascii_lt := lt `on` ascii2prod.
-
-  Global Instance ascii_Ord : Ord ascii := { lt := ascii_lt }.
-End Ord.
-
-Section OrdDec.
-  Definition ascii_ord_dec := ord_dec `on` ascii2prod.
-
-  Global Instance ascii_OrdDec : OrdDec ascii := { ord_dec := ascii_ord_dec  }.
-End OrdDec.
-
-Section Show.
-  Section ascii_show.
-    Variable (R:Type) (SR:ShowResult R).
-
-    Definition ascii_show (c:ascii) : R :=
-         raw_char "'"%char
-      ** raw_char c
-      ** raw_char "'"%char.
-  End ascii_show.
-
-  Global Instance ascii_Show : Show ascii := { show := ascii_show }.
-End Show.
-
-Definition space := " "%char.
-Definition newline := "010"%char.
-Definition tab := "011"%char.
-Definition carriage_return := "013"%char.
-
-Section predicates.
-  Definition is_alpha (c:ascii) : bool:=
-    let n := convert (to:=N) c in
-    65 <=! n <=! 90 || 97 <=! n <=! 122.
-
-  Definition is_numeric (c:ascii) : bool :=
-    let n := convert (to:=N) c in
-    48 <=! n <=! 57.
-
-  Definition is_whitespace : ascii -> bool :=
-    foldl orf (const false) $ fmap eqv_dec $
-      [ space ; newline ; tab ; carriage_return ].
-End predicates.
+Section constants.
+  Definition space := " "%char.
+  Definition newline := "010"%char.
+  Definition tab := "011"%char.
+  Definition carriage_return := "013"%char.
+End constants.

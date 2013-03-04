@@ -1,5 +1,5 @@
-Require Import FP.Data.AsciiPre.
-Require Import FP.Data.StringPre.
+Require Import FP.Data.Ascii.
+Require Import FP.Data.String.
 
 Require Import FP.Structures.Injection.
 Require Import FP.Structures.Monoid.

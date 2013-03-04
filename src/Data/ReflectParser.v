@@ -1,4 +1,5 @@
 Require Import Data.String.
+Require Import Data.StringRelations.
 Require Import Data.Ascii.
 Require Import Data.Maps.
 Require Import Structures.MapI.

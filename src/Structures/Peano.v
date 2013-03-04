@@ -3,6 +3,9 @@ Require Import FP.Data.Function.
 Require Import FP.Data.Identity.
 Require Import FP.Data.Susp.
 Require Import FP.Structures.Monad.
+Require Import FP.Structures.MonadState.
+Require Import FP.Structures.Counit.
+Require Import FP.Structures.Comonad.
 Require Import FP.Data.Cont.
 Require Import FP.Structures.MonadCont.
 Require Import FP.Structures.MonadState.
@@ -18,10 +21,13 @@ Class Peano T :=
   ; coloopl : forall {m} {M:Comonad m} {A}, (m A -> A) -> m A -> T -> A
   }.
 
-Definition pinc {m} {M:Monad m} {T} {P:Peano T} {MS:MonadState T m} : m T :=
-  p <- get ;;
-  modify psucc ;;
-  ret p.
+Section pinc.
+  Context {m} {Monad_:Monad m} {T} {Peano_:Peano T} {MState_:MState T m}. 
+  Definition pinc : m T :=
+    p <- get ;;
+    modify psucc ;;
+    ret p.
+End pinc.
 
 Definition Coloop m T {A} := (m A -> A) -> m A -> T -> A.
 
@@ -30,7 +36,7 @@ Definition mk_loop {T A} (coloop:Coloop identity T) (f:A -> A) (a:A) : T -> A :=
 
 Definition mk_mloop {m} {M:Monad m} {T A}
     (coloop:Coloop identity T) (f:A -> m A) (a:A) : T -> m A :=
-  mk_loop coloop (revbind f) (ret a).
+  mk_loop coloop (extend f) (ret a).
 
 Definition mk_lazyloop {T A}
     (coloop:Coloop susp T) (f:forall {C}, (C -> A) -> C -> A) (a:A) : T -> A :=

@@ -1,4 +1,4 @@
-Require Import FP.Data.BoolPre.
+Require Import FP.Data.Bool.
 Require Import FP.Data.Function.
 Require Import FP.Structures.Injection.
 Require Import FP.Relations.Function.
@@ -8,7 +8,7 @@ Require Import FP.Relations.RelDec.
 
 Import BoolNotation.
 Import FunctionNotation.
-Import MorphismNotation.
+Import ProperNotation.
 
 Class Ord T := { lt : T -> T -> Prop}.
 Arguments lt {T Ord} _ _ : simpl never.

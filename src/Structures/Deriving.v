@@ -8,6 +8,7 @@ Require Import FP.Structures.Ord.
 Require Import FP.Relations.Setoid.
 
 Import FunctionNotation.
+Import ProperNotation.
 
 Section DerivingRelDec.
   Context {T:Type} {U:Type}.
@@ -36,9 +37,9 @@ Section DerivingInjResp.
   Variable (poof:TR = (UR `on` inj)).
 
   Definition DerivingInjResp : InjectionRespect T U inj TR UR.
-  Proof. constructor ; unfold Proper ; simpl ; intros.
+  Proof. constructor ; unfold Proper,"==>","<==" ; simpl ; intros.
     rewrite poof in H ; auto.
-    rewrite poof ; auto.
+    rewrite poof ; unfold on ; simpl ; auto.
   Qed.
 End DerivingInjResp.
 
@@ -55,7 +56,7 @@ Section DerivingInjResp_inv.
   Variable (poof:UR = (TR `on` from)).
 
   Definition DerivingInjResp_inv : InjectionRespect T U to TR UR.
-  Proof. constructor ; unfold Proper ; simpl ; intros.
+  Proof. constructor ; unfold Proper,"==>","<==" ; simpl ; intros.
     rewrite poof ; simpl.
       repeat rewrite <- InjectionInverse_inv ; auto.
     rewrite poof in H ; simpl in H.
@@ -126,10 +127,10 @@ Section DerivingEqRDC.
 
   Definition DerivingEqRDC : RelDecCorrect T eq eq_dec.
   Proof. repeat (constructor ; simpl in * ; intros).
-    rewrite poof.
+    rewrite poof ; simpl.
       apply rel_correct.
       apply InjectionRespect_eta ; auto.
-    rewrite poof in H.
+    rewrite poof in H ; simpl in H.
       apply dec_correct in H.
       apply InjectionRespect_beta ; auto.
     Qed.
@@ -168,7 +169,7 @@ Section DerivingOrdWF.
     unfold Transitive ; intros.
       apply InjectionRespect_eta in H ; apply InjectionRespect_eta in H0.
       apply InjectionRespect_beta ; transitivity (inj y) ; auto.
-    unfold Proper ; simpl ; intros.
+    unfold Proper,"==>" ; simpl ; intros.
       apply InjectionRespect_eta in H1.
       apply InjectionRespect_eta in H0.
       apply InjectionRespect_eta in H.

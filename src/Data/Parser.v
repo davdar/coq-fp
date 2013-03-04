@@ -22,6 +22,7 @@ Require Import FP.Structures.Multiplicative.
 Require Import FP.Structures.Ord.
 Require Import FP.Structures.Traversable.
 
+Import NNotation.
 Import AdditiveNotation.
 Import AlternativeNotation.
 Import ApplicativeNotation.

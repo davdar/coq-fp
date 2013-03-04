@@ -8,6 +8,8 @@ Require Import FP.Data.Option.
 Require Import FP.Structures.Ord.
 Require Import FP.Data.Function.
 Require Import FP.Data.Sum.
+Require Import FP.Data.SumStructures.
+Require Import FP.Data.SumRelations.
 Require Import FP.Data.Unit.
 Require Import FP.Relations.Setoid.
 
@@ -15,6 +17,7 @@ Import AdditiveNotation.
 Import FunctionNotation.
 Import LatticeNotation.
 Import OrdNotation.
+Import ProperNotation.
 
 Definition ext_bot := option.
 
@@ -35,7 +38,7 @@ Section ext_top_Bijection.
   Proof. constructor ; unfold Proper ; simpl in * ; intros.
     congruence.
     destruct x as [x], y as [y] ; destruct x,y ; simpl in * ;
-      unfold ext_top_to_sum in H ; simpl in H ; try congruence.
+    unfold ext_top_to_sum ; simpl ; congruence.
   Qed.
 
   Definition sum_to_ext_top (et:A+unit) : ext_top A :=
@@ -81,11 +84,12 @@ Section ext_top_bot_Bijection.
       : InjectionRespect (ext_top_bot A) (unit+A+unit) ext_top_bot_to_sum eq eq.
   Proof. constructor ; unfold Proper ; simpl ; intros.
     congruence.
-    unfold ext_top_bot_to_sum in H.
+    unfold "<==" ; intros.
     destruct x as [x], y as [y] ;
       destruct x as [ x |], y as [y |] ;
       [ destruct x,y | destruct x | destruct y |] ;
-      simpl in * ; congruence.
+      simpl in * ;
+      unfold ext_top_bot_to_sum in * ; simpl in * ; congruence.
   Qed.
 
   Definition sum_to_ext_top_bot (e:unit+A+unit) : ext_top_bot A :=
@@ -125,11 +129,12 @@ Section Injection.
       : InjectionRespect A (ext_top_bot A) inject eq eq.
   Proof. constructor ; unfold Proper ; simpl ; intros.
     congruence.
-    unfold inject in H ; simpl in H ; congruence.
+    unfold "<==" ; intros ;
+      unfold inject in H ; simpl in H ; congruence.
   Qed.
   Global Instance ext_top_bot_InjectionRespect_inject_eqv
       : InjectionRespect A (ext_top_bot A) inject eqv eqv.
-  Proof. constructor ; unfold Proper ; simpl ; intros.
+  Proof. constructor ; unfold Proper,"==>","<==" ; simpl ; intros.
     apply InjectionRespect_beta ; simpl.
       unfold ext_top_bot_to_sum, inject ; simpl.
       repeat apply InjectionRespect_eta ; auto.
@@ -141,7 +146,7 @@ Section Injection.
   Global Instance ext_top_bot_inject_InjectionRespect_lt
       : InjectionRespect A (ext_top_bot A) inject lt lt.
   Proof.
-    constructor ; unfold Proper ; simpl ; intros.
+    constructor ; unfold Proper,"==>","<==" ; simpl ; intros.
     apply InjectionRespect_beta ; simpl.
       unfold ext_top_bot_to_sum, inject ; simpl.
       repeat apply InjectionRespect_eta ; auto.

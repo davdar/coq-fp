@@ -1,12 +1,16 @@
 Require Import FP.Data.Function.
 Require Import FP.Data.List.
+Require Import FP.Data.ListRelations.
+Require Import FP.Data.ListStructures.
 Require Import FP.Data.N.
 Require Import FP.Data.Option.
 Require Import FP.Data.Prod.
+Require Import FP.Data.ProdRelations.
+Require Import FP.Data.ProdStructures.
 Require Import FP.Data.String.
 Require Import FP.Data.Sum.
+Require Import FP.Data.GeneralizedList.
 Require Import FP.Structures.Additive.
-Require Import FP.Structures.Alternative.
 Require Import FP.Structures.Applicative.
 Require Import FP.Structures.Convertible.
 Require Import FP.Structures.Comonad.
@@ -26,7 +30,6 @@ Require Import FP.Structures.Foldable.
 Require Import FP.Structures.Iterable.
 Require Import FP.Data.PrettyI.
 
-Import AlternativeNotation.
 Import ApplicativeNotation.
 Import FunctionNotation.
 Import FunctorNotation.
@@ -35,6 +38,7 @@ Import MonadNotation.
 Import MonoidNotation.
 Import OrdNotation.
 Import StringNotation.
+Import NNotation.
 
 Module TwoThreeTrees.
   Section variable.
@@ -205,11 +209,11 @@ Module TwoThreeTrees.
       | Two_t tl em tr =>
           locate_greatest tr (TwoRightHole_c tl em c)
           <|>
-          ret (em, inl c)
+          Some (em, inl c)
       | Three_t tl el tm er tr =>
           locate_greatest tr (ThreeRightHole_c tl el tm er c)
           <|>
-          ret (er, inr (el, c))
+          Some (er, inr (el,c))
       end.
 
     Definition lookup (k:K) (t:tree) : option V :=
@@ -592,6 +596,7 @@ Module TwoThreeTrees.
   Arguments fuse {K V} _ _.
   Arguments fill_location {K V} _ _.
   Arguments locate {K kO V} _ _ _.
+  Arguments locate_greatest {K V} _ _.
   Arguments remove {K kO V} k t.
   Arguments to_list {K V} t.
   Arguments tree_cofold {K V} {m} {M} {B} f z t.
@@ -845,7 +850,7 @@ Instance two3set_FiniteSetI : FiniteSetI OrdDec two3set :=
   { ssize := fun A _ => @TwoThreeTrees.set_size A
   ; sreduce := fun A _ => @TwoThreeTrees.set_reduce A
   ; sfrom_list := @TwoThreeTrees.set_from_list
-  ; sto_list := fun A _ => @TwoThreeTrees.set_to_list _
+  ; sto_list := fun A _ => @TwoThreeTrees.set_to_list A
   }.
 
 Instance two3set_Traversable : TraversableP OrdDec two3set :=

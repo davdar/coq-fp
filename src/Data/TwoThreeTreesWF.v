@@ -10,11 +10,17 @@ Require Import FP.Structures.Injection.
 Require Import FP.Structures.Ord.
 Require Import FP.Structures.Eqv.
 Require Import FP.Structures.Additive.
+Require Import FP.Structures.Alternative.
+Require Import FP.Structures.Functor.
+Require Import FP.Structures.Monad.
 Require Import FP.Relations.RelDec.
 
+Import MonadNotation.
+Import NNotation.
 Import EqvNotation.
 Import OrdNotation.
 Import AdditiveNotation.
+Import AlternativeNotation.
 
 Module TwoThreeTreesWF.
   Import TwoThreeTrees.
@@ -290,7 +296,7 @@ Module TwoThreeTreesWF.
           in_tree k tm -> in_location k (ThreeRightHole_l tl pl tm tr c)
     | InLocThreeRightHoleRightTree :
         forall k tl pl tm tr c,
-          in_tree k tm -> in_location k (ThreeRightHole_l tl pl tm tr c)
+          in_tree k tr -> in_location k (ThreeRightHole_l tl pl tm tr c)
     | InLocThreeRightHoleNode :
         forall k tl kl vl tm tr c,
           k ~= kl -> in_location k (ThreeRightHole_l tl (kl,vl) tm tr c).
@@ -359,97 +365,122 @@ Module TwoThreeTreesWF.
 
   Local Ltac mysimp :=
   match goal with
-   | [ |- forall  _,  _ ] => intros
-   | [ |- _ /\ _ ] => constructor
-   | [ |- tree_iwf _ _ _ (Two_t _ _ _) ] => econstructor
-   | [ |- tree_iwf _ _ _ (Three_t _ _ _ _ _) ] => econstructor
-   | [ |- context_iwf _ _ _ _ _ _ Top_c ] => econstructor
-   | [ |- context_iwf _ _ _ _ _ _ (TwoLeftHole_c _ _ _) ] => econstructor
-   | [ |- context_iwf _ _ _ _ _ _ (TwoRightHole_c _ _ _) ] => econstructor
-   | [ |- context_iwf _ _ _ _ _ _ (ThreeLeftHole_c _ _ _ _ _) ] => econstructor
-   | [ |- context_iwf _ _ _ _ _ _ (ThreeMiddleHole_c _ _ _ _ _) ] => econstructor
-   | [ |- context_iwf _ _ _ _ _ _ (ThreeRightHole_c _ _ _ _ _) ] => econstructor
-   | [ |- location_iwf _ _ _ _ _ (TwoHole_l _ _ _) ] => econstructor
-   | [ |- location_iwf _ _ _ _ _ (ThreeLeftHole_l _ _ _ _ _) ] => econstructor
-   | [ |- location_iwf _ _ _ _ _ (ThreeRightHole_l _ _ _ _ _) ] => econstructor
-   | [ H : _ = _ <=>! _ |- _ ] => symmetry in H
-   | [ H : _ <=>! _ = Eq |- _ ] => apply ord_dec_correct_eqv in H
-   | [ H : _ <=>! _ = Lt |- _ ] => apply ord_dec_correct_lt in H
-   | [ H : _ <=>! _ = Gt |- _ ] => apply ord_dec_correct_gt in H
-   | [ H : ?a < ?b < ?c |- ?a < ?b ] => apply H
-   | [ H : ?a < ?b < ?c |- ?b < ?c ] => apply H
-   | [ H : in_tree _ Null_t |- _ ] => inversion H
-   | [ H : in_tree _ (Two_t _ _ _) |- _ ] => inversion H ; subst ; clear H
-   | [ H : in_tree _ (Three_t _ _ _ _ _) |- _ ] => inversion H ; subst ; clear H
-   | [ H : tree_iwf _ _ _ Null_t |- _ ] =>
-       inversion H ; subst ; clear H
-   | [ H : tree_iwf _ _ _ (Two_t _ _ _) |- _ ] =>
-       inversion H ; subst ; clear H
-   | [ H : tree_iwf _ _ _ (Three_t _ _ _ _ _) |- _ ] =>
-       inversion H ; subst ; clear H
-   | [ H : in_context _ Top_c |- _ ] => inversion H
-   | [ H : in_context _ (TwoLeftHole_c _ _ _) |- _ ] =>
-       inversion H ; subst ; clear H
-   | [ H : in_context _ (TwoRightHole_c _ _ _) |- _ ] =>
-       inversion H ; subst ; clear H
-   | [ H : in_context _ (ThreeLeftHole_c _ _ _ _ _) |- _ ] =>
-       inversion H ; subst ; clear H
-   | [ H : in_context _ (ThreeMiddleHole_c _ _ _ _ _) |- _ ] =>
-       inversion H ; subst ; clear H
-   | [ H : in_context _ (ThreeRightHole_c _ _ _ _ _) |- _ ] =>
-       inversion H ; subst ; clear H
-   | [ H : context_iwf _ _ _ _ _ _ Top_c |- _ ] =>
-       inversion H ; subst ; clear H
-   | [ H : context_iwf _ _ _ _ _ _ (TwoLeftHole_c _ _ _) |- _ ] =>
-       inversion H ; subst ; clear H
-   | [ H : context_iwf _ _ _ _ _ _ (TwoRightHole_c _ _ _) |- _ ] =>
-       inversion H ; subst ; clear H
-   | [ H : context_iwf _ _ _ _ _ _ (ThreeLeftHole_c _ _ _ _ _) |- _ ] =>
-       inversion H ; subst ; clear H
-   | [ H : context_iwf _ _ _ _ _ _ (ThreeMiddleHole_c _ _ _ _ _) |- _ ] =>
-       inversion H ; subst ; clear H
-   | [ H : context_iwf _ _ _ _ _ _ (ThreeRightHole_c _ _ _ _ _) |- _ ] =>
-       inversion H ; subst ; clear H
-   | [ H : in_location _ (TwoHole_l _ _ _) |- _ ] =>
-       inversion H ; subst ; clear H
-   | [ H : in_location _ (ThreeLeftHole_l _ _ _ _ _) |- _ ] =>
-       inversion H ; subst ; clear H
-   | [ H : in_location _ (ThreeRightHole_l _ _ _ _ _) |- _ ] =>
-       inversion H ; subst ; clear H
-   | [ H : location_iwf _ _ _ _ _ (TwoHole_l _ _ _) |- _ ] =>
-       inversion H ; subst ; clear H
-   | [ H : location_iwf _ _ _ _ _ (ThreeLeftHole_l _ _ _ _ _) |- _ ] =>
-       inversion H ; subst ; clear H
-   | [ H : location_iwf _ _ _ _ _ (ThreeRightHole_l _ _ _ _ _) |- _ ] =>
-       inversion H ; subst ; clear H
-   | [ H1 : ?X, H2 : ?X -> ?Y |- ?Y ] => apply (H2 H1)
-   | [ |- context [match ?x <=>! ?y with _ => _ end] ] =>
-       remember (x <=>! y) as cmp ; destruct cmp
-   | [ H : forall c' k,
-             (@?X c' k) c' k
-          /\ (@?Y c' k) c' k
-     |- _ ] =>
-       let c' := fresh "c'" in
-       let k := fresh "k" in
-       let H1 := fresh in
-       let H2 := fresh in
-       assert (forall c' k, X c' k) as H1;
-         [ intros c' k ; apply (proj1 (H c' k)) | idtac ] ;
-       assert (forall c' k, Y c' k) as H2;
-         [ intros c' k ; apply (proj2 (H c' k)) | idtac ] ;
-       clear H ; simpl in H1 ; simpl in H2
-   | [ |- context [ let (_,_) := ?p in _ ] ] => destruct p
-   | [ H1 : ?x ~= ?z, H2 : ?y ~= ?z, H3 : ?x /~= ?y |- _ ] =>
-       exfalso ; apply H3 ; transitivity z ; [ apply H1 | symmetry ; apply H2 ]
-   | _ => eauto
+    | [ |- forall  _, _ ] => intros
+    | [ |- _ /\ _ ] => constructor
+    | [ H : _ /\ _ |- _ ] => destruct H
+    | [ H : inl _ = inr _ |- _ ] => discriminate H
+    | [ H : inr _ = inr _ |- _ ] => inversion H ; subst ; clear H
+    | [ H : ?a < ?b < ?c |- ?a < ?b ] => apply H
+    | [ H : ?a < ?b < ?c |- ?b < ?c ] => apply H
+    | [ H1 : ?X, H2 : ?X -> ?Y |- ?Y ] => apply (H2 H1)
+    | [ |- match ?e with _ => _ end ] =>
+        let x := fresh in
+        remember e as x ; destruct x
+    | [ H : forall c' k,
+              (@?X c' k) c' k
+           /\ (@?Y c' k) c' k
+      |- _ ] =>
+        let c' := fresh "c'" in
+        let k := fresh "k" in
+        let H1 := fresh in
+        let H2 := fresh in
+        assert (forall c' k, X c' k) as H1;
+          [ intros c' k ; apply (proj1 (H c' k)) | idtac ] ;
+        assert (forall c' k, Y c' k) as H2;
+          [ intros c' k ; apply (proj2 (H c' k)) | idtac ] ;
+        clear H ; simpl in H1 ; simpl in H2
+    | [ |- context [ let (_,_) := ?p in _ ] ] => destruct p
+    | [ H : context [ let (_,_) := ?p in _ ] |- _ ] => destruct p
+    | [ H1 : ?x ~= ?z, H2 : ?y ~= ?z, H3 : ?x /~= ?y |- _ ] =>
+        exfalso ; apply H3 ; transitivity z ; [ apply H1 | symmetry ; apply H2 ]
+    | _ => auto
   end.
+
+  Local Ltac rip :=
+    match goal with
+    | [ H : in_tree _ Null_t |- _ ] => inversion H
+    | [ H : in_tree _ (Two_t _ _ _) |- _ ] => inversion H ; subst ; clear H
+    | [ H : in_tree _ (Three_t _ _ _ _ _) |- _ ] => inversion H ; subst ; clear H
+    | [ H : tree_iwf _ _ _ Null_t |- _ ] =>
+        inversion H ; subst ; clear H
+    | [ H : tree_iwf _ _ _ (Two_t _ _ _) |- _ ] =>
+        inversion H ; subst ; clear H
+    | [ H : tree_iwf _ _ _ (Three_t _ _ _ _ _) |- _ ] =>
+        inversion H ; subst ; clear H
+    | [ H : in_context _ Top_c |- _ ] => inversion H
+    | [ H : in_context _ (TwoLeftHole_c _ _ _) |- _ ] =>
+        inversion H ; subst ; clear H
+    | [ H : in_context _ (TwoRightHole_c _ _ _) |- _ ] =>
+        inversion H ; subst ; clear H
+    | [ H : in_context _ (ThreeLeftHole_c _ _ _ _ _) |- _ ] =>
+        inversion H ; subst ; clear H
+    | [ H : in_context _ (ThreeMiddleHole_c _ _ _ _ _) |- _ ] =>
+        inversion H ; subst ; clear H
+    | [ H : in_context _ (ThreeRightHole_c _ _ _ _ _) |- _ ] =>
+        inversion H ; subst ; clear H
+    | [ H : context_iwf _ _ _ _ _ _ Top_c |- _ ] =>
+        inversion H ; subst ; clear H
+    | [ H : context_iwf _ _ _ _ _ _ (TwoLeftHole_c _ _ _) |- _ ] =>
+        inversion H ; subst ; clear H
+    | [ H : context_iwf _ _ _ _ _ _ (TwoRightHole_c _ _ _) |- _ ] =>
+        inversion H ; subst ; clear H
+    | [ H : context_iwf _ _ _ _ _ _ (ThreeLeftHole_c _ _ _ _ _) |- _ ] =>
+        inversion H ; subst ; clear H
+    | [ H : context_iwf _ _ _ _ _ _ (ThreeMiddleHole_c _ _ _ _ _) |- _ ] =>
+        inversion H ; subst ; clear H
+    | [ H : context_iwf _ _ _ _ _ _ (ThreeRightHole_c _ _ _ _ _) |- _ ] =>
+        inversion H ; subst ; clear H
+    | [ H : in_location _ (TwoHole_l _ _ _) |- _ ] =>
+        inversion H ; subst ; clear H
+    | [ H : in_location _ (ThreeLeftHole_l _ _ _ _ _) |- _ ] =>
+        inversion H ; subst ; clear H
+    | [ H : in_location _ (ThreeRightHole_l _ _ _ _ _) |- _ ] =>
+        inversion H ; subst ; clear H
+    | [ H : location_iwf _ _ _ _ _ (TwoHole_l _ _ _) |- _ ] =>
+        inversion H ; subst ; clear H
+    | [ H : location_iwf _ _ _ _ _ (ThreeLeftHole_l _ _ _ _ _) |- _ ] =>
+        inversion H ; subst ; clear H
+    | [ H : location_iwf _ _ _ _ _ (ThreeRightHole_l _ _ _ _ _) |- _ ] =>
+        inversion H ; subst ; clear H
+    | _ => auto
+    end.
+
+  Opaque fplus fmap.
+
+  Lemma locate_greatest_in :
+    forall
+      (t:tree K V) (c:context K V),
+        match locate_greatest t c with
+        | None => True
+        | Some ((k,_),lM) =>
+            let l :=
+              match lM with
+              | inl c => TwoHole_l Null_t Null_t c
+              | inr (el,c) => ThreeRightHole_l Null_t el Null_t Null_t c
+              end
+            in
+            forall k', k /~= k' ->
+              (in_tree k' t -> in_location k' l)
+           /\ (in_context k' c -> in_location k' l)
+        end.
+  Proof.
+    intros t ; induction t ; intros.
+    simpl ; auto.
+    cbv beta iota delta [locate_greatest].
+    fold (@locate_greatest K V).
+  specialize (IHt2 (TwoRightHole_c t1 p c)).
+  remember (locate_greatest t2 (TwoRightHole_c t1 p c)) as foo ; destruct foo.
+  simpl.
+  simpl.
+  simp
+  
 
   Lemma zip_in :
     forall (c:context K V) (t:tree K V) (k:K),
       (in_context k c -> in_tree k (zip t c))
    /\ (in_tree k t -> in_tree k (zip t c)).
   Proof.
-    intros c ; induction c ; repeat mysimp.
+    intros c ; induction c ; repeat mysimp ; repeat rip ; eauto.
   Qed.
   Lemma zip_in_context :
     forall (c:context K V) (t:tree K V) (k:K),
@@ -472,7 +503,7 @@ Module TwoThreeTreesWF.
                     c_lower_bound c_upper_bound c_height c
      -> tree_iwf c_lower_bound c_upper_bound c_height (zip t c).
   Proof.
-    intros c ; induction c ; repeat mysimp ; eapply IHc ; repeat mysimp.
+    intros c ; induction c ; repeat mysimp ; repeat rip ; eapply IHc ; eauto.
   Qed.
   Hint Resolve zip_wf.
 
@@ -481,7 +512,7 @@ Module TwoThreeTreesWF.
       (in_context k c1 -> in_context k (fuse c1 c2))
    /\ (in_context k c2 -> in_context k (fuse c1 c2)).
   Proof.
-    intros c ; induction c ; simpl ; repeat mysimp.
+    intros c ; induction c ; simpl ; repeat mysimp ; repeat rip.
   Qed.
   Lemma fuse_in_context1 :
     forall (c1:context K V) (c2:context K V) k,
@@ -507,7 +538,7 @@ Module TwoThreeTreesWF.
      -> context_iwf c1h_lower_bound c1h_upper_bound c1h_height
                     c2_lower_bound c2_upper_bound c2_height (fuse c1 c2).
   Proof.
-    intros c1 ; induction c1 ; simpl ; repeat mysimp.
+    intros c1 ; induction c1 ; simpl ; repeat mysimp ; repeat rip ; eauto.
   Qed.
   Hint Resolve fuse_wf.
 
@@ -516,7 +547,7 @@ Module TwoThreeTreesWF.
       (in_tree k (fill_location (k,v) l))
    /\ (forall k', in_location k' l -> in_tree k' (fill_location (k,v) l)).
   Proof.
-    intros l ; induction l ; simpl ; repeat mysimp.
+    intros l ; induction l ; simpl ; repeat mysimp ; repeat rip.
   Qed.
   Lemma fill_location_in_filled :
     forall (l:location K V) (k:K) (v:V),
@@ -539,7 +570,8 @@ Module TwoThreeTreesWF.
                      c_lower_bound c_upper_bound c_height l
      -> tree_iwf c_lower_bound c_upper_bound c_height (fill_location (k,v) l).
   Proof.
-    intros l ; induction l ; intros ; repeat mysimp ; eapply zip_wf ; repeat mysimp.
+    intros l ; induction l ; intros ; repeat mysimp ; repeat rip ; eapply zip_wf ;
+      eauto.
   Qed.
   Hint Resolve fill_location_wf.
 
@@ -557,26 +589,34 @@ Module TwoThreeTreesWF.
           /\ (in_context k'' c -> in_location k'' l))
       end.
   Proof.
-    intros t ; induction t ; intros ; simpl ; repeat mysimp ; eauto.
-    exfalso ; apply H ; transitivity k0 ; [ apply Heqcmp | symmetry ; apply H3 ].
-
-
-
-    
-    remember (k <=>! km) as cmp ; destruct cmp.
-    mysimp.
-    destruct p ; simpl in *.
-    constructor ; auto.
-    intros.
-    constructor ; intros.
-    eapply IHt2.
-    
-    unfold fst in * ; simpl in *.
-    compute.
-    split.
-    remember (k <=>! fst p) as cmp ; destruct cmp.
-    constructor.
-    eapply IHt2.
+    intros t ; induction t ; intros ; simpl ; repeat mysimp ; repeat rip ;
+      repeat
+        match goal with
+        | [ H : context[ ?a <=>! ?b ] |- _ ] =>
+            let cmp := fresh "cmp" in
+            remember (a <=>! b) as cmp eqn:cmp_eqn ; symmetry in cmp_eqn ;
+              destruct cmp as [cmp|cmp|cmp] ;
+              [ apply ord_dec_correct_eqv in cmp_eqn
+              | apply ord_dec_correct_lt in cmp_eqn
+              | apply ord_dec_correct_gt in cmp_eqn
+              ]
+        | [ H : context[ ?a <=>! ?b ] |- _ ] =>
+            let cmp := fresh "cmp" in
+            remember (a <=>! b) as cmp eqn:cmp_eqn2 ; symmetry in cmp_eqn2 ;
+              destruct cmp as [cmp|cmp|cmp] ;
+              [ apply ord_dec_correct_eqv in cmp_eqn2
+              | apply ord_dec_correct_lt in cmp_eqn2
+              | apply ord_dec_correct_gt in cmp_eqn2
+              ]
+        | [ H1 : forall k c, match locate k ?t c with _ => _ end
+          , H2 : _ = locate ?k ?t ?c
+          |- _ ] =>
+            specialize (H1 k c) ; rewrite <- H2 in H1
+        | [ H : forall k, _ /\ _
+          |- context[ ?k ]
+          ] => specialize (H k)
+        end ; repeat mysimp.
+  Qed.
 
   Lemma locate_wf :
     forall
@@ -596,8 +636,29 @@ Module TwoThreeTreesWF.
                            c_lower_bound c_upper_bound c_height l
           end.
   Proof.
-    intros t ; induction t ; intros ; simpl ; repeat mysimp.
+    intros t ; induction t ; intros ; simpl ; repeat mysimp ; repeat rip ;
+      repeat
+        match goal with
+        | [ |- context[ ?a <=>! ?b ] ] =>
+            let cmp := fresh "cmp" in
+            remember (a <=>! b) as cmp eqn:cmp_eqn ; symmetry in cmp_eqn ;
+              destruct cmp as [cmp|cmp|cmp] ;
+              [ apply ord_dec_correct_eqv in cmp_eqn
+              | apply ord_dec_correct_lt in cmp_eqn
+              | apply ord_dec_correct_gt in cmp_eqn
+              ]
+        | [ |- context[ ?a <=>! ?b ] ] =>
+            let cmp := fresh "cmp" in
+            remember (a <=>! b) as cmp eqn:cmp_eqn2 ; symmetry in cmp_eqn2 ;
+              destruct cmp as [cmp|cmp|cmp] ;
+              [ apply ord_dec_correct_eqv in cmp_eqn2
+              | apply ord_dec_correct_lt in cmp_eqn2
+              | apply ord_dec_correct_gt in cmp_eqn2
+              ]
+        end ; eauto.
   Qed.
+
+          
 
   Lemma locate_greatest_wf :
     forall

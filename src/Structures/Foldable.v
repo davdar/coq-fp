@@ -64,5 +64,4 @@ Section Buildable.
         Identity $ f B begin fun (a:A) (b:B) =>
           f' a b
         end b.
-              
 End Buildable.

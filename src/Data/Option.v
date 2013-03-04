@@ -1,10 +1,8 @@
-Require Import FP.Data.StringPre.
-
+Require Import FP.Data.String.
 Require Import FP.Data.Function.
 Require Import FP.Data.Identity.
 Require Import FP.Data.Sum.
 Require Import FP.Data.Unit.
-Require Import FP.Structures.Alternative.
 Require Import FP.Structures.Additive.
 Require Import FP.Structures.Comonad.
 Require Import FP.Structures.EqDec.
@@ -12,14 +10,21 @@ Require Import FP.Structures.Eqv.
 Require Import FP.Structures.Foldable.
 Require Import FP.Structures.Lattice.
 Require Import FP.Structures.Functor.
+Require Import FP.Structures.Functor.
+Require Import FP.Structures.Monad.
+Require Import FP.Structures.Counit.
 Require Import FP.Structures.Injection.
+Require Import FP.Structures.FUnit.
 Require Import FP.Structures.Injection.
 Require Import FP.Structures.Monad.
 Require Import FP.Structures.MonadError.
-Require Import FP.Structures.MonadPlus.
 Require Import FP.Structures.Deriving.
+Require Import FP.Structures.FUnit.
+Require Import FP.Structures.FUnitDeriving.
 Require Import FP.Structures.MonadReader.
 Require Import FP.Structures.MonadState.
+Require Import FP.Structures.MonadReader.
+Require Import FP.Structures.MonadDeriving.
 Require Import FP.Structures.MonadTrans.
 Require Import FP.Structures.Monoid.
 Require Import FP.Structures.Ord.
@@ -28,12 +33,11 @@ Require Import FP.Relations.Setoid.
 Require Import FP.Relations.Function.
 
 Import AdditiveNotation.
-Import MorphismNotation.
 Import EqvNotation.
-Import AlternativeNotation.
 Import FunctionNotation.
 Import FunctorNotation.
 Import MonadNotation.
+Import ProperNotation.
 
 Arguments Some {A} _.
 Arguments None {A}.
@@ -83,7 +87,7 @@ Definition from_option {A} (a:A) (aM:option A) : A :=
   end.
 
 Section throw_msg_option.
-  Context {m E} {mM:Monad m} {mE:MonadError E m} {eI:HasInjection string E}.
+  Context {m E} {mM:Monad m} {mE:MError E m} {eI:HasInjection string E}.
 
   Definition throw_msg_option {A} (msg:string) (xM:option A) : m A :=
     match xM with
@@ -92,6 +96,7 @@ Section throw_msg_option.
     end.
 End throw_msg_option.
 
+(*
 Section zero_option.
   Context {m} {M:Monad m} {P:MonadPlus m}.
 
@@ -101,6 +106,7 @@ Section zero_option.
     | Some x => ret x
     end.
 End zero_option.
+*)
 
 Section monoid_option.
   Context {T} {TM:Monoid T}.
@@ -116,7 +122,7 @@ Section Foldable.
   Definition option_cofold {m} {M:Comonad m} {B}
       (f:A -> m B -> B) (b:m B) (aM:option A) : B :=
     match aM with
-    | None => coret b
+    | None => counit b
     | Some a => f a b
     end.
   Global Instance option_Foldable : Foldable A (option A) :=
@@ -131,7 +137,7 @@ Arguments un_option_t {m A} _.
 
 Section MonadTrans.
   Definition option_t_lift {m} {M:Monad m} {A} : m A -> option_t m A :=
-    OptionT '.' fmap Some.
+    OptionT '.' bind_fmap Some.
   Global Instance option_t_MonadTrans : MonadTrans option_t :=
     { lift := @option_t_lift }.
 End MonadTrans.
@@ -142,7 +148,10 @@ Section option_t_Monad.
   Definition run_option_t {A} : option_t m A -> m (option A) := un_option_t.
 
   Section Monad.
-    Definition option_t_ret {A} (a:A) : option_t m A := OptionT $ ret $ Some a.
+    Definition option_t_funit {A} (a:A) : option_t m A := OptionT $ ret $ Some a.
+    Global Instance option_t_FUnit : FUnit (option_t m) :=
+      { funit := @option_t_funit }.
+
     Definition option_t_bind {A B}
         (aMM:option_t m A) (f:A -> option_t m B) : option_t m B :=
       OptionT $ begin
@@ -152,13 +161,13 @@ Section option_t_Monad.
         | Some a => un_option_t $ f a
         end
       end.
-    Global Instance option_t_Monad : Monad (option_t m) :=
-      { ret := @option_t_ret
-      ; bind := @option_t_bind
-      }.
+    Global Instance option_t_MBind : MBind (option_t m) :=
+      { bind := @option_t_bind }.
   End Monad.
 
-  Section MonadPlus.
+  Global Instance option_t_FMap : FMap (option_t m) := Deriving_FMap_MBind.
+
+  Section FPlus.
     Definition option_t_mzero {A} : option_t m A := OptionT $ ret None.
     Definition option_t_mplus {A} {B}
         (aMM:option_t m A) (bMM:option_t m B) : option_t m (A+B) :=
@@ -174,7 +183,7 @@ Section option_t_Monad.
       { mzero := @option_t_mzero
       ; mplus := @option_t_mplus
       }.
-  End MonadPlus.
+  End FPlus.
 
   Section MonadError.
     Context {E} {ME:MonadError E m}.
@@ -188,14 +197,15 @@ Section option_t_Monad.
       ; catch := @option_t_catch
       }.
   End MonadError.
+*)
 
   Section MonadReader.
-    Context {R} {MR:MonadReader R m}.
+    Context {R} {MR:MReader R m}.
 
     Definition option_t_ask : option_t m R := lift ask.
     Definition option_t_local {A} (f:R -> R) : option_t m A -> option_t m A :=
       OptionT '.' local f '.' un_option_t.
-    Global Instance option_t_MonadReader : MonadReader R (option_t m) :=
+    Global Instance option_t_MonadReader : MReader R (option_t m) :=
       { ask := option_t_ask
       ; local := @option_t_local
       }.
@@ -213,14 +223,18 @@ Section option_t_Monad.
   End MonadState.
 End option_t_Monad.
 
-Instance option_option_t_FunctorInjection
-  : FunctorInjection option (option_t identity) (fun _ => OptionT '.' Identity) := {}.
-Instance option_t_option_FunctorInjection
-  : FunctorInjection (option_t identity) option
-                     (fun _ => un_identity '.' un_option_t) := {}.
-Instance option_Monad : Monad option := iso_Monad (option_t identity).
-Instance option_MonadPlus : MonadPlus option := iso_MonadPlus (option_t identity).
+Instance option_option_t_HasFunctorInjection
+    : HasFunctorInjection option (option_t identity) :=
+  { finject := fun _ => OptionT '.' Identity}.
+Instance option_t_option_HasFunctorInjection
+    : HasFunctorInjection (option_t identity) option :=
+  { finject := fun _ => un_identity '.' un_option_t }.
 
+Instance option_FUnit : FUnit option := Deriving_FUnit (option_t identity).
+Instance option_MBind : MBind option := Deriving_MBind (option_t identity).
+Instance option_FPlus : FPlus option := Deriving_FPlus (option_t identity).
+
+(*
 Section MonadPlus_passthrough.
   Context {m} {M:Monad m} {MP:MonadPlus m}.
 
@@ -240,3 +254,5 @@ Section MonadPlus_passthrough.
      ; mplus := @option_t_mplus_passthrough
     |}.
 End MonadPlus_passthrough.
+
+*)

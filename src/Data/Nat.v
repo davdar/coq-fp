@@ -2,9 +2,8 @@ Require EqNat.
 Require Peano.
 Require Compare_dec.
 
-Require Import FP.Data.AsciiPre.
+Require Import FP.Data.Ascii.
 Require Import FP.Data.Function.
-
 Require Import FP.Relations.RelDec.
 Require Import FP.Structures.Additive.
 Require Import FP.Structures.EqDec.

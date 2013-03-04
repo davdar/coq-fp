@@ -1,6 +1,7 @@
 Require Import FP.Data.Function.
 Require Import FP.Data.Identity.
 Require Import FP.Data.N.
+Require Import FP.Data.NStructures.
 Require Import FP.Data.Reader.
 Require Import FP.Data.Option.
 Require Import FP.Structures.Monad.
@@ -11,6 +12,7 @@ Require Import FP.Structures.MonadPlus.
 Require Import FP.Structures.MonadReader.
 Require Import FP.Structures.Functor.
 Require Import FP.Structures.MonadState.
+Require Import FP.Structures.MonadDeriving.
 Require Import FP.Structures.Foldable.
 Require Import FP.Structures.Peano.
 Require Import FP.Structures.MonadTrans.
@@ -45,18 +47,21 @@ Section fuel_t_Monad.
              mk_fuel_t $ fun (__n:N) => f _n a
            end a
         end n a.
-    Global Instance fuel_t_MonadFix : MonadFix (fuel_t m) :=
+    Global Instance fuel_t_MonadFix : MFix (fuel_t m) :=
       { mfix := @fuel_t_mfix }.
   End MonadFix.
 
-  Global Instance fuel_t_reader_t_FunctorInjection
-      : FunctorInjection (fuel_t m) (reader_t N (option_t m)) (@un_fuel_t _) := {}.
-  Global Instance reader_t_fuel_t_FunctorInjection
-      : FunctorInjection (reader_t N (option_t m)) (fuel_t m) (@FuelT _) := {}.
+  Global Instance fuel_t_reader_t_HasFunctorInjection
+      : HasFunctorInjection (fuel_t m) (reader_t N (option_t m)) :=
+    { finject := @un_fuel_t _ }.
+  Global Instance reader_t_fuel_t_HasFunctorInjection
+      : HasFunctorInjection (reader_t N (option_t m)) (fuel_t m) :=
+    { finject := @FuelT _ }.
 
-  Global Instance fuel_t_Monad
-      : Monad (fuel_t m) :=
-    iso_Monad (reader_t N (option_t m)).
+  Global Instance fuel_t_MBind
+      : MBind (fuel_t m) :=
+    Deriving_MBind (reader_t N (option_t m)).
+  (*
   Global Instance fuel_t_MonadError {E} {ME:MonadError E m}
       : MonadError E (fuel_t m) :=
     iso_MonadError (reader_t N (option_t m)).
@@ -71,6 +76,7 @@ Section fuel_t_Monad.
       : MonadReader R (fuel_t m) :=
     iso_MonadReader (nMR:=reader_t_MonadReader_passthrough)
                     (reader_t N (option_t m)).
+*)
 End fuel_t_Monad.
 
 Definition fuel := fuel_t identity.

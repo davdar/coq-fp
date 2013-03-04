@@ -2,19 +2,19 @@ Require Import FP.Structures.Monoid.
 
 Class Times T :=
   { times_gtimes :> GTimes T }.
-Definition times {T} {T_Times : Times T} : T -> T -> T := gtimes.
+Definition times {T} {Times:Times T} : T -> T -> T := gtimes.
 
 Class One T :=
   { one_gtimes :> GUnit T }.
-Definition zero {T} {T_One : One T} : T := gunit.
+Definition one {T} {One:One T} : T := gunit.
 
 Class Div T :=
   { div_gdiv :> GDiv T }.
-Definition div {T} {T_Div : Div T} : T -> T -> T := gdiv.
+Definition div {T} {Div:Div T} : T -> T -> T := gdiv.
 
 Class Inv T :=
   { inv_ginv :> GInv T }.
-Definition inv {T} {T_Inv : Inv T} : T -> T := ginv.
+Definition inv {T} {Inv:Inv T} : T -> T := ginv.
 
 Module MultiplicativeNotation.
   Infix "*" := times.

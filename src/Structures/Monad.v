@@ -1,52 +1,48 @@
+Require Import FP.Structures.FUnit.
+Require Import FP.Structures.EqvRel.
+Require Import FP.Relations.Setoid.
 Require Import FP.Data.Function.
-Require Import FP.Structures.Eqv.
-Require Import FP.Structures.Functor.
-Require Import FP.Structures.Applicative.
-Require Import FP.Structures.Injection.
 
-Import EqvNotation.
+Import ProperNotation.
 Import FunctionNotation.
 
-Class Monad m :=
-  { ret : forall {A}, A -> m A
-  ; bind : forall {A B}, m A -> (A -> m B) -> m B
+Class MBind (m:Type->Type) :=
+  { bind : forall {A B}, m A -> (A -> m B) -> m B }.
+
+Class Monad (m:Type->Type) :=
+  { Monad_FUnit : FUnit m
+  ; Monad_MBind : MBind m
   }.
-Local Infix ">>=" := bind (at level 50, left associativity).
+Hint Resolve Build_Monad : typeclass_instances.
+Hint Immediate Monad_FUnit : typeclass_instances.
+Hint Immediate Monad_MBind : typeclass_instances.
 
 Section Monad.
-  Context {m} {M:Monad m}.
+  Context {m} {FUnit_:FUnit m} {MBind_:MBind m}.
 
-  Definition revbind {A B} : (A -> m B) -> m A ->  m B := flip bind.
-  Definition kleisli_compose {A B C} (g:B -> m C) (f:A -> m B) (a:A) : m C :=
-    f a >>= g.
-  Definition kleisli_revcompose {A B C} : (A -> m B) -> (B -> m C) -> A -> m C :=
-    flip kleisli_compose.
+  Definition ret {A} : A -> m A := funit.
 
-  Definition join {A} : m (m A) -> m A := revbind id.
-  Definition mmap {A B} : (A -> B) -> m A -> m B :=
-    revbind '.' compose ret.
-  Definition mapply {A B} (fM:m (A -> B)) (aM:m A) : m B :=
-    fM >>= flip mmap aM.
+  Definition extend {A B} : (A -> m B) -> (m A -> m B) := flip bind.
+  Definition seq {A B} (aM:m A) (bM:m B) : m B := bind aM (const bM).
 
-  Global Instance Monad_Applicative : Applicative m :=
-    { fret := @ret _ _
-    ; fapply := @mapply
-    }.
-
-  Section iso_Monad.
-    Variable n:Type -> Type.
-    Context {N:Monad n}.
-    Context {m_n_FBij:HasFunctorBijection m n}.
-
-    Definition iso_ret {A} : A -> m A := ffrom '.' ret.
-    Definition iso_bind {A B} (aM:m A) (f:A -> m B) : m B := ffrom $ bind (fto aM) (fto '.' f).
-
-    Definition iso_Monad : Monad m :=
-      {| ret := @iso_ret
-       ; bind := @iso_bind
-      |}.
-    End iso_Monad.
+  Definition bind_mpipe {A B C} (f:A -> m B) (g:B -> m C) (a:A) : m C :=
+    bind (f a) g.
+  Definition bind_mjoin {A} (aMM:m (m A)) : m A :=
+    bind aMM id.
+  Definition bind_fmap {A B} (f:A -> B) (aM:m A) : m B :=
+    bind aM (funit '.' f).
+  Definition bind_fapply {A B} (fM:m (A -> B)) (aM:m A) : m B :=
+    bind fM (fun f => bind aM (fun a => funit (f a))).
+  Definition bind_ftimes {A B} (aM:m A) (bM:m B) : m (A*B) :=
+    bind aM (fun a => bind bM (fun b => funit (a,b))).
 End Monad.
+Arguments ret {m FUnit_ A} _ /.
+Arguments extend {m MBind_ A B} _ _ /.
+Arguments bind_mpipe {m MBind_ A B C} f g a /.
+Arguments bind_mjoin {m MBind_ A} aMM /.
+Arguments bind_fmap {m FUnit_ MBind_ A B} f aM /.
+Arguments bind_fapply {m FUnit_ MBind_ A B} fM aM /.
+Arguments bind_ftimes {m FUnit_ MBind_ A B} aM bM /.
 
 Module MonadNotation.
   Notation "x <- c1 ;; c2" := (bind c1 (fun x => c2))
@@ -56,21 +52,49 @@ Module MonadNotation.
     (at level 100, right associativity).
 
   Infix ">>=" := bind (at level 50, left associativity).
-  Infix "=<<" := revbind (at level 51, right associativity).
-  Infix "<=<" := kleisli_compose (at level 53, right associativity).
-  Infix ">=>" := kleisli_revcompose (at level 53, right associativity).
+  Infix "=<<" := extend (at level 51, right associativity).
+  Infix ">>" := seq (at level 50, left associativity).
 End MonadNotation.
-Import MonadNotation.
 
-Class MonadLaws m {E:forall A {AE:Eqv A}, Eqv (m A)} {M:Monad m} :=
-  { monad_bind_of_ret
-      : forall {A B} {AE:Eqv A} {BE:Eqv B} {x:A} {f:A -> m B},
-          ret x >>= f ~= f x
-  ; monad_ret_of_bind
-      : forall {A} {AE:Eqv A} {c:m A},
-          c >>= ret ~= c
-  ; monad_associativity
-      : forall {A B c} {AE:Eqv A} {BE:Eqv B} {CE:Eqv c}
-               {aM:m A} {f:A -> m B} {g:B -> m c},
-          aM >>= f >>= g ~= aM >>= fun x => f x >>= g
-  }.
+Section MonadWF.
+  Variable (m:Type->Type).
+  Context {FUnit_:FUnit m} {MBind_:MBind m}.
+  Context {EqvEnv_:EqvEnv}.
+  Context {EqvEnvWF_:EqvEnvWF}.
+  Context {E_R_m:forall {A} {aER:PE_R A}, PE_R (m A)}.
+
+  Class MonadWF :=
+    { bind_left_unit :
+        forall
+          {A} {aER:E_R A}
+          {B} {bER:E_R B}
+          (f:A -> m B) {fP:Proper PE_eqv f}
+          (a:A) {aP:Proper PE_eqv a},
+            PE_eqv
+            (bind (ret a) f)
+            (f a)
+    ; bind_right_unit :
+        forall
+          {A} {aER:E_R A}
+          (aM:m A) {aMP:Proper PE_eqv aM},
+            PE_eqv
+            (bind aM ret)
+            aM
+    ; bind_associativity :
+        forall
+          {A} {aER:E_R A}
+          {B} {bER:E_R B}
+          {C} {cER:E_R C}
+          (f:A -> m B) {fP:Proper PE_eqv f}
+          (g:B -> m C) {gP:Proper PE_eqv g}
+          (aM:m A) {aP:Proper PE_eqv aM},
+          PE_eqv
+          (bind (bind aM f) g)
+          (bind aM (fun a => bind (f a) g))
+    ; bind_respect :>
+        forall
+          {A} {aER:E_R A}
+          {B} {bER:E_R B},
+            Proper PE_eqv (bind (A:=A) (B:=B))
+    }.
+End MonadWF.

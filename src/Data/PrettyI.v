@@ -1,5 +1,5 @@
-Require Import FP.Data.StringPre.
-Require Import FP.Data.NPre.
+Require Import FP.Data.String.
+Require Import FP.Data.N.
 
 Import StringNotation.
 
@@ -21,19 +21,3 @@ Definition text_d : string -> doc := TextD.
 Definition line_d : doc := LineD " ".
 Definition line_with_d : string -> doc := LineD.
 Definition group_d := GroupD.
-
-(*
-Fixpoint flatten_d (d:doc) : doc :=
-  match d with
-  | NilD => NilD
-  | ConcatD dl dr => ConcatD (flatten_d dl) (flatten_d dr)
-  | NestD i dn => NestD i (flatten_d dn)
-  | TextD s => TextD s
-  | LineD => TextD " "
-  | UnionD dl dr => flatten_d dl
-  end.
-
-Definition group_d (d:doc) : doc := UnionD (flatten_d d) d.
-
-
-*)

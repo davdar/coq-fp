@@ -4,6 +4,7 @@ Require Import FP.Data.Identity.
 Require Import FP.Structures.Monad.
 Require Import FP.Data.Cont.
 Require Import FP.Structures.MonadCont.
+Require Import FP.Structures.Monad.
 Require Import FP.Data.Susp.
 Require Import FP.Structures.Monoid.
 

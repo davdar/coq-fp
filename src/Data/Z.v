@@ -1,8 +1,7 @@
 Require BinNums.
 Require BinInt.
 
-Require Import FP.Data.AsciiPre.
-
+Require Import FP.Data.Ascii.
 Require Import FP.Data.Positive.
 Require Import FP.Data.Nat.
 Require Import FP.Data.Function.
@@ -70,7 +69,7 @@ Section Lattice.
 End Lattice.
 
 Section Show.
-  Definition Z_show {R} {SR:ShowResult R} : Z -> R := show '.' convert (to:=nat).
+  Definition Z_show {R} {SR:ShowResult R} : Z -> R := show '.' convert_to nat.
   Global Instance Z_Show : Show Z := { show := @Z_show }.
 End Show.
 

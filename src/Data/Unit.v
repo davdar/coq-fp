@@ -1,5 +1,4 @@
-Require Import Data.StringPre.
-
+Require Import Data.String.
 Require Import FP.Data.Function.
 Require Import FP.Relations.RelDec.
 Require Import FP.Structures.EqDec.
@@ -47,7 +46,7 @@ Section OrdWF.
   Proof. constructor ; eauto with typeclass_instances.
     unfold Irreflexive, Reflexive, complement ; simpl ; intros.
       destruct x ; inversion H.
-    unfold Proper ; simpl ; intros.
+    unfold Proper,"==>" ; simpl ; intros.
       destruct x,x0 ; inversion H1.
   Qed.
 End OrdWF.

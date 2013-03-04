@@ -1,8 +1,7 @@
 Require BinNums.
 Require BinPos.
 
-Require Import FP.Data.AsciiPre.
-
+Require Import FP.Data.Ascii.
 Require Import FP.Data.Function.
 Require Import FP.Data.Nat.
 Require Import FP.Relations.RelDec.
@@ -72,7 +71,7 @@ Section Lattice.
 End Lattice.
 
 Section Show.
-  Definition pos_show {R} {SR:ShowResult R} : positive -> R := show '.' convert (to:=nat).
+  Definition pos_show {R} {SR:ShowResult R} : positive -> R := show '.' convert_to nat.
   Global Instance pos_Show : Show positive := { show := @pos_show }.
 End Show.
 

@@ -1,4 +1,4 @@
-Require Import FP.Data.BoolPre.
+Require Import FP.Data.Bool.
 Require Import FP.Data.Function.
 Require Import FP.Structures.Injection.
 

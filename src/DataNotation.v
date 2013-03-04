@@ -8,12 +8,12 @@ Require FP.Data.String.
 Require FP.Data.Z.
 Require FP.Data.Lens.
 
-Export FP.Data.AsciiPre.CharNotation.
+Export FP.Data.Ascii.CharNotation.
 Export FP.Data.Function.FunctionNotation.
-Export FP.Data.ListPre.ListNotation.
-Export FP.Data.NPre.NNotation.
+Export FP.Data.List.ListNotation.
+Export FP.Data.N.NNotation.
 Export FP.Data.Nat.NatNotation.
 Export FP.Data.Positive.PositiveNotation.
-Export FP.Data.StringPre.StringNotation.
+Export FP.Data.String.StringNotation.
 Export FP.Data.Z.ZNotation.
 Export FP.Data.Lens.LensNotation.

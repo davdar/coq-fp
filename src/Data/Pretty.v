@@ -4,6 +4,8 @@ Require Import FP.Data.Z.
 Require Import FP.Structures.Monoid.
 Require Import FP.Data.Function.
 Require Import FP.Data.List.
+Require Import FP.Data.ListStructures.
+Require Import FP.Data.GeneralizedList.
 Require Import FP.Data.Ascii.
 Require Import FP.Structures.Convertible.
 Require Import FP.Structures.Additive.
@@ -20,6 +22,8 @@ Require Import FP.Data.Option.
 Require Import FP.Data.PrettyI.
 Require Import FP.Data.StringBuilder.
 
+Import StringNotation.
+Import NNotation.
 Import SuspNotation.
 Import MonadNotation.
 Import ApplicativeNotation.
@@ -41,7 +45,7 @@ Fixpoint layout (td:tinydoc) : string_builder :=
   match td with
   | NilTD => mk_string_builder ""
   | ConcatTD s td => mk_string_builder s ** layout td
-  | LineTD i td => mk_string_builder (convert (to:=string) (newline :: replicate i " "%char)) ** layout td
+  | LineTD i td => mk_string_builder (convert_to string (newline :: replicate i " "%char)) ** layout td
   end.
 Inductive fmode :=
   | Flat
@@ -86,13 +90,9 @@ Definition format : Z -> Z -> list (N*fmode*doc) -> fuel tinydoc :=
           format w k ((i,Break,dg)::ps)
    end.
     
-Definition run_pretty' (w:N) (d:doc) : option string :=
-  run_fuel large_N $ begin
-    td <- format (convert w) 0%Z [(0,Flat,GroupD d)] ;;
-    ret $ run_string_builder $ layout td ** mk_string_builder (convert [newline])
-  end.
 Definition run_pretty (w:N) (d:doc) : option string :=
-  run_fuel large_N $ begin
+  let one_million := 1000000 in
+  run_fuel one_million $ begin
     td <- format (convert w) 0%Z [(0,Flat,GroupD d)] ;;
     let nl := mk_string_builder $ convert [newline] in
     ret $ run_string_builder $ nl ** layout td ** nl

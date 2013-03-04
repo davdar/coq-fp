@@ -1,9 +1,13 @@
-Require Import FP.Data.BoolPre.
+Require Import FP.Data.Bool.
 Require Import FP.Data.Function.
 Require Import FP.Relations.RelDec.
 Require Import FP.Structures.Injection.
+Require Import FP.Structures.Proxy.
+Require Import FP.Structures.EqvRel.
+Require Import FP.Relations.Setoid.
 
 Import FunctionNotation.
+Import ProperNotation.
 
 Class EqDec T := { eq_dec : T -> T -> bool }.
 

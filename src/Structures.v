@@ -12,7 +12,6 @@ Require Export FP.Structures.Injection.
 Require Export FP.Structures.Iterable.
 Require Export FP.Structures.LLParser.
 Require Export FP.Structures.Lattice.
-Require Export FP.Structures.Lens.
 Require Export FP.Structures.MapI.
 Require Export FP.Structures.Monad.
 Require Export FP.Structures.MonadError.
