@@ -23,11 +23,17 @@ Definition tforeach {t u} {T:Traversable t} {F:FMap t} {uA:Applicative u} {A B} 
     t A -> (A -> u B) -> u (t B) := flip tmap.
 
 Class TraversableP P t :=
-  { tsequence_p : forall {u} {uA:Applicative u} {A} {p:Proxy2 P A}, t (u A) -> u (t A) }.
+  { tsequence_p :
+      forall {u} {uA:Applicative u} {A} {p:Px (P A)},
+        t (u A) -> u (t A)
+  }.
 
 
-Definition tmap_p {t tP u} {tT:TraversableP tP t} {tF:FMapP tP t} {uA:Applicative u} {A B} {tp:Proxy2 tP B} {tup:Proxy2 tP (u B)}
-  (f:A -> u B) : t A -> u (t B) :=
-    fun x =>
-      let y : t (u B) := fmap_p f x in
-      tsequence_p y.
+Section tmap_p.
+  Context {A B:Type}.
+  Context {t tP u} {tT:TraversableP tP t} {tF:FMapP tP t} {uA:Applicative u}.
+  Context {Px_tP:Px (tP B)} {Px_utP:Px (tP (u B))}.
+  Definition tmap_p (f:A -> u B) (x:t A) : u (t B) :=
+    let y : t (u B) := fmap_p f x in
+    tsequence_p y.
+End tmap_p.

@@ -37,9 +37,9 @@ Section Eqv.
 
   Global Instance prod_Eqv : Eqv (A*B) := { eqv := prod_eqv }.
 
-  Context {AEE:EqvWF A} {BEE:EqvWF B}.
+  Context {AEE:Eqv_E_WF A} {BEE:Eqv_E_WF B}.
 
-  Global Instance prod_Equivalence : EqvWF (A*B).
+  Global Instance prod_Equivalence : Eqv_E_WF (A*B).
   Proof. repeat constructor.
     unfold Reflexive ; intros.
       destruct x. constructor ; reflexivity.

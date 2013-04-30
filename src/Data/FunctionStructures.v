@@ -1,6 +1,7 @@
 Require Import FP.Data.Function.
 Require Import FP.Structures.EqDec.
-Require Import FP.Structures.EqvRel.
+Require Import FP.Structures.Feq.
+Require Import FP.Structures.EqvEnv.
 Require Import FP.Relations.Setoid.
 Require Import FP.Structures.Category.
 Require Import FP.Structures.Proxy.
@@ -15,10 +16,15 @@ Section Category.
     ; ccompose := @compose
     }.
 
-  Global Instance fun_CategoryWF_eq : CategoryWF Fun (EqvEnv_:=eq_EqvEnv).
-  Proof.
-    constructor ; intros ; simpl in * ; subst ; auto.
-  Qed.
+  Section fun_CategoryWF_eq.
+    Local Instance EqvEnv_ : EqvEnv := feq_EqvEnv.
+    Local Instance EqvEnvLogical_ : EqvEnvLogical := feq_EqvEnvLogical.
+    Global Instance fun_CategoryWF_eq : CategoryWF Fun.
+    Proof.
+      constructor ; intros ; unfold ccompose,cid ; simpl ; logical_eqv.
+      logical_eqv_intro ; simpl ; logical_eqv.
+    Qed.
+  End fun_CategoryWF_eq.
 End Category.
 
 Ltac promote_fun_once :=
@@ -44,29 +50,25 @@ Ltac promote_fun := repeat promote_fun_once.
 
 Section id_respect.
   Context {EqvEnv_:EqvEnv}.
-  Context {EqvEnvWF_:EqvEnvWF}.
-  Context {A} {aPER:PE_R A}.
-  Global Instance id_respect : Proper PE_eqv id.
+  Context {EqvEnvLogical_:EqvEnvLogical}.
+  Context {A} {aPER:Px (env_PER A)} {aPER':Px (env_PER_WF A)}.
+  Global Instance id_respect : Proper env_eqv id.
   Proof.
-    unfold Proper.
     logical_eqv_intro ; auto.
   Qed.
 End id_respect.
-Hint Immediate id_respect : logical_eqv_db.
 
 Section compose_respect.
   Context {EqvEnv_:EqvEnv}.
-  Context {EqvEnvWF_:EqvEnvWF}.
-  Context {A} {aPER:PE_R A}.
-  Context {B} {bPER:PE_R B}.
-  Context {C} {cPER:PE_R C}.
-  Global Instance compose_respect : Proper PE_eqv (compose (A:=A) (B:=B) (C:=C)).
+  Context {EqvEnvLogical_:EqvEnvLogical}.
+  Context {A} {aPER:Px (env_PER A)} {aPER':Px (env_PER_WF A)}.
+  Context {B} {bPER:Px (env_PER B)} {bPER':Px (env_PER_WF B)}.
+  Context {C} {cPER:Px (env_PER C)} {cPER':Px (env_PER_WF C)}.
+  Global Instance compose_respect : Proper env_eqv (compose (A:=A) (B:=B) (C:=C)).
   Proof.
-    unfold Proper.
-    logical_eqv_intro ; simpl ; logical_eqv_elim ; auto.
+    logical_eqv_intro ; simpl ; logical_eqv.
   Qed.
 End compose_respect.
-Hint Immediate compose_respect : logical_eqv_db.
 
 Definition compose_associativity :
   forall
@@ -77,25 +79,32 @@ Proof. auto. Qed.
 
 Section const_respect.
   Context {EqvEnv_:EqvEnv}.
-  Context {EqvEnvWF_:EqvEnvWF}.
-  Context {A} {aPER:PE_R A}.
-  Global Instance const_respect : Proper PE_eqv (const (A:=A)).
+  Context {EqvEnvLogical_:EqvEnvLogical}.
+  Context {A} {aPER:Px (env_PER A)} {aPER':Px (env_PER_WF A)}.
+  Global Instance const_respect : Proper env_eqv (const (A:=A)).
   Proof.
-    unfold Proper.
     logical_eqv_intro ; auto.
   Qed.
 End const_respect.
-Hint Immediate const_respect : logical_eqv_db.
 
 Section apply_respect.
   Context {EqvEnv_:EqvEnv}.
-  Context {EqvEnvWF_:EqvEnvWF}.
-  Context {A} {aPER:PE_R A}.
-  Context {B} {bPER:PE_R B}.
-  Global Instance apply_respect : Proper PE_eqv apply.
+  Context {EqvEnvLogical_:EqvEnvLogical}.
+  Context {A} {aPER:Px (env_PER A)} {aPER':Px (env_PER_WF A)}.
+  Context {B} {bPER:Px (env_PER B)} {bPER':Px (env_PER_WF B)}.
+  Global Instance apply_respect : Proper env_eqv (apply (A:=A) (B:=B)).
   Proof.
-    unfold Proper.
-    logical_eqv_intro ; simpl ; logical_eqv_elim ; auto.
+    logical_eqv_intro ; simpl ; logical_eqv.
   Qed.
 End apply_respect.
-Hint Immediate apply_respect : logical_eqv_db.
+
+Section apply_to_respect.
+  Context {EqvEnv_:EqvEnv}.
+  Context {EqvEnvLogical_:EqvEnvLogical}.
+  Context {A} {aPER:Px (env_PER A)} {aPER':Px (env_PER_WF A)}.
+  Context {B} {bPER:Px (env_PER B)} {bPER':Px (env_PER_WF B)}.
+  Global Instance apply_to_respect : Proper env_eqv (apply_to (A:=A) (B:=B)).
+  Proof.
+    logical_eqv_intro ; simpl ; logical_eqv.
+  Qed.
+End apply_to_respect.

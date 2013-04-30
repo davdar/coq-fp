@@ -1,3 +1,19 @@
+Inductive nlist : nat -> Type :=
+  | nnil : nlist O
+  | ncons : forall n, unit -> nlist n -> nlist (S n).
+
+Definition foo n (l:nlist n) : nat :=
+  match l with
+  | nnil => O
+  | ncons m _ _ => n
+  end.
+
+Extraction foo.
+
+  
+
+
+
 Require Import FP.
 Require Import FPNotation.
 

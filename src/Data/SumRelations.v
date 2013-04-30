@@ -59,45 +59,75 @@ Section Eqv.
 
   Global Instance sum_Eqv : Eqv (A+B) := { eqv := sum_eqv }.
 
-  Context {AEE:EqvWF A} {BEE:EqvWF B}.
+  Section Equivalence.
+    Context {AEE:Eqv_E_WF A} {BEE:Eqv_E_WF B}.
+    Global Instance sum_E_EqvWF : Eqv_E_WF (A+B).
+      Local Ltac mysimp :=
+        match goal with
+        | [ |- inl _ ~= inl _ ] => constructor
+        | [ |- inr _ ~= inr _ ] => constructor
+        | [ |- ?x ~= ?x ] => reflexivity
 
-  Global Instance sum_EqvWF : EqvWF (A+B).
-    Local Ltac mysimp :=
-      match goal with
-      | [ |- inl _ ~= inl _ ] => constructor
-      | [ |- inr _ ~= inr _ ] => constructor
-      | [ |- ?x ~= ?x ] => reflexivity
+        | [ H : inl _ ~= inl _ |- _ ] => inversion H ; subst ; clear H
+        | [ H : inl _ ~= inr _ |- _ ] => inversion H
+        | [ H : inr _ ~= inl _ |- _ ] => inversion H
+        | [ H : inr _ ~= inr _ |- _ ] => inversion H ; subst ; clear H
 
-      | [ H : inl _ ~= inl _ |- _ ] => inversion H ; subst ; clear H
-      | [ H : inl _ ~= inr _ |- _ ] => inversion H
-      | [ H : inr _ ~= inl _ |- _ ] => inversion H
-      | [ H : inr _ ~= inr _ |- _ ] => inversion H ; subst ; clear H
+        | [ H : ?x ~= ?y |- ?y ~= ?x ] => symmetry ; exact H
+        | [ H1 : ?x ~= ?y, H2 : ?y ~= ?z |- ?x ~= ?z ] =>
+            transitivity y ; [exact H1 | exact H2]
+        | _ => auto
+        end.
+      constructor ; constructor ; intros.
+      unfold Reflexive ; intros.
+        destruct x ; repeat mysimp.
+      unfold Symmetric ; intros.
+        destruct x as [xl | xr], y as [yl | yr] ; repeat mysimp.
+      unfold Transitive ; intros.
+        destruct x as [xl | xr], y as [yl | yr], z as [zl | zr] ; repeat mysimp.
+      Qed.
+  End Equivalence.
 
-      | [ H : ?x ~= ?y |- ?y ~= ?x ] => symmetry ; exact H
-      | [ H1 : ?x ~= ?y, H2 : ?y ~= ?z |- ?x ~= ?z ] =>
-          transitivity y ; [exact H1 | exact H2]
-      | _ => auto
-      end.
-    constructor ; constructor ; intros.
-    unfold Reflexive ; intros.
-      destruct x ; repeat mysimp.
-    unfold Symmetric ; intros.
-      destruct x as [xl | xr], y as [yl | yr] ; repeat mysimp.
-    unfold Transitive ; intros.
-      destruct x as [xl | xr], y as [yl | yr], z as [zl | zr] ; repeat mysimp.
-    Qed.
+  Section PER.
+    Context {AEE:Eqv_PE_WF A} {BEE:Eqv_PE_WF B}.
+    Global Instance sum_PE_EqvWF : Eqv_PE_WF (A+B).
+      Local Ltac mysimp :=
+        match goal with
+        | [ |- inl _ ~= inl _ ] => constructor
+        | [ |- inr _ ~= inr _ ] => constructor
+        | [ |- ?x ~= ?x ] => reflexivity
+
+        | [ H : inl _ ~= inl _ |- _ ] => inversion H ; subst ; clear H
+        | [ H : inl _ ~= inr _ |- _ ] => inversion H
+        | [ H : inr _ ~= inl _ |- _ ] => inversion H
+        | [ H : inr _ ~= inr _ |- _ ] => inversion H ; subst ; clear H
+
+        | [ H : ?x ~= ?y |- ?y ~= ?x ] => symmetry ; exact H
+        | [ H1 : ?x ~= ?y, H2 : ?y ~= ?z |- ?x ~= ?z ] =>
+            transitivity y ; [exact H1 | exact H2]
+        | _ => auto
+        end.
+      constructor ; constructor ; intros.
+      unfold Symmetric ; intros.
+        destruct x as [xl | xr], y as [yl | yr] ; repeat mysimp.
+      unfold Transitive ; intros.
+        destruct x as [xl | xr], y as [yl | yr], z as [zl | zr] ; repeat mysimp.
+      Qed.
+  End PER.
 
   Global Instance sum_InjectionRespect_eqv_inl : InjectionRespect A (A+B) inl eqv eqv.
+  Proof.
     constructor ; unfold Proper ; simpl in * ; intros.
     constructor ; auto.
     unfold "<==" ; intros ; inversion H ; auto.
-    Qed.
+  Qed.
 
   Global Instance sum_InjectionRespect_eqv_inr : InjectionRespect B (A+B) inr eqv eqv.
+  Proof.
     constructor ; unfold Proper ; simpl in * ; intros.
     constructor ; auto.
     unfold "<==" ; intros ; inversion H ; auto.
-    Qed.
+  Qed.
 End Eqv.
 
 Section EqvDec.
@@ -143,8 +173,8 @@ Section Ord.
       
   Global Instance sum_Ord : Ord (A+B) := { lt := sum_lt }.
 
-  Context {EA:Eqv A} {EAWF:EqvWF A} {ALWF:OrdWF A}.
-  Context {EB:Eqv B} {EBWF:EqvWF B} {BLWF:OrdWF B}.
+  Context {EA:Eqv A} {EAWF:Eqv_E_WF A} {ALWF:OrdWF A}.
+  Context {EB:Eqv B} {EBWF:Eqv_E_WF B} {BLWF:OrdWF B}.
 
   Global Instance sum_OrdWF : OrdWF (A+B).
     Local Ltac mysimp :=
@@ -266,8 +296,8 @@ Section Lattice.
     }.
 
   Context {EA:Eqv A} {AO:Ord A} {EB:Eqv B} {BO:Ord B}.
-  Context {EAWF:EqvWF A} {OAWF:OrdWF A}.
-  Context {EBWF:EqvWF B} {OBWF:OrdWF B}.
+  Context {EAWF:Eqv_E_WF A} {OAWF:OrdWF A}.
+  Context {EBWF:Eqv_E_WF B} {OBWF:OrdWF B}.
   Context {ALWF:LatticeWF A} {BLWF:LatticeWF B}.
 
   Lemma inlr_lte : forall (a:A) (b:B), inl a <= inr b.

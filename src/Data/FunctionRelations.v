@@ -9,6 +9,6 @@ Import ProperNotation.
 Section Eqv.
   Context {A} {A_Eqv:Eqv A}.
   Context {B} {B_Eqv:Eqv B}.
-  Global Instance function_Eqv : Eqv (A -> B) :=
+  Definition function_Eqv : Eqv (A -> B) :=
     { eqv := (eqv ==> eqv) }.
 End Eqv.

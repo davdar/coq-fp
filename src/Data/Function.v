@@ -8,6 +8,7 @@ Arguments flip {A B C} f b a /.
 Definition apply {A B} (f:A -> B) (x:A) : B := f x.
 Arguments apply {A B} f x /.
 Definition apply_to {A B} : A -> (A -> B) -> B := flip apply.
+Arguments apply_to {A B} x f /.
 
 Definition compose {A B C} (g:B -> C) (f:A -> B) (a:A) : C := g (f a).
 Arguments compose {A B C} g f a /.

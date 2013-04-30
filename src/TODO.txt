@@ -1,2 +1,0 @@
-* change monoid to use # as operator
-* change lenses to use '@' and ':@' instead of '|' and ':|'

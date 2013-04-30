@@ -21,14 +21,25 @@ Section Eqv.
   Global Instance unit_Eqv : Eqv unit := { eqv := eq }.
 End Eqv.
 
-Section EqvWF.
-  Global Instance unit_EqvWF : EqvWF unit.
+Section Eqv_E_WF.
+  Global Instance unit_Eqv_E_WF : Eqv_E_WF unit.
+  Proof.
     constructor ; constructor ;
       [ unfold Reflexive | unfold Symmetric | unfold Transitive ] ;
       intros ;
       [ apply reflexivity | apply symmetry | eapply transitivity ] ; eauto.
-    Qed.
-End EqvWF.
+  Qed.
+End Eqv_E_WF.
+
+Section Eqv_PE_WF.
+  Global Instance unit_Eqv_PE_WF : Eqv_PE_WF unit.
+  Proof.
+    constructor ; constructor ;
+      [ unfold Symmetric | unfold Transitive ] ;
+      intros ;
+      [ apply symmetry | eapply transitivity ] ; eauto.
+  Qed.
+End Eqv_PE_WF.
 
 Section EqvDec.
   Global Instance unit_EqvDec : EqvDec unit := { eqv_dec := unit_eq_dec }.

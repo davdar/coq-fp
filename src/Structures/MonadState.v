@@ -1,7 +1,9 @@
 Require Import FP.Structures.Monad.
-Require Import FP.Structures.EqvRel.
+Require Import FP.Structures.EqvEnv.
 Require Import FP.Structures.FUnit.
+Require Import FP.Structures.Proxy.
 Require Import FP.Data.Function.
+Require Import FP.Relations.Setoid.
 
 Import MonadNotation.
 Import FunctionNotation.
@@ -22,23 +24,29 @@ Section MonadStateWF.
   Context {S:Type} {m:Type->Type}.
   Context {Monad_:Monad m} {MState_:MState S m}.
   Context {EqvEnv_:EqvEnv}.
-  Context {EqvEnvWF_:EqvEnvWF}.
-  Context {E_R_S:E_R S}.
-  Context {E_R_unit:E_R unit}.
-  Context {E_R_m:forall {A} {aER:E_R A}, E_R (m A)}.
+  Context {EqvEnvLogical_:EqvEnvLogical}.
+  Context {PE_R_E:Px (env_PER S)}.
+  Context {PE_R_E':Px (env_PER_WF S)}.
+  Context {PE_R_Eu:Px (env_PER unit)}.
+  Context {PE_R_Eu':Px (env_PER_WF unit)}.
+  Context {PE_R_t:forall {A} {aER:Px (env_PER A)}, Px (env_PER (m A))}.
+  Context {PE_R_t' :
+    forall {A} {aER:Px (env_PER A)} {aER':Px (env_PER_WF A)},
+    Px (env_PER_WF (m A))}.
+
 
   Class MonadStateWF :=
     { mget_after_mput :
         forall
-          (s:S) (s':S) (sP:E_eqv s s'),
-            E_eqv
+          (s:S) (sP:Proper env_eqv s),
+            env_eqv
             (seq (put s) get)
-            (seq (put s') (ret s'))
+            (seq (put s) (ret s))
     ; mput_after_mput :
         forall
-          (s1:S) (s1':S) (s1P:E_eqv s1 s1')
-          (s2:S) (s2':S) (s2P:E_eqv s2 s2'),
-            E_eqv
+          (s1:S) (s1P:Proper env_eqv s1)
+          (s2:S) (s2P:Proper env_eqv s2),
+            env_eqv
             (seq (put s1) (put s2))
             (put s2)
     }.

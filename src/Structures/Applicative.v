@@ -4,7 +4,8 @@ Require Import FP.Structures.FUnit.
 Require Import FP.Relations.Setoid.
 Require Import FP.Structures.FMultiplicative.
 Require Import FP.Structures.Related.
-Require Import FP.Structures.EqvRel.
+Require Import FP.Structures.Proxy.
+Require Import FP.Structures.EqvEnv.
 Require Import FP.Structures.Functor.
 
 Import FunctionNotation.
@@ -40,64 +41,76 @@ Section ApplicativeWF.
   Context {t:Type->Type}.
   Context {FUnit_:FUnit t} {FApply_:FApply t}.
   Context {EqvEnv_:EqvEnv}.
-  Context {EqvEnvWF_:EqvEnvWF}.
-  Context {PE_R_t:forall {A} {aER:PE_R A}, PE_R (t A)}.
+  Context {EqvEnvLogical_:EqvEnvLogical}.
+  Context {PE_R_t:forall {A} {aER:Px (env_PER A)}, Px (env_PER (t A))}.
+  Context {PE_R_t' :
+    forall {A} {aER:Px (env_PER A)} {aER':Px (env_PER_WF A)},
+    Px (env_PER_WF (t A))}.
 
   Class ApplicativeWF :=
     { fapply_unit :
         forall
-          {A} {aER:PE_R A}
-          {B} {bER:PE_R B}
-          (aT:t A) {aTP:Proper PE_eqv aT},
-            PE_eqv
+          {A} {aER:Px (env_PER A)} {aER':Px (env_PER_WF A)}
+          {B} {bER:Px (env_PER B)} {bER':Px (env_PER_WF B)}
+          (aT:t A) {aTP:Proper env_eqv aT},
+            env_eqv
             (fapply (funit id) aT)
             aT
     ; fapply_composition :
         forall
-          {A} {aER:PE_R A}
-          {B} {bER:PE_R B}
-          {C} {cER:PE_R C}
-          (fT:t (A -> B)) {fTP:Proper PE_eqv fT}
-          (gT:t (B -> C)) {gTP:Proper PE_eqv gT}
-          (aT:t A) {aTP:Proper PE_eqv aT},
-            PE_eqv
+          {A} {aER:Px (env_PER A)} {aER':Px (env_PER_WF A)}
+          {B} {bER:Px (env_PER B)} {bER':Px (env_PER_WF B)}
+          {C} {cER:Px (env_PER C)} {bER':Px (env_PER_WF C)}
+          (fT:t (A -> B)) {fTP:Proper env_eqv fT}
+          (gT:t (B -> C)) {gTP:Proper env_eqv gT}
+          (aT:t A) {aTP:Proper env_eqv aT},
+            env_eqv
             (fapply gT (fapply fT aT))
             (fapply (fapply (fapply (funit compose) gT) fT) aT)
     ; fapply_homomorphism :
         forall
-          {A} {aER:PE_R A}
-          {B} {bER:PE_R B}
-          (f:A -> B) {fP:Proper PE_eqv f}
-          (a:A) {aP:Proper PE_eqv a},
-            PE_eqv
+          {A} {aER:Px (env_PER A)} {aER':Px (env_PER_WF A)}
+          {B} {bER:Px (env_PER B)} {bER':Px (env_PER_WF B)}
+          (f:A -> B) {fP:Proper env_eqv f}
+          (a:A) {aP:Proper env_eqv a},
+            env_eqv
             (fapply (funit f) (funit a))
             (funit (f a))
-    (* is this derivable? *)
+    (* is this derivable? necessary? *)
     ; fapply_interchange :
         forall
-          {A} {aER:PE_R A}
-          {B} {bER:PE_R B}
-          (fT:t (A -> B)) {fTP:Proper PE_eqv fT}
-          (a:A) {aP:Proper PE_eqv a},
-            PE_eqv
+          {A} {aER:Px (env_PER A)} {aER':Px (env_PER_WF A)}
+          {B} {bER:Px (env_PER B)} {bER':Px (env_PER_WF B)}
+          (fT:t (A -> B)) {fTP:Proper env_eqv fT}
+          (a:A) {aP:Proper env_eqv a},
+            env_eqv
             (fapply fT (funit a))
             (fapply (funit (apply_to a)) fT)
     ; fapply_respect :>
         forall
-          {A} {aER:PE_R A}
-          {B} {bER:PE_R B},
-            Proper PE_eqv (fapply (A:=A) (B:=B))
+          {A} {aER:Px (env_PER A)} {aER':Px (env_PER_WF A)}
+          {B} {bER:Px (env_PER B)} {bER':Px (env_PER_WF B)},
+            Proper env_eqv (fapply (A:=A) (B:=B))
     }.
 End ApplicativeWF.
 Arguments ApplicativeWF t {_ _ _ _ _}. 
-Hint Resolve fapply_respect : logical_eqv_db.
+
+Section Deriving_FMap_FApply.
+  Context {t:Type -> Type} {FUnit_:FUnit t} {FApply_:FApply t}.
+  Definition deriving_FMap_FApply {A} {B} : (A -> B) -> t A -> t B := fapply_fmap.
+  Definition Deriving_FMap_FApply : FMap t :=
+    {| fmap := @deriving_FMap_FApply |}.
+End Deriving_FMap_FApply.
 
 Section Deriving_FunctorWF_ApplicativeWF.
   Variable (t:Type -> Type).
   Context {FUnit_:FUnit t} {FApply_:FApply t}.
   Context {EqvEnv_:EqvEnv}.
-  Context {EqvEnvWF_:EqvEnvWF}.
-  Context {PE_R_t:forall {A} {aER:PE_R A}, PE_R (t A)}.
+  Context {EqvEnvLogical_:EqvEnvLogical}.
+  Context {PE_R_t:forall {A} {aER:Px (env_PER A)}, Px (env_PER (t A))}.
+  Context {PE_R_t' :
+    forall {A} {aER:Px (env_PER A)} {aER':Px (env_PER_WF A)},
+    Px (env_PER_WF (t A))}.
 
   Context {FUnitWF_:FUnitWF t}.
   Context {ApplicativeWF_:ApplicativeWF t}.
@@ -106,55 +119,44 @@ Section Deriving_FunctorWF_ApplicativeWF.
   Class ApplicativeRespectsFunctor :=
     { fapply_respect_fmap :
         forall
-          {A} {aER:PE_R A}
-          {B} {bER:PE_R B}
-          (f:A -> B) {fP:Proper PE_eqv f}
-          (aT:t A) {aTP:Proper PE_eqv aT},
-            PE_eqv
+          {A} {aER:Px (env_PER A)} {aER':Px (env_PER_WF A)}
+          {B} {bER:Px (env_PER B)} {bER':Px (env_PER_WF B)}
+          (f:A -> B) {fP:Proper env_eqv f}
+          (aT:t A) {aTP:Proper env_eqv aT},
+            env_eqv
             (fmap f aT)
             (fapply_fmap f aT)
     }.
   Context {ApplicativeRespectsFunctor_:ApplicativeRespectsFunctor}.
 
+  Local Instance fapply_fmap_respect'
+      {A} {aER:Px (env_PER A)} {aER':Px (env_PER_WF A)}
+      {B} {bER:Px (env_PER B)} {bER':Px (env_PER_WF B)} :
+    Proper env_eqv (fapply_fmap (A:=A) (B:=B)).
+  Proof.
+    unfold fapply_fmap ; logical_eqv.
+  Qed.
+
+  Local Instance fmap_respect'
+      {A} {aER:Px (env_PER A)} {aER':Px (env_PER_WF A)}
+      {B} {bER:Px (env_PER B)} {bER':Px (env_PER_WF B)} :
+    Proper env_eqv (fmap (A:=A) (B:=B)).
+  Proof.
+    logical_eqv_intro.
+    repeat rewrite fapply_respect_fmap ; logical_eqv.
+  Qed.
+
   Definition Deriving_FunctorWF_ApplicativeWF : FunctorWF t.
   Proof.
     constructor ; intros ; simpl.
-    - rewrite (fapply_respect_fmap id aT) ; simpl.
-      rewrite (fapply_unit aT) ; auto.
-    - rewrite (fapply_respect_fmap (g '.' f) aT) ; simpl.
-      assert (Proper PE_eqv (fmap f aT)).
-      { unfold Proper.
-        rewrite (fapply_respect_fmap f aT) ; simpl.
-        logical_eqv_elim ; auto.
-        exact fapply_respect.
-        exact funit_respect.
-      }
-      rewrite (fapply_respect_fmap g (fmap f aT)) ; simpl.
-      rewrite (fapply_respect_fmap f aT) ; simpl.
-      rewrite (fapply_composition (funit f) (funit g) aT).
-      logical_eqv_elim ; auto.
-      exact fapply_respect.
-      transitivity (fapply (funit (compose g)) (funit f)).
-      rewrite (fapply_homomorphism (compose g) f).
-      logical_eqv_elim ; auto.
-      exact funit_respect.
-      exact compose_respect.
-      logical_eqv_elim ; auto.
-      exact fapply_respect.
-      symmetry.
-      apply fapply_homomorphism ; auto.
-      exact compose_respect.
-      exact funit_respect.
-    - unfold Proper.
-      logical_eqv_intro.
-      assert (Proper PE_eqv x). { apply (morph_proper_left H). }
-      assert (Proper PE_eqv x0). { apply (morph_proper_left H0). }
-      assert (Proper PE_eqv y). { apply (morph_proper_right H). }
-      assert (Proper PE_eqv y0). { apply (morph_proper_right H0). }
-      rewrite (fapply_respect_fmap x x0) ; simpl.
-      rewrite (fapply_respect_fmap y y0) ; simpl.
-      logical_eqv_elim ; auto.
-      exact fapply_respect.
-      exact funit_respect.
+    - rewrite fapply_respect_fmap ; logical_eqv ; simpl.
+      rewrite fapply_unit ; logical_eqv.
+    - rewrite fapply_respect_fmap ; logical_eqv.
+      rewrite fapply_respect_fmap ; logical_eqv .
+      rewrite fapply_respect_fmap ; logical_eqv ; simpl.
+      rewrite fapply_composition ; logical_eqv ; simpl.
+      rewrite fapply_homomorphism ; logical_eqv.
+      rewrite fapply_homomorphism ; logical_eqv.
+    - apply fmap_respect'.
   Qed.
 End Deriving_FunctorWF_ApplicativeWF.

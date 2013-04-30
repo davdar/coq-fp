@@ -32,7 +32,7 @@ Class OrdDecCorrect T {T_Eqv:Eqv T} {T_Ord:Ord T} {T_OrdDec:OrdDec T} :=
   }.
 
 Section Ord.
-  Context {T} {T_Eqv:Eqv T} {T_EqvWF:EqvWF T} {T_Ord:Ord T} {T_OrdWF:OrdWF T}.
+  Context {T} {Eqv_:Eqv T} {Eqv_E_WF_:Eqv_E_WF T} {T_Ord:Ord T} {T_OrdWF:OrdWF T}.
 
   Global Instance lt_Asymmetric : Asymmetric lt.
     unfold Asymmetric ; intros.

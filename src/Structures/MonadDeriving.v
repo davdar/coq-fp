@@ -2,11 +2,12 @@ Require Import FP.Structures.FUnit.
 Require Import FP.Data.Function.
 Require Import FP.Data.FunctionStructures.
 Require Import FP.Structures.Category.
+Require Import FP.Structures.Proxy.
 Require Import FP.Structures.Injection.
 Require Import FP.Structures.Applicative.
 Require Import FP.Structures.Related.
 Require Import FP.Structures.Functor.
-Require Import FP.Structures.EqvRel.
+Require Import FP.Structures.EqvEnv.
 Require Import FP.Structures.Monad.
 Require Import FP.Relations.Setoid.
 
@@ -33,189 +34,90 @@ Section Deriving_FMap_Monad.
     {| fmap := @deriving_FMap_Monad |}.
 End Deriving_FMap_Monad.
 
-Section Deriving_ApplicativeWF_MonadWF.
-  Variable (m:Type -> Type).
-  Context {FUnit_:FUnit m} {MBind_:MBind m}.
-  Context {EqvEnv_:EqvEnv}.
-  Context {mPER:forall {A} {aPER:PE_R A}, PE_R (m A)}.
-
-  Context {FMap_:FMap m}.
-
-  Class MonadRespFunctor :=
-    { bind_resp_fmap :
-        forall
-          {A} {aER:EqvRel A}
-          {B} {bER:EqvRel B}
-          (f:A -> B) (f':A -> B) {fP:(env_R ==> env_R) f f'}
-          (aM:m A) (aM':m A) {aMP:env_R aM aM'},
-            env_R
-            (fmap f aM)
-            (bind_fmap f' aM')
-    }.
-
-  Context {FUnitWF_:FUnitWF m EqvEnv_}.
-  Context {MonadWF_:MonadWF m EqvEnv_}.
-  Context {MonadRespFunctor_:MonadRespFunctor}.
-
-  Definition Deriving_FunctorWF_MonadWF : FunctorWF m EqvEnv_.
-  Proof.
-    constructor ; intros.
-    - erewrite (bind_resp_fmap id id aT aT').
-      simpl.
-      promote_fun.
-      rewrite category_right_unit_eq.
-      apply bind_right_unit.
-      reflexivity.
-    - simpl.
-      erewrite (bind_resp_fmap (g '.' f) (g '.' f) aT aT).
-      erewrite (bind_resp_fmap g' g' (fmap f' aT') (fmap f' aT')).
-      transitivity (bind_fmap g' (bind_fmap f' aT')).
-      + simpl.
-        erewrite (bind_associativity
-                    (funit '.' f') (funit '.' f')
-                    (funit '.' g') (funit '.' g')
-                    aT' aT') ; simpl.
-        eapply bind_respect ; auto.
-        unfold "==>" ; intros ; simpl.
-        erewrite (bind_left_unit
-                    (funit '.' g') (funit '.' g')
-                    (f' y) (f' x)) ; simpl.
-        eapply funit_respect.
-        eapply gP.
-        eapply fP.
-        reflexivity.
-      + simpl.
-        eapply bind_respect.
-        * erewrite (bind_resp_fmap f' f' aT' aT') ; simpl.
-          reflexivity.
-        * unfold "==>" ; intros ; simpl.
-          eapply funit_respect.
-          eapply (morph_proper_right gP).
-          auto.
-    - unfold Proper ; intros ; unfold "==>" at 1 ; intros ; unfold "==>" at 1 ; intros.
-      erewrite (bind_resp_fmap y y y0 y0).
-      eapply bind_resp_fmap ; [|auto].
-      exact H.
-  Grab Existential Variables.
-    reflexivity.
-    apply (morph_proper_right H).
-    reflexivity.
-    apply (morph_proper_right fP).
-    apply (morph_proper_right fP) ; symmetry ; exact H.
-    unfold "==>" ; intros ; simpl ;
-      eapply funit_respect ; eapply (morph_proper_right gP) ; auto.
-    reflexivity.
-    unfold "==>" ; intros ; simpl ;
-      eapply funit_respect ; eapply (morph_proper_right gP) ; auto.
-    unfold "==>" ; intros ; simpl ;
-      eapply funit_respect ; eapply (morph_proper_right fP) ; auto.
-    erewrite (bind_resp_fmap f' f' aT' aT') at 2 ;
-      eapply bind_resp_fmap ; [|reflexivity] ; apply (morph_proper_right fP).
-    apply (morph_proper_right gP).
-    reflexivity.
-    unfold "==>" ; intros ; simpl ;
-      eapply (morph_proper_left gP) ; eapply (morph_proper_left fP) ; auto.
-    auto.
-    apply id_respect.
-  Grab Existential Variables.
-    reflexivity.
-    apply (morph_proper_right fP).
-  Qed.
-End Deriving_FunctorWF_MonadWF.
-
-Section Deriving_FApply_Monad.
+Section Deriving_FApply_FBind.
   Context {m:Type -> Type} {FUnit_:FUnit m} {MBind_:MBind m}.
-  Definition deriving_FApply_Monad {A} {B} : m (A -> B) -> m A -> m B := bind_fapply.
-  Definition Deriving_FApply_Monad : FApply m :=
-    {| fapply := @deriving_FApply_Monad |}.
-End Deriving_FApply_Monad.
+  Definition deriving_FApply_MBind {A} {B} : m (A -> B) -> m A -> m B := bind_fapply.
+  Definition Deriving_FApply_MBind : FApply m :=
+    {| fapply := @deriving_FApply_MBind |}.
+End Deriving_FApply_FBind.
 
 Section Deriving_ApplicativeWF_MonadWF.
-  Context {m} {FUnit_:FUnit m} {MBind_:MBind m}.
-  Variable (EqvEnv_:EqvEnv).
-  Context {RPromote:forall {A} {aER:EqvRel A}, EqvRel (m A)}.
-  Context {RPromote2:forall {A} {aER:EqvRel A} {B} {bER:EqvRel B}, EqvRel (A -> B)}.
-  Context {FUnitWF_:FUnitWF m EqvEnv_}.
-  Context {MonadWF_:MonadWF m EqvEnv_}.
+  Context {m:Type -> Type}.
+  Context {FUnit_:FUnit m} {FApply_:FApply m} {MBind_:MBind m}.
 
-  Context {FApply_:FApply m}.
+  Context {EqvEnv_:EqvEnv}.
+  Context {EqvEnvLogical_:EqvEnvLogical}.
+  Context {mPER:forall {A} {aPER:Px (env_PER A)}, Px (env_PER (m A))}.
+  Context {mPER':forall {A} {aPER:Px (env_PER A)} {aPER':Px (env_PER_WF A)},
+                   Px (env_PER_WF (m A))}.
+
+  Context {FUnitWF_:FUnitWF m}.
+  Context {MonadWF_:MonadWF m}.
+
+  Global Instance bind_fapply_respect
+      {A} {aER:Px (env_PER A)} {aER':Px (env_PER_WF A)}
+      {B} {bER:Px (env_PER B)} {bER':Px (env_PER_WF B)} :
+    Proper env_eqv (bind_fapply (A:=A) (B:=B)).
+  Proof.
+    unfold bind_fapply ; logical_eqv.
+  Qed.
+
   Class MonadRespApplicative :=
-    { bind_resp_fapply :
+    { bind_respect_fapply :
         forall
-          {A} {aER:EqvRel A}
-          {B} {bER:EqvRel B}
-          (fM:m (A -> B)) (fM':m (A -> B)) {fP:env_R fM fM'}
-          (aM:m A) (aM':m A) {aMP:env_R aM aM'},
-            env_R
+          {A} {aER:Px (env_PER A)} {aER':Px (env_PER_WF A)}
+          {B} {bER:Px (env_PER B)} {bER':Px (env_PER_WF B)}
+          (fM:m (A -> B)) {fP:Proper env_eqv fM}
+          (aM:m A) {aMP:Proper env_eqv aM},
+            env_eqv
             (fapply fM aM)
-            (bind_fapply fM' aM')
+            (bind_fapply fM aM)
     }.
+
   Context {MonadRespApplicative_:MonadRespApplicative}.
 
-  Definition Deriving_ApplicativeWF_MonadWF : ApplicativeWF m EqvEnv_.
+  Local Instance fapply_respect'
+      {A} {aER:Px (env_PER A)} {aER':Px (env_PER_WF A)}
+      {B} {bER:Px (env_PER B)} {bER':Px (env_PER_WF B)} :
+    Proper env_eqv (fapply (A:=A) (B:=B)).
+  Proof.
+    logical_eqv_intro.
+    repeat rewrite bind_respect_fapply ; logical_eqv.
+  Qed.
+  Hint Extern 9 (Proper env_eqv fapply) =>
+    apply fapply_respect' : typeclass_instances.
+
+  Definition Deriving_ApplicativeWF_MonadWF : ApplicativeWF m.
   Proof.
     constructor ; intros.
-    - erewrite (bind_resp_fmap id id aT aT').
-      simpl.
-      promote_fun.
-      rewrite category_right_unit_eq.
-      apply bind_right_unit.
-      reflexivity.
-    - simpl.
-      erewrite (bind_resp_fmap (g '.' f) (g '.' f) aT aT).
-      erewrite (bind_resp_fmap g' g' (fmap f' aT') (fmap f' aT')).
-      transitivity (bind_fmap g' (bind_fmap f' aT')).
-      + simpl.
-        erewrite (bind_associativity
-                    (funit '.' f') (funit '.' f')
-                    (funit '.' g') (funit '.' g')
-                    aT' aT') ; simpl.
-        eapply bind_respect ; auto.
-        unfold "==>" ; intros ; simpl.
-        erewrite (bind_left_unit
-                    (funit '.' g') (funit '.' g')
-                    (f' y) (f' x)) ; simpl.
-        eapply funit_respect.
-        eapply gP.
-        eapply fP.
-        reflexivity.
-      + simpl.
-        eapply bind_respect.
-        * erewrite (bind_resp_fmap f' f' aT' aT') ; simpl.
-          reflexivity.
-        * unfold "==>" ; intros ; simpl.
-          eapply funit_respect.
-          eapply (morph_proper_right gP).
-          auto.
-    - unfold Proper ; intros ; unfold "==>" at 1 ; intros ; unfold "==>" at 1 ; intros.
-      erewrite (bind_resp_fmap y y y0 y0).
-      eapply bind_resp_fmap ; [|auto].
-      exact H.
-  Grab Existential Variables.
-    reflexivity.
-    apply (morph_proper_right H).
-    reflexivity.
-    apply (morph_proper_right fP).
-    apply (morph_proper_right fP) ; symmetry ; exact H.
-    unfold "==>" ; intros ; simpl ;
-      eapply funit_respect ; eapply (morph_proper_right gP) ; auto.
-    reflexivity.
-    unfold "==>" ; intros ; simpl ;
-      eapply funit_respect ; eapply (morph_proper_right gP) ; auto.
-    unfold "==>" ; intros ; simpl ;
-      eapply funit_respect ; eapply (morph_proper_right fP) ; auto.
-    erewrite (bind_resp_fmap f' f' aT' aT') at 2 ;
-      eapply bind_resp_fmap ; [|reflexivity] ; apply (morph_proper_right fP).
-    apply (morph_proper_right gP).
-    reflexivity.
-    unfold "==>" ; intros ; simpl ;
-      eapply (morph_proper_left gP) ; eapply (morph_proper_left fP) ; auto.
-    auto.
-    apply id_respect.
-  Grab Existential Variables.
-    reflexivity.
-    apply (morph_proper_right fP).
+    - rewrite bind_respect_fapply ; logical_eqv ; simpl.
+      rewrite bind_left_unit ; logical_eqv ; simpl.
+      apply bind_right_unit ; auto.
+    - rewrite bind_respect_fapply ; logical_eqv.
+      rewrite bind_respect_fapply ; logical_eqv.
+      rewrite bind_respect_fapply ; logical_eqv.
+      rewrite bind_respect_fapply ; logical_eqv.
+      rewrite bind_respect_fapply ; logical_eqv ; simpl.
+      rewrite bind_associativity ; logical_eqv.
+      rewrite bind_associativity ; logical_eqv.
+      rewrite bind_left_unit ; logical_eqv.
+      rewrite bind_associativity ; logical_eqv.
+      rewrite bind_left_unit ; logical_eqv.
+      rewrite bind_associativity ; logical_eqv.
+      rewrite bind_associativity ; logical_eqv.
+      rewrite bind_left_unit ; logical_eqv.
+      rewrite bind_associativity ; logical_eqv.
+      rewrite bind_left_unit ; logical_eqv ; simpl.
+      logical_eqv.
+    - rewrite bind_respect_fapply ; logical_eqv ; simpl.
+      rewrite bind_left_unit ; logical_eqv.
+      rewrite bind_left_unit ; logical_eqv.
+    - rewrite bind_respect_fapply ; logical_eqv ; simpl.
+      rewrite bind_respect_fapply ; logical_eqv ; simpl.
+      rewrite bind_left_unit ; logical_eqv.
+      rewrite bind_left_unit ; logical_eqv ; simpl.
+      logical_eqv.
+    - apply fapply_respect'.
   Qed.
-End Deriving_FunctorWF_MonadWF.
 End Deriving_ApplicativeWF_MonadWF.
-
+Arguments MonadRespApplicative m {_ _ _ _ _ _}.

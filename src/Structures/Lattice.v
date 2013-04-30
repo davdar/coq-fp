@@ -26,8 +26,7 @@ Class LatticeWF T {E:Eqv T} {O:Ord T} {L:Lattice T} :=
   }.
 
 Class BoundedLattice T :=
-  { bounded_lattice_Lattice :> Lattice T
-  ; ltop : T
+  { ltop : T
   ; lbot : T
   }.
 Arguments ltop {T BoundedLattice} : simpl never.

@@ -1,6 +1,6 @@
 Require Import FP.Data.Function.
 Require Import FP.Structures.Proxy.
-Require Import FP.Structures.EqvRel.
+Require Import FP.Structures.EqvEnv.
 Require Import FP.Relations.Setoid.
 
 Import FunctionNotation.
@@ -30,33 +30,36 @@ Section FunctorWF.
   Variable (t:Type->Type).
   Context {FMap_:FMap t}.
   Context {EqvEnv_:EqvEnv}.
-  Context {EqvEnvWF_:EqvEnvWF}.
-  Context {PE_R_t:forall {A} {aER:PE_R A}, PE_R (t A)}.
+  Context {EqvEnvLogical_:EqvEnvLogical}.
+  Context {PE_R_t:forall {A} {aER:Px (env_PER A)}, Px (env_PER (t A))}.
+  Context {PE_R_t' :
+    forall {A} {aER:Px (env_PER A)} {aER':Px (env_PER_WF A)},
+    Px (env_PER_WF (t A))}.
   
   Class FunctorWF :=
     { fmap_id :
         forall
-          {A} {aER:PE_R A}
-          (f:A -> A) (fP:Proper PE_eqv f)
-          (aT:t A) (aTP:Proper PE_eqv aT),
-            PE_eqv
+          {A} {aER:Px (env_PER A)} {aER':Px (env_PER_WF A)}
+          (f:A -> A) (fP:Proper env_eqv f)
+          (aT:t A) (aTP:Proper env_eqv aT),
+            env_eqv
             (fmap id aT)
             aT
     ; fmap_compose :
         forall
-          {A} {aER:PE_R A}
-          {B} {bER:PE_R B}
-          {C} {cER:PE_R C}
-          (f:A -> B) (fP:Proper PE_eqv f)
-          (g:B -> C) (gP:Proper PE_eqv g)
-          (aT:t A) (aTP:Proper PE_eqv aT),
-            PE_eqv
+          {A} {aER:Px (env_PER A)} {aER':Px (env_PER_WF A)}
+          {B} {bER:Px (env_PER B)} {bER':Px (env_PER_WF B)}
+          {C} {cER:Px (env_PER C)} {cER':Px (env_PER_WF C)}
+          (f:A -> B) (fP:Proper env_eqv f)
+          (g:B -> C) (gP:Proper env_eqv g)
+          (aT:t A) (aTP:Proper env_eqv aT),
+            env_eqv
             (fmap (g '.' f) aT)
             ((fmap g '.' fmap f) aT)
     ; fmap_respect :>
         forall
-          {A} {aER:PE_R A}
-          {B} {bER:PE_R B},
-            Proper PE_eqv (fmap (A:=A) (B:=B))
+          {A} {aER:Px (env_PER A)} {aER':Px (env_PER_WF A)}
+          {B} {bER:Px (env_PER B)} {bER':Px (env_PER_WF B)},
+            Proper env_eqv (fmap (A:=A) (B:=B))
     }.
 End FunctorWF.
