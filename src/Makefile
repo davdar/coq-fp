@@ -1,6 +1,6 @@
-PACKAGES   := Data Relations Structures
+PACKAGES   := CoreData CoreClasses Categories Data Deriving
 FILES      := $(foreach pkg,$(PACKAGES),$(patsubst %.v,%,$(wildcard $(pkg)/*.v))) \
-              $(patsubst %.v,%,$(wildcard *.v))
+	            $(patsubst %.v,%,$(wildcard *.v))
 SOURCES    := $(FILES:%=%.v) 
 
 COQ_ARGS :=

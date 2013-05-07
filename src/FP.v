@@ -1,3 +1,2 @@
-Require Export FP.Relations.
-Require Export FP.Data.
-Require Export FP.Structures.
+Require Export FP.CoreData.
+Require Export FP.CoreClasses.

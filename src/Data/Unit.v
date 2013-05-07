@@ -1,81 +1,104 @@
-Require Import Data.String.
-Require Import FP.Data.Function.
-Require Import FP.Relations.RelDec.
-Require Import FP.Structures.EqDec.
-Require Import FP.Structures.Lattice.
-Require Import FP.Structures.Eqv.
-Require Import FP.Structures.Ord.
-Require Import FP.Structures.Show.
-Require Import FP.Relations.Setoid.
+Require Import FP.CoreClasses.
+Require Import FP.CoreData.
 
-Import StringNotation.
+Import CoreDataNotation.
 
 Section EqDec.
-  Fixpoint unit_eq_dec (_x:unit) (_y:unit) : bool := true.
+  Definition unit_eq_dec : unit -> unit -> bool := const2 true.
   Global Instance unit_EqDec : EqDec unit := { eq_dec := unit_eq_dec }.
   Global Instance unit_Eq_RelDecCorrect : RelDecCorrect unit eq eq_dec.
-    constructor ; destruct x ; destruct y ; simpl ; constructor ; auto. Qed.
+  Proof. constructor ; destruct x ; destruct y ; simpl ; constructor ; auto. Qed.
 End EqDec.
 
 Section Eqv.
   Global Instance unit_Eqv : Eqv unit := { eqv := eq }.
+  Section ER_WF.
+    Global Instance unit_ER_WF : ER_WF unit.
+    Proof.
+      constructor ; constructor ;
+        [ unfold Reflexive | unfold Symmetric | unfold Transitive ] ;
+        intros ;
+        [ apply reflexivity | apply symmetry | eapply transitivity ] ; eauto.
+    Qed.
+  End ER_WF.
+
+  Section PER_WF.
+    Global Instance unit_PER_WF : PER_WF unit.
+    Proof.
+      constructor ; constructor ;
+        [ unfold Symmetric | unfold Transitive ] ;
+        intros ;
+        [ apply symmetry | eapply transitivity ] ; eauto.
+    Qed.
+  End PER_WF.
 End Eqv.
-
-Section Eqv_E_WF.
-  Global Instance unit_Eqv_E_WF : Eqv_E_WF unit.
-  Proof.
-    constructor ; constructor ;
-      [ unfold Reflexive | unfold Symmetric | unfold Transitive ] ;
-      intros ;
-      [ apply reflexivity | apply symmetry | eapply transitivity ] ; eauto.
-  Qed.
-End Eqv_E_WF.
-
-Section Eqv_PE_WF.
-  Global Instance unit_Eqv_PE_WF : Eqv_PE_WF unit.
-  Proof.
-    constructor ; constructor ;
-      [ unfold Symmetric | unfold Transitive ] ;
-      intros ;
-      [ apply symmetry | eapply transitivity ] ; eauto.
-  Qed.
-End Eqv_PE_WF.
 
 Section EqvDec.
   Global Instance unit_EqvDec : EqvDec unit := { eqv_dec := unit_eq_dec }.
   Global Instance unit_Eqv_RelDecCorrect : RelDecCorrect unit eqv eqv_dec.
-    apply unit_Eq_RelDecCorrect. Qed.
+  Proof. apply unit_Eq_RelDecCorrect. Qed.
 End EqvDec.
 
-Section Ord.
-  Definition unit_lt : unit -> unit -> Prop := const2 False.
-  Global Instance unit_Ord : Ord unit := { lt := unit_lt }.
-End Ord.
-
-Section OrdWF.
-  Global Instance unit_OrdWF : OrdWF unit.
-  Proof. constructor ; eauto with typeclass_instances.
-    unfold Irreflexive, Reflexive, complement ; simpl ; intros.
-      destruct x ; inversion H.
-    unfold Proper,"==>" ; simpl ; intros.
-      destruct x,x0 ; inversion H1.
+Section PreOrd.
+  Global Instance unit_Lte : Lte unit := { lte := eq }.
+  Global Instance unit_PreOrd : PreOrd unit.
+  Proof.
+    constructor ; [ unfold Reflexive | unfold Transitive ]
+    ; intros ; [ reflexivity | transitivity y ] ; auto.
   Qed.
-End OrdWF.
-
-Section OrdDec.
-  Definition unit_ord_dec : unit -> unit -> comparison := const2 Eq.
-  Global Instance unit_OrdDec : OrdDec unit := { ord_dec := unit_ord_dec }.
-  Global Instance unit_OrdDecCorrect : OrdDecCorrect unit.
-  Proof. constructor ; intros ; destruct x,y ;
-      unfold eqv in * ; unfold lt in * ; simpl in *.
-    reflexivity.
-    contradiction.
-    contradiction.
-    reflexivity.
-    compute in H ; discriminate H.
-    compute in H ; discriminate H.
+  Global Instance unit_LteDec : LteDec unit := { lte_dec := unit_eq_dec }.
+  Global Instance unit_Lte_RDC : RelDecCorrect unit lte lte_dec.
+  Proof.
+    constructor ; intros ; simpl ; auto.
+    destruct x,y ; unfold lte ; simpl ; auto.
   Qed.
-End OrdDec.
+End PreOrd.
+
+Section PartialOrd.
+  Global Instance unit_PartialOrd : PartialOrd unit.
+  Proof.
+    constructor ; eauto with typeclass_instances.
+    - constructor ; intros ; destruct x,y ; unfold lte ; simpl ; auto.
+    - unfold Proper,"==>",impl,Basics.impl ; intros ; destruct x,y,y0 ; simpl ; auto.
+  Qed.
+  Definition unit_pord_dec : unit -> unit -> option comparison := const2 $ Some Eq.
+  Global Instance unit_PartialOrdDec : PartialOrdDec unit := { pord_dec := unit_pord_dec }.
+  Global Instance unit_PartialOrdDecCorrect : PartialOrdDecCorrect unit.
+  Proof.
+    constructor ; intros ; destruct x,y ; simpl
+    ; unfold pord_dec,unit_pord_dec,eqv in * ; simpl in *
+    ; unfold unit_pord_dec in * ; simpl in * ; try congruence.
+    - simpl. destruct H.
+      exfalso ; apply H0 ; auto.
+    - destruct H.
+      exfalso ; apply H0 ; auto.
+    - destruct H.
+      exfalso ; apply H ; constructor.
+  Qed.
+End PartialOrd.
+
+Section TotalOrd.
+  Global Instance unit_TotalOrd : TotalOrd unit.
+  Proof.
+    constructor ; eauto with typeclass_instances ; intros.
+    unfold "~" at 1 ; intros.
+    destruct H.
+    apply H.
+    destruct x,y ; unfold lte ; simpl ; auto.
+  Qed.
+  Definition unit_tord_dec (x:unit) (y:unit) : comparison := Eq.
+  Global Instance unit_TotalOrdDec : TotalOrdDec unit := { tord_dec := unit_tord_dec }.
+  Global Instance unit_TotalOrdDecCorrect : TotalOrdDecCorrect unit.
+  Proof.
+    constructor ; intros ; destruct x,y ; simpl
+    ; unfold tord_dec,unit_tord_dec,eqv in * ; simpl in *
+    ; unfold unit_tord_dec in * ; simpl in * ; try congruence.
+    - destruct H.
+      exfalso ; apply H0 ; auto.
+    - destruct H.
+      exfalso ; apply H0 ; auto.
+  Qed.
+End TotalOrd.
 
 Section Lattice.
   Definition unit_meet : unit -> unit -> unit := const2 tt.
@@ -88,7 +111,7 @@ Section Lattice.
 
   Global Instance unit_LatticeWF : LatticeWF unit.
   Proof. constructor ; eauto with typeclass_instances ; intros ; constructor ;
-      destruct t1, t2 ; right ; compute ; auto.
+      destruct t1, t2 ; compute ; auto.
   Qed.
 End Lattice.
 
@@ -101,13 +124,3 @@ Section BoundedLattice.
   Proof. constructor ; intros ; destruct t ; simpl in * ; reflexivity.
   Qed.
 End BoundedLattice.
-
-Section Show.
-  Section unit_show.
-    Variable (R:Type) (SR:ShowResult R).
-
-    Definition unit_show (_x:unit) : R := raw_string "tt".
-  End unit_show.
-
-  Global Instance unit_Show : Show unit := { show := unit_show }.
-End Show.

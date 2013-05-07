@@ -1,15 +1,50 @@
-Require Import FP.CoreData.
-Require Import FP.CoreClasses.
-Require Import FP.Categories.
+Require Import FP.Data.Function.
+Require Import FP.Data.List.
+Require Import FP.Data.ListRelations.
+Require Import FP.Data.ListStructures.
+Require Import FP.Data.N.
+Require Import FP.Data.Option.
+Require Import FP.Data.Prod.
+Require Import FP.Data.ProdRelations.
+Require Import FP.Data.ProdStructures.
+Require Import FP.Data.String.
+Require Import FP.Data.Sum.
+Require Import FP.Data.GeneralizedList.
+Require Import FP.Structures.Additive.
+Require Import FP.Structures.Applicative.
+Require Import FP.Structures.Convertible.
+Require Import FP.Structures.Comonad.
+Require Import FP.Structures.Functor.
+Require Import FP.Structures.FunctorP.
+Require Import FP.Structures.Lattice.
+Require Import FP.Structures.MapI.
+Require Import FP.Structures.Monad.
+Require Import FP.Structures.Eqv.
+Require Import FP.Structures.MonadPlus.
+Require Import FP.Structures.Monoid.
+Require Import FP.Structures.Multiplicative.
+Require Import FP.Structures.Ord.
+Require Import FP.Structures.Show.
+Require Import FP.Structures.Traversable.
+Require Import FP.Structures.Foldable.
+Require Import FP.Structures.Iterable.
+Require Import FP.Data.PrettyI.
 
-Import CoreDataNotation.
-Import CoreClassesNotation.
-Import CategoriesNotation.
+Import ApplicativeNotation.
+Import FunctionNotation.
+Import FunctorNotation.
+Import ListNotation.
+Import MonadNotation.
+Import MonoidNotation.
+Import OrdNotation.
+Import StringNotation.
+Import NNotation.
 
 Module TwoThreeTrees.
   Section variable.
-    Context (K:Type) `{! TotalOrdDec K }.
-    Context (V:Type).
+    Variable K:Type.
+    Context {kO:OrdDec K}.
+    Variable V:Type.
 
     (* a two-three tree *)
     Inductive tree :=
@@ -173,10 +208,12 @@ Module TwoThreeTrees.
       | Null_t => None
       | Two_t tl em tr =>
           locate_greatest tr (TwoRightHole_c tl em c)
-          <|> Some (em, inl c)
+          <|>
+          Some (em, inl c)
       | Three_t tl el tm er tr =>
           locate_greatest tr (ThreeRightHole_c tl el tm er c)
-          <|> Some (er, inr (el,c))
+          <|>
+          Some (er, inr (el,c))
       end.
 
     Definition lookup (k:K) (t:tree) : option V :=
