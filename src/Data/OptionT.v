@@ -1,3 +1,3 @@
 Require Import FP.Data.ErrorT.
 
-Definition OptionT m A := ErrorT unit m A.
+Definition option_t m A := error_t unit m A.

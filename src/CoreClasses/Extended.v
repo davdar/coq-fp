@@ -73,18 +73,15 @@ Class Bif_Lte_RDC t `{! Bif_Lte t ,! Bif_LteDec t } :=
 
 (***** PartialOrd *****)
 Class F_PartialOrd t `{! F_Lte t ,! F_Eqv t ,! F_ER_WF t } :=
-  { f_partial_ord :> forall {A} `{! Lte A ,! Eqv A ,! ER_WF A ,! PartialOrd A }, PartialOrd (t A) }.
+  { f_partial_ord :> forall {A} `{! Lte A ,! Eqv A ,! ER_WF A ,! PartialOrd A }, PartialOrd (t A)
+  ; f_partial_ord_pre_ord :> F_PreOrd t
+  }.
 Class Bif_PartialOrd t `{! Bif_Lte t ,! Bif_Eqv t ,! Bif_ER_WF t } :=
   { bif_partial_ord :> forall {A B}
                          `{! Lte A ,! Eqv A ,! ER_WF A ,! PartialOrd A
-                          ,! Lte B ,! Eqv B ,! ER_WF B ,! PartialOrd B }, PartialOrd (t A B) }.
-Global Instance F_PartialOrd_PreOrd {t} `{! F_Lte t ,! F_Eqv t ,! F_ER_WF t ,! F_PartialOrd t } : F_PreOrd t.
-Proof.
-  constructor ; intros.
-  eapply @PartialOrd_PreOrd.
-  eapply @f_partial_ord.
-  eapply F_PartialOrd0.
-  AW SHIT
+                          ,! Lte B ,! Eqv B ,! ER_WF B ,! PartialOrd B }, PartialOrd (t A B)
+  ; bif_partial_ord_pre_ord :> Bif_PreOrd t
+  }.
 
 (***** PartialOrdDec *****)
 Class F_PartialOrdDec t :=
@@ -105,11 +102,15 @@ Class Bif_PartialOrd_RDC t `{! Bif_Lte t ,! Bif_Eqv t ,! Bif_ER_WF t ,! Bif_Part
 
 (***** TotalOrd *****)
 Class F_TotalOrd t `{! F_Lte t ,! F_Eqv t ,! F_ER_WF t } :=
-  { f_total_ord :> forall {A} `{! Lte A ,! Eqv A ,! ER_WF A ,! TotalOrd A }, TotalOrd (t A) }.
+  { f_total_ord :> forall {A} `{! Lte A ,! Eqv A ,! ER_WF A ,! TotalOrd A }, TotalOrd (t A)
+  ; f_total_ord_partial_ord :> F_PartialOrd t
+  }.
 Class Bif_TotalOrd t `{! Bif_Lte t ,! Bif_Eqv t ,! Bif_ER_WF t } :=
   { bif_total_ord :> forall {A B}
                        `{! Lte A ,! Eqv A ,! ER_WF A ,! TotalOrd A
-                        ,! Lte B ,! Eqv B ,! ER_WF B ,! TotalOrd B }, TotalOrd (t A B) }.
+                        ,! Lte B ,! Eqv B ,! ER_WF B ,! TotalOrd B }, TotalOrd (t A B)
+  ; bif_total_ord_partial_ord :> Bif_PartialOrd t
+  }.
 
 (***** TotalOrdDec *****)
 Class F_TotalOrdDec t :=

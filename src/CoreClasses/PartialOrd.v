@@ -7,12 +7,9 @@ Require Import FP.CoreData.Bool.
 
 Import BoolNotation.
 
-Class Antisymmetric {T} `{! Eqv T } (R:T -> T -> Prop) :=
-  { antisymmetry : forall {x y}, R x y -> R y x -> eqv x y }.
-                                                       
 Class PartialOrd T `{! Lte T ,! Eqv T ,! ER_WF T } :=
   { PartialOrd_PreOrd :> PreOrd T
-  ; PartialOrd_Antisymmetry :> Antisymmetric lte
+  ; PartialOrd_Antisymmetry :> Antisymmetric T eqv lte
   ; PartialOrd_respect_eqv :> Proper (eqv ==> eqv ==> impl) lte
   }.
 Class PartialOrdDec T :=

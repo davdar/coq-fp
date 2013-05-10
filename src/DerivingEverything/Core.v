@@ -45,9 +45,9 @@ Section Deriving_IR_inv.
   Proof.
     constructor ; unfold Proper,"==>","<==" ; simpl ; intros.
     - rewrite H ; simpl.
-      repeat rewrite InjectionInverse_inv ; auto.
+      repeat (rewrite InjectionInverse_inv ; logical_eqv).
     - rewrite H in H0 ; simpl in H0.
-      repeat rewrite InjectionInverse_inv in H0 ; auto.
+      repeat (rewrite InjectionInverse_inv in H0 ; logical_eqv).
   Qed.
 End Deriving_IR_inv.
 
@@ -62,21 +62,21 @@ Section Deriving_II_ext.
   Definition Deriving_II_ext : InjectionInverse T U to from R2.
   Proof. constructor ; intros.
     eapply Proper0.
-    - symmetry ; apply InjectionInverse_inv.
+    - symmetry ; apply InjectionInverse_inv ; logical_eqv.
     - reflexivity.
     - reflexivity.
   Qed.
 End Deriving_II_ext.
 
 Section Deriving_ID.
-  Context {T U} to from TM UM (eqv:U->U->Prop)
-    `{! InjectionInverse U T from to eqv }
+  Context {T U} to from TM UM
+    `{! InjectionInverse U T from to eq }
     `(! TM = (from '.:' (UM `on` to)) ).
 
-  Definition Deriving_ID : InjectionDistribute T U to TM UM eqv.
+  Definition Deriving_ID : InjectionDistribute T U to TM UM eq.
   Proof. constructor ; intros.
     rewrite H ; simpl.
-    eapply InjectionInverse_inv.
+    apply InjectionInverse_inv ; logical_eqv.
   Qed.
 End Deriving_ID.
 
@@ -204,7 +204,7 @@ Section Deriving_PartialOrd.
   Proof.
     constructor.
     - eauto with typeclass_instances.
-    - constructor ; intros.
+    - unfold Antisymmetric ; intros.
       apply InjectionRespect_beta.
       apply InjectionRespect_eta in H.
       apply InjectionRespect_eta in H0.
@@ -340,11 +340,11 @@ Section Deriving_BoundedLatticeWF.
     constructor ; intros.
     - rewrite H.
       apply InjectionRespect_beta.
-      rewrite  InjectionInverse_inv.
+      rewrite  InjectionInverse_inv ; logical_eqv.
       apply ltop_ineq.
     - rewrite H0.
       apply InjectionRespect_beta.
-      rewrite InjectionInverse_inv.
+      rewrite InjectionInverse_inv ; logical_eqv.
       apply lbot_ineq.
   Qed.
 End Deriving_BoundedLatticeWF.

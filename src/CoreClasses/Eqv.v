@@ -91,7 +91,8 @@ Ltac logical_eqv :=
   end ;
   repeat logical_eqv_once ;
   match goal with
-  | [ |- eqv ?x ?x ] => change (eqv x x) with (Proper eqv x)
+  | [ |- eqv (T:=?T) (Eqv:=?_Eqv) ?x ?x ] =>
+      change (eqv x x) with (Proper (eqv (T:=T) (Eqv:=_Eqv)) x)
   | _ => idtac
   end ;
   eauto with logical_eqv_db typeclass_instances.

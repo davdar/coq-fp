@@ -15,4 +15,4 @@ Class InjectionDistribute T U (inj:T->U) (T_op:T->T->T) (U_op:U->U->U) (R:U->U->
   }.
 
 Class InjectionInverse T U (to:T->U) (from:U->T) R :=
-  { InjectionInverse_inv : forall {x}, R (from (to x)) x }.
+  { InjectionInverse_inv : forall {x} `(! Proper R x ), R (from (to x)) x }.

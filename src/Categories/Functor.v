@@ -20,9 +20,9 @@ Section FMap.
 End FMap.
 
 Module FunctorNotation.
-  Infix "<$>" := fmap (at level 46, left associativity).
-  Infix "<$$>" := fmap2 (at level 46, left associativity).
-  Infix "<$$$>" := fmap3 (at level 46, left associativity).
+  Infix "<$>" := fmap (at level 47, left associativity).
+  Infix "<$$>" := fmap2 (at level 47, left associativity).
+  Infix "<$$$>" := fmap3 (at level 47, left associativity).
 End FunctorNotation.
 
 Section FunctorWF.

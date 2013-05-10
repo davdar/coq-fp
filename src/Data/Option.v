@@ -1,45 +1,19 @@
 Require Import FP.CoreData.
 Require Import FP.CoreClasses.
 Require Import FP.Categories.
-Require Import FP.Deriving.
+Require Import FP.DerivingEverything.
+Require Import FP.DerivingMonad.
 Require Import FP.Data.Type.
 Require Import FP.Data.Sum.
 Require Import FP.Data.Unit.
+Require Import FP.Data.Error.
+Require Import FP.Data.ErrorMonad.
 
 Import CoreClassesNotation.
 Import CategoriesNotation.
 
 Arguments Some {A} _.
 Arguments None {A}.
-
-Definition option_elim {A C} (aM:option A) (z:C) (f:A -> C) : C :=
-  match aM with
-  | None => z
-  | Some a => f a
-  end.
-Definition from_option {A} (a:A) (aM:option A) : A := option_elim aM a id.
-
-Ltac destruct_option_eqv x y :=
-  match goal with
-  | [ e : eqv x y |- _ ] =>
-      destruct x,y
-      ; [ apply InjectionRespect_beta in e
-        | inversion e
-        | inversion e
-        | idtac
-        ]
-  end.
-
-Ltac fold_option_elim :=
-  match goal with
-  | [ |- context
-         [ match ?aM with
-           | None => ?z
-           | Some a => (@?f a)
-           end
-         ]
-    ] => fold (option_elim aM z f)
-  end.
 
 Section sum_Bijection.
   Context {A:Type}.
@@ -69,20 +43,56 @@ Section sum_Bijection.
   Qed.
 End sum_Bijection.
 
-Module option_DerivingEverything_Functor_Arg <: DerivingEverything_Functor_Arg.
-  Definition T A := option A.
+Module option_DE_Arg <: DE_Functor_Arg.
+  Definition T := option.
   Definition U A := (unit:Type)+A.
-  Definition to {A} (x:T A) := option_to_sum x.
-  Definition from {A} (x:U A) := sum_to_option x.
-  Definition InjResp {A} : InjectionRespect (T A) (U A) to eq eq := _.
-  Definition InjInv {A} : InjectionInverse (U A) (T A) from to eq := _.
-  Definition _DerivingEverything_FunctorI : DerivingEverything_FunctorI U.
+  Definition to : forall {A}, T A -> U A := @option_to_sum.
+  Definition from : forall {A}, U A -> T A := @sum_to_option.
+  Definition IR_to {A} : InjectionRespect (T A) (U A) to eq eq := _.
+  Definition II_from {A} : InjectionInverse (U A) (T A) from to eq := _.
+  Definition _DE_FunctorI : DE_FunctorI U.
   Proof. econstructor ; eauto with typeclass_instances. Defined.
-End option_DerivingEverything_Functor_Arg.
+End option_DE_Arg.
+Module option_DE := DE_Functor option_DE_Arg.
+Import option_DE.
 
-Module option_DerivingEverything_Functor :=
-  DerivingEverything_Functor option_DerivingEverything_Functor_Arg.
-Import option_DerivingEverything_Functor.
+Definition option_elim {A C} (aM:option A) (z:C) (f:A -> C) : C :=
+  match aM with
+  | None => z
+  | Some a => f a
+  end.
+Definition from_option {A} (a:A) (aM:option A) : A := option_elim aM a id.
+Section Proper_option_elim.
+  Context {A C} `{! Eqv A ,! PER_WF A ,! Eqv C ,! PER_WF C }.
+
+  Global Instance Proper_option_elim : Proper eqv (@option_elim A C).
+  Proof.
+    unfold Proper ; logical_eqv_intro.
+    destruct x,y ; simpl ; inversion H ; subst ; clear H ; logical_eqv.
+  Qed.
+End Proper_option_elim.
+
+Ltac destruct_option_eqv x y :=
+  match goal with
+  | [ e : eqv x y |- _ ] =>
+      destruct x,y
+      ; [ apply InjectionRespect_beta in e
+        | inversion e
+        | inversion e
+        | idtac
+        ]
+  end.
+
+Ltac fold_option :=
+  match goal with
+  | [ |- context
+         [ match ?aM with
+           | None => ?z
+           | Some a => (@?f a)
+           end
+         ]
+    ] => fold (option_elim aM z f)
+  end.
 
 Section Properties.
   Context {A} `{! Eqv A }.
@@ -114,3 +124,99 @@ Section Properties.
     destruct_option_eqv x y ; logical_eqv.
   Qed.
 End Properties.
+
+Section error_Bijection.
+  Definition option_to_error {A} (aM:option A) : error unit A :=
+    match aM with
+    | None => Failure tt
+    | Some a => Success a
+    end.
+
+  Definition error_to_option {A} (aM:error unit A) : option A :=
+    match aM with
+    | Failure tt => None
+    | Success a => Some a
+    end.
+
+  Global Instance IR_error_to_option_eqv {A} `{! Eqv A ,! PER_WF A }
+    : InjectionRespect (error unit A) (option A) error_to_option eqv eqv.
+  Proof.
+    constructor ; unfold Proper,"==>","<==" ; intros.
+    - destruct x,y ; simpl
+      ; repeat
+          match goal with
+          | [ H : unit |- _ ] => destruct H
+          end
+      ; auto.
+    - destruct x,y ; simpl in *
+      ; repeat
+          match goal with
+          | [ H : unit |- _ ] => destruct H
+          end
+      ; auto.
+    Qed.
+
+  Global Instance II_option_to_error_eqv {A} `{! Eqv A ,! PER_WF A }
+    : InjectionInverse (option A) (error unit A) option_to_error error_to_option eqv.
+  Proof.
+    constructor ; intros.
+    destruct x ; simpl ; auto.
+  Qed.
+
+  Global Instance II_error_to_option_eqv {A} `{! Eqv A ,! PER_WF A }
+    : InjectionInverse (error unit A) (option A) error_to_option option_to_error eqv.
+  Proof.
+    constructor ; intros.
+    destruct x
+    ; try
+        match goal with
+        | [ H : unit |- _ ] => destruct H
+        end
+    ; auto.
+  Qed.
+
+  Global Instance Proper_option_to_error {A} `{! Eqv A ,! PER_WF A } : Proper eqv option_to_error.
+  Proof.
+    unfold Proper ; logical_eqv_intro ; unfold option_to_error
+    ; simpl ; repeat fold_option ; logical_eqv.
+  Qed.
+
+  Global Instance Proper_error_to_option {A} `{! Eqv A ,! PER_WF A } : Proper eqv error_to_option.
+  Proof.
+    unfold Proper ; logical_eqv_intro ; unfold error_to_option
+    ; simpl ; repeat fold_error ; logical_eqv
+    ; repeat
+        match goal with
+        | [ H : unit |- _ ] => destruct H
+        end
+    ; auto.
+    constructor ; auto.
+  Qed.
+End error_Bijection.
+
+Module option_DM_Arg <: DM_Functor_Arg.
+  Definition T := option.
+  Definition U := error unit.
+  Definition to : forall {A}, T A -> U A := @option_to_error.
+  Definition from : forall {A}, U A -> T A := @error_to_option.
+  Definition _DM_FunctorI : DM_FunctorI T U.
+  Proof. econstructor ; eauto with typeclass_instances. Defined.
+  Definition IR_from_eqv :
+    forall {A} `{! Eqv A ,! PER_WF A },
+    InjectionRespect (U A) (T A) from eqv eqv := _.
+  Definition II_to_from_eqv :
+    forall {A} `{! Eqv A ,! PER_WF A },
+    InjectionInverse (T A) (U A) to from eqv := _.
+  Definition II_from_from_eqv :
+    forall {A} `{! Eqv A ,! PER_WF A },
+    InjectionInverse (U A) (T A) from to eqv := _.
+  Definition Proper_to_eqv :
+    forall {A} `{! Eqv A ,! PER_WF A },
+    Proper eqv (@to A) := _.
+  Definition Proper_from_eqv :
+    forall {A} `{! Eqv A ,! PER_WF A },
+    Proper eqv (@from A) := _.
+End option_DM_Arg.
+
+Module option_DM := DM_Functor option_DM_Arg.
+Import option_DM.

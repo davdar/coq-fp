@@ -30,7 +30,7 @@ Arguments fapply_fmap {t _ _ A B} _ _ / .
 Arguments fapply_ftimes {t _ _ A B} _ _ / .
 
 Module ApplicativeNotation.
-  Infix "<@>" := fapply (at level 46, left associativity).
+  Infix "<@>" := fapply (at level 47, left associativity).
 End ApplicativeNotation.
 
 Section ApplicativeWF.
@@ -76,61 +76,7 @@ Section ApplicativeWF.
     }.
 End ApplicativeWF.
 Arguments ApplicativeWF t {_ _ _}. 
-Hint Extern 9 (Proper eqv fapply) => apply fapply_respect : typeclass_instances.
-
-Section Deriving_FMap_FApply.
-  Context {t} `{! FUnit t ,! FApply t}.
-  Definition deriving_FMap_FApply {A} {B} : (A -> B) -> t A -> t B := fapply_fmap.
-  Definition Deriving_FMap_FApply : FMap t :=
-    {| fmap := @deriving_FMap_FApply |}.
-End Deriving_FMap_FApply.
-
-Section Deriving_FunctorWF_ApplicativeWF.
-  Context {t} `{! FUnit t ,! FMap t ,! FApply t
-               ,! F_Eqv t ,! F_PER_WF t
-               ,! PointedWF t ,! ApplicativeWF t
-               }.
-
-  Global Instance fapply_fmap_respect
-      {A} `{! Eqv A ,! PER_WF A }
-      {B} `{! Eqv B ,! PER_WF B } :
-    Proper eqv (fapply_fmap (A:=A) (B:=B)).
-  Proof.
-    unfold fapply_fmap ; logical_eqv.
-  Qed.
-
-  Class ApplicativeRespectsFunctor :=
-    { fapply_respect_fmap :
-        forall
-          {A} `{! Eqv A ,! PER_WF A }
-          {B} `{! Eqv B ,! PER_WF B }
-          (f:A -> B) `{! Proper eqv f }
-          (aT:t A) `{! Proper eqv aT },
-        fmap f aT ~= fapply_fmap f aT
-    }.
-
-  Context `{! ApplicativeRespectsFunctor }.
-
-  Local Instance fmap_respect'
-      {A} `{! Eqv A ,! PER_WF A }
-      {B} `{! Eqv B ,! PER_WF B } :
-    Proper eqv (fmap (A:=A) (B:=B)).
-  Proof.
-    unfold Proper ; logical_eqv_intro.
-    repeat rewrite fapply_respect_fmap ; logical_eqv.
-  Qed.
-
-  Definition Deriving_FunctorWF_ApplicativeWF : FunctorWF t.
-  Proof.
-    constructor ; intros ; simpl.
-    - rewrite fapply_respect_fmap ; logical_eqv ; simpl.
-      rewrite fapply_unit ; logical_eqv.
-    - rewrite fapply_respect_fmap ; logical_eqv.
-      rewrite fapply_respect_fmap ; logical_eqv .
-      rewrite fapply_respect_fmap ; logical_eqv ; simpl.
-      rewrite fapply_composition ; logical_eqv ; simpl.
-      rewrite fapply_homomorphism ; logical_eqv.
-      rewrite fapply_homomorphism ; logical_eqv.
-    - apply fmap_respect'.
-  Qed.
-End Deriving_FunctorWF_ApplicativeWF.
+Hint Extern 9 (Proper eqv (fapply (t:=?t) (A:=?A))) =>
+  let H := fresh "H" in
+  pose (H:=(fapply_respect (t:=t) (A:=A))) ; apply H
+  : typeclass_instances.
