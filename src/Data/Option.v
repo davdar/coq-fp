@@ -194,7 +194,7 @@ Section error_Bijection.
   Qed.
 End error_Bijection.
 
-Module option_DM_Arg <: DM_Functor_Arg.
+Module option_DMError_Arg <: DMError_Functor_Arg.
   Definition T := option.
   Definition U := error unit.
   Definition to : forall {A}, T A -> U A := @option_to_error.
@@ -216,7 +216,11 @@ Module option_DM_Arg <: DM_Functor_Arg.
   Definition Proper_from_eqv :
     forall {A} `{! Eqv A ,! PER_WF A },
     Proper eqv (@from A) := _.
-End option_DM_Arg.
 
-Module option_DM := DM_Functor option_DM_Arg.
-Import option_DM.
+  Definition E := unit.
+  Definition _DMError_FunctorI : DMError_FunctorI unit T U.
+  Proof. econstructor ; eauto with typeclass_instances. Defined.
+End option_DMError_Arg.
+
+Module option_DMError := DMError_Functor option_DMError_Arg.
+Import option_DMError.

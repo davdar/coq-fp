@@ -92,3 +92,39 @@ Module DM_IdxFunctor (M:DM_IdxFunctor_Arg).
     End Functor.
   End I.
 End DM_IdxFunctor.
+
+Class DMError_IdxFunctorI
+    (T:Type -> Type -> Type) (U:Type -> Type -> Type)
+    `{! forall {I} `{! Eqv I }, F_Eqv (U I)
+     ,! forall {I} `{! Eqv I ,! PER_WF I }, F_PER_WF (U I)
+     ,! forall {I}, MBind (U I)
+     } :=
+  { DMError_Idx_U_MCatch :> forall {I}, MCatch I (U I)
+  ; DMError_Idx_U_MonadCatchWF :> forall {I} `{! Eqv I ,! PER_WF I}, MonadCatchWF I (U I)
+  }.
+Module Type DMError_IdxFunctor_Arg.
+  Include DM_IdxFunctor_Arg.
+  Parameter _DMError_IdxFunctorI : DMError_IdxFunctorI T U.
+End DMError_IdxFunctor_Arg.
+
+Module DMError_IdxFunctor (M:DMError_IdxFunctor_Arg).
+  Import M.
+  Module DM := DM_IdxFunctor M.
+  Import DM.
+
+  Arguments T / _ _ .
+  Arguments U / _ _ .
+  Arguments to {I A} / _ .
+  Arguments from {I A} / _ .
+
+  Section MonadError.
+    Context {I:Type} `{! Eqv I ,! PER_WF I }.
+
+    Global Instance _MCatch : MCatch I (T I) := deriving_MCatch_Bijection (@to I) (@from I).
+    Global Instance _MonadCatchWF : MonadCatchWF I (T I).
+    Proof.
+      apply (deriving_MonadCatchWF_Bijection (@to I) (@from I)) ; intros.
+      unfold bind at 1 ; simpl ; logical_eqv.
+    Qed.
+  End MonadError.
+End DMError_IdxFunctor.

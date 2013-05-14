@@ -80,3 +80,41 @@ Module DM_Functor (M:DM_Functor_Arg).
     Qed.
   End Functor.
 End DM_Functor.
+
+Class DMError_FunctorI
+    (E:Type) (T:Type -> Type) (U:Type -> Type)
+    `{! F_Eqv U
+     ,! F_PER_WF U
+     ,! MBind U
+     } :=
+  { DMError_Idx_E_Eqv :> Eqv E
+  ; DMError_Idx_E_PER_WF :> PER_WF E
+  ; DMError_Idx_U_MCatch :> MCatch E U
+  ; DMError_Idx_U_MonadCatchWF :> MonadCatchWF E U
+  }.
+Module Type DMError_Functor_Arg.
+  Include DM_Functor_Arg.
+  Parameter E : Type.
+  Parameter _DMError_FunctorI : DMError_FunctorI E T U.
+End DMError_Functor_Arg.
+
+Module DMError_Functor (M:DMError_Functor_Arg).
+  Import M.
+  Module DM := DM_Functor M.
+  Import DM.
+
+  Arguments T / _.
+  Arguments U / _.
+  Arguments E /.
+  Arguments to {A} / _ .
+  Arguments from {A} / _ .
+
+  Section MonadError.
+    Global Instance _MCatch : MCatch E T := deriving_MCatch_Bijection (@to) (@from).
+    Global Instance _MonadCatchWF : MonadCatchWF E T.
+    Proof.
+      apply (deriving_MonadCatchWF_Bijection (@to) (@from)) ; intros.
+      unfold bind at 1 ; simpl ; logical_eqv.
+    Qed.
+  End MonadError.
+End DMError_Functor.

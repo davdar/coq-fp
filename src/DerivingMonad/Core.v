@@ -29,7 +29,7 @@ End Deriving_Pointed_Bijection.
 Arguments deriving_funit_bijection {T U} from {FUnit0 A} _ /.
 
 Section Deriving_Monad_Bijection.
-  Context {T U:Type -> Type} (to:forall {A}, T A -> U A) (from:forall {A}, U A -> T A)
+  Context {T U} (to:forall {A}, T A -> U A) (from:forall {A}, U A -> T A)
     `{! F_Eqv T ,! F_PER_WF T ,! FUnit T ,! PointedWF T
      ,! F_Eqv U ,! F_PER_WF U ,! FUnit U ,! MBind U ,! PointedWF U ,! MonadWF U
      ,! forall {A} `{! Eqv A ,! PER_WF A }, Proper eqv from
@@ -74,6 +74,51 @@ Section Deriving_Monad_Bijection.
   Qed.
 End Deriving_Monad_Bijection.
 Arguments deriving_bind_bijection {T U} to from {MBind0 A B} _ _ /.
+
+Section Deriving_MonadCatch_Bijection.
+  Context {T U E} (to:forall {A}, T A -> U A) (from:forall {A}, U A -> T A)
+    `{! Eqv E ,! PER_WF E
+     ,! F_Eqv T ,! F_PER_WF T ,! FUnit T ,! PointedWF T ,! MBind T ,! MonadWF T
+     ,! F_Eqv U ,! F_PER_WF U ,! FUnit U ,! MBind U ,! PointedWF U ,! MonadWF U
+     ,! MCatch E U ,! MonadCatchWF E U
+     ,! forall {A} `{! Eqv A ,! PER_WF A }, Proper eqv from
+     ,! forall {A} `{! Eqv A ,! PER_WF A }, Proper eqv to
+     ,! forall {A} `{! Eqv A ,! PER_WF A }, InjectionInverse (U A) (T A) from to eqv
+     ,! forall {A} `{! Eqv A ,! PER_WF A }, InjectionInverse (T A) (U A) to from eqv
+     }
+    ( fbind_eqv :
+        forall
+          {A B} `{! Eqv A ,! PER_WF A ,! Eqv B ,! PER_WF B }
+          (aM:T A) `{! Proper eqv aM }
+          (k:A -> T B) `{! Proper eqv k},
+        aM >>= k ~= from (to aM >>= to '.' k)
+    ).
+  Arguments to {A} _.
+  Arguments from {A} _.
+
+  Definition deriving_throw_bijection {A} : E -> T A :=
+    from '.' mthrow.
+  Arguments deriving_throw_bijection {A} _ /.
+  Definition deriving_catch_bijection {A} (aM:T A) (k:E -> T A) : T A :=
+    from $ mcatch (to aM) (to '.' k).
+  Arguments deriving_catch_bijection {A} _ _ /.
+  Local Instance deriving_MCatch_Bijection : MCatch E T :=
+    { mthrow := @deriving_throw_bijection
+    ; mcatch := @deriving_catch_bijection
+    }.
+  Local Instance deriving_MonadCatchWF_Bijection : MonadCatchWF E T.
+  Proof.
+    constructor ; intros ; unfold mcatch,mthrow ; simpl.
+    - rewrite InjectionInverse_inv ; logical_eqv.
+      rewrite mcatch_throw_zero ; logical_eqv ; simpl.
+      rewrite InjectionInverse_inv ; logical_eqv.
+    - rewrite fbind_eqv ; logical_eqv.
+      rewrite InjectionInverse_inv ; logical_eqv.
+      rewrite mcatch_bind_zero ; logical_eqv.
+    - unfold Proper,deriving_throw_bijection ; logical_eqv.
+    - unfold Proper,deriving_catch_bijection ; logical_eqv.
+  Qed.
+End Deriving_MonadCatch_Bijection.
 
 Section Deriving_FApply_MBind.
   Context {m} `{! FUnit m ,! MBind m }.

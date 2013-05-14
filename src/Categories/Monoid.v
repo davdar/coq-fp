@@ -1,4 +1,4 @@
-Require Import CoreClasses.
+Require Import FP.CoreClasses.
 
 Import CoreClassesNotation.
 

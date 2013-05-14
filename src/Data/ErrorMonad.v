@@ -15,7 +15,7 @@ Section error_b_Bijection.
     ErrorT '.' Identity.
   Arguments error_to_error_b / _.
   Definition error_b_to_error : error_b E A -> error E A :=
-    un_identity '.' un_error_t.
+    run_identity '.' run_error_t.
   Arguments error_b_to_error / _.
   Global Instance error_IR_error_b_to_error
     : InjectionRespect (error_b E A) (error E A) error_b_to_error eqv eqv.
@@ -50,7 +50,7 @@ Section error_b_Bijection.
   Qed.
 End error_b_Bijection.
 
-Module error_DM_Arg <: DM_IdxFunctor_Arg.
+Module error_DMError_Arg <: DMError_IdxFunctor_Arg.
   Definition T := error.
   Definition U := error_b.
   Definition to : forall {I A}, T I A -> U I A := @error_to_error_b.
@@ -72,7 +72,10 @@ Module error_DM_Arg <: DM_IdxFunctor_Arg.
   Definition Proper_from_eqv :
     forall {I A} `{! Eqv I ,! PER_WF I ,! Eqv A ,! PER_WF A },
     Proper eqv (@from I A) := _.
-End error_DM_Arg.
 
-Module error_DM := DM_IdxFunctor error_DM_Arg.
-Import error_DM.
+  Definition _DMError_IdxFunctorI : DMError_IdxFunctorI T U.
+  Proof. econstructor ; eauto with typeclass_instances. Defined.
+End error_DMError_Arg.
+
+Module error_DMError := DMError_IdxFunctor error_DMError_Arg.
+Import error_DMError.

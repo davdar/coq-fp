@@ -1,5 +1,5 @@
-Require BinNums.
-Require BinInt.
+Require Coq.Numbers.BinNums.
+Require Coq.ZArith.BinInt.
 
 Definition Z := BinNums.Z.
 

@@ -10,14 +10,6 @@ Import EqvNotation.
 Class FApply t :=
   { fapply : forall {A B}, t (A -> B) -> t A -> t B }.
 
-Class Applicative t : Type :=
-  { Applicative_FUnit : FUnit t
-  ; Applicative_FApply : FApply t
-  }.
-Hint Resolve Build_Applicative : typeclass_instances.
-Hint Immediate Applicative_FUnit : typeclass_instances.
-Hint Immediate Applicative_FApply : typeclass_instances.
-
 Section FApply.
   Context {t} `{! FUnit t ,! FApply t}.
 

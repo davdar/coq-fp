@@ -1,9 +1,8 @@
 Require Import FP.CoreData.
 Require Import FP.CoreClasses.
 
-Import FunctionNotation.
-Import ProperNotation.
-Import EqvNotation.
+Import CoreClassesNotation.
+Import CoreDataNotation.
 
 Class FMap (t:Type->Type) : Type :=
   { fmap : forall {A B}, (A -> B) -> t A -> t B }.

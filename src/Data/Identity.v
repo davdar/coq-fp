@@ -6,22 +6,22 @@ Require Import FP.Categories.
 Import CoreClassesNotation.
 Import CoreDataNotation.
 
-Inductive identity A := Identity { un_identity : A }.
+Inductive identity A := Identity { run_identity : A }.
 Arguments Identity {A} _.
-Arguments un_identity {A} _.
+Arguments run_identity {A} _.
 
 Section identity_Bijection.
   Context {A:Type}.
 
   Global Instance IR_un_identity_eq
-    : InjectionRespect (identity A) A un_identity eq eq.
+    : InjectionRespect (identity A) A run_identity eq eq.
   Proof.
     constructor ; [congruence|].
     unfold Proper,"<==" ; intros ; destruct x,y ; simpl in * ; congruence.
   Qed.
 
   Global Instance II_Identity_eq
-    : InjectionInverse A (identity A) Identity un_identity eq.
+    : InjectionInverse A (identity A) Identity run_identity eq.
   Proof.
     constructor ; auto.
   Qed.
@@ -30,7 +30,7 @@ End identity_Bijection.
 Module identity_DE_Arg <: DE_Functor_Arg.
   Definition T := identity.
   Definition U := id:Type->Type.
-  Definition to : forall {A}, T A -> U A := @un_identity.
+  Definition to : forall {A}, T A -> U A := @run_identity.
   Definition from : forall {A}, U A -> T A := @Identity.
   Definition IR_to {A} : InjectionRespect (T A) (U A) to eq eq := _.
   Definition II_from {A} : InjectionInverse (U A) (T A) from to eq := _.
@@ -48,7 +48,7 @@ Section Proper.
     logical_eqv_intro.
     unfold eqv ; auto.
   Qed.
-  Global Instance un_identity_Proper : Proper eqv (@un_identity A).
+  Global Instance run_identity_Proper : Proper eqv (@run_identity A).
   Proof.
     unfold Proper.
     logical_eqv_intro.
@@ -62,7 +62,7 @@ Section Monad.
   Global Instance identity_FUnit : FUnit identity := { funit := @identity_unit }.
 
   Definition identity_bind {A B} (aM:identity A) (k:A -> identity B) : identity B :=
-    k $ un_identity aM.
+    k $ run_identity aM.
   Arguments identity_bind {A B} _ _ /.
   Global Instance identity_MBind : MBind identity := { bind := @identity_bind }.
 
@@ -79,3 +79,13 @@ Section Monad.
     simpl ; logical_eqv.
   Qed.
 End Monad.
+
+Section Comonad.
+  Definition identity_counit {A} : identity A -> A := run_identity.
+  Arguments identity_counit {A} _ /.
+  Global Instance identity_Counit : Counit identity := { counit := @identity_counit }.
+
+  Definition identity_cobind {A B} (aM:identity A) (k:identity A -> B) : identity B :=
+    Identity $ k aM.
+  Global Instance identity_Cobind : Cobind identity := { cobind := @identity_cobind }.
+End Comonad.

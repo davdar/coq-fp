@@ -10,6 +10,12 @@ Require Export FP.Categories.Monoid.
 Require Export FP.Categories.Pointed.
 Require Export FP.Categories.MonadPlus.
 Require Export FP.Categories.MonadCatch.
+Require Export FP.Categories.MonadState.
+Require Export FP.Categories.Foldable.
+Require Export FP.Categories.MonadCont.
+Require Export FP.Categories.Morphism.
+Require Export FP.Categories.Peano.
+Require Export FP.Categories.Traversable.
 
 Module CategoriesNotation.
   Export ApplicativeNotation.
@@ -20,4 +26,6 @@ Module CategoriesNotation.
   Export MonadNotation.
   Export MonadPlusNotation.
   Export MonadCatchNotation.
+  Export MorphismNotation.
+  Export ComonadNotation.
 End CategoriesNotation.

@@ -1,4 +1,7 @@
 Require Import FP.CoreClasses.
+Require Import FP.CoreData.
+
+Import CoreDataNotation.
 
 Class FUnit t := { funit : forall {A}, A -> t A }.
 

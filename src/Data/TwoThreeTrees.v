@@ -1,15 +1,20 @@
 Require Import FP.CoreData.
 Require Import FP.CoreClasses.
 Require Import FP.Categories.
+Require Import FP.Data.Option.
+Require Import FP.Data.List.
+Require Import FP.Data.Foldable.
+Require Import FP.Data.Monoid.
+Require Import FP.Data.Prod.
 
 Import CoreDataNotation.
 Import CoreClassesNotation.
 Import CategoriesNotation.
 
 Module TwoThreeTrees.
-  Section variable.
-    Context (K:Type) `{! TotalOrdDec K }.
-    Context (V:Type).
+  Section Context.
+    Context {K:Type} `{! TotalOrdDec K }.
+    Context {V:Type}.
 
     (* a two-three tree *)
     Inductive tree :=
@@ -31,15 +36,6 @@ Module TwoThreeTrees.
     Definition empty := Null_t.
     Definition single (e:K*V) : tree := Two_t Null_t e Null_t.
     Definition singleton (k:K) (v:V) : tree := Two_t Null_t (k,v) Null_t.
-
-    (*
-    Fixpoint height (t:tree) : N :=
-      match t with
-      | Null_t => zero
-      | Two_t tl _ tr => height tl `lmax` height tr
-      | Three_t tl _ tm _ tr => height tl `lmax` height tm `lmax` height tr
-      end.
-*)
 
     (* a context of a two-three tree. this is the type of taking a tree and
      * replacing a sub-tree with a hole.
@@ -98,18 +94,12 @@ Module TwoThreeTrees.
 
     Fixpoint fuse (c1:context) (c2:context) : context :=
       match c1 with
-      | Top_c =>
-          c2
-      | TwoLeftHole_c em tr c1' =>
-          TwoLeftHole_c em tr $ fuse c1' c2
-      | TwoRightHole_c tl em c1' =>
-          TwoRightHole_c tl em $ fuse c1' c2
-      | ThreeLeftHole_c el em er tr c1' =>
-          ThreeLeftHole_c el em er tr $ fuse c1' c2
-      | ThreeMiddleHole_c tl el er tr c1' =>
-          ThreeMiddleHole_c tl el er tr $ fuse c1' c2
-      | ThreeRightHole_c tl el em er c1' =>
-          ThreeRightHole_c tl el em er $ fuse c1' c2
+      | Top_c => c2
+      | TwoLeftHole_c em tr c1' => TwoLeftHole_c em tr $ fuse c1' c2
+      | TwoRightHole_c tl em c1' => TwoRightHole_c tl em $ fuse c1' c2
+      | ThreeLeftHole_c el em er tr c1' => ThreeLeftHole_c el em er tr $ fuse c1' c2
+      | ThreeMiddleHole_c tl el er tr c1' => ThreeMiddleHole_c tl el er tr $ fuse c1' c2
+      | ThreeRightHole_c tl el em er c1' => ThreeRightHole_c tl el em er $ fuse c1' c2
       end.
 
     Inductive location :=
@@ -188,7 +178,7 @@ Module TwoThreeTrees.
     (* if insertion results in a subtree which is too tall, propegate it up into
      * its context.
      *)
-    Fixpoint insertUp (tet:tree * (K*V) * tree) (c:context) : tree :=
+    Fixpoint insert_up (tet:tree * (K*V) * tree) (c:context) : tree :=
       let '(tl,em,tr) := tet in
       match c with
       (*     _          
@@ -206,8 +196,7 @@ Module TwoThreeTrees.
        *   // \\
        *  tl   tr
        *)
-      | TwoLeftHole_c em' tr' c' =>
-          zip (Three_t tl em tr em' tr') c'
+      | TwoLeftHole_c em' tr' c' => zip (Three_t tl em tr em' tr') c'
       (*     c'                c'
        *     |                 |
        *   [em']      =>    [em'][em]
@@ -216,8 +205,7 @@ Module TwoThreeTrees.
        *      // \\
        *     tl   tr
        *)
-      | TwoRightHole_c tl' em' c' =>
-          zip (Three_t  tl' em' tl em tr ) c'
+      | TwoRightHole_c tl' em' c' => zip (Three_t  tl' em' tl em tr ) c'
       (*         c'                  c'
        *         |                   |
        *      [el][er]     =>      [el]
@@ -226,8 +214,7 @@ Module TwoThreeTrees.
        *   // \\                /  \   /  \
        *  tl   tr              tl  tr tm  tr'
        *)
-      | ThreeLeftHole_c el tm er tr' c' =>
-          insertUp (Two_t tl em tr, el, Two_t tm er tr') c'
+      | ThreeLeftHole_c el tm er tr' c' => insert_up (Two_t tl em tr, el, Two_t tm er tr') c'
       (*      c'                 c'
        *      |                  |
        *   [el][er]     =>      [em]
@@ -236,8 +223,7 @@ Module TwoThreeTrees.
        *     // \\           /  \   /  \
        *    tl   tr         tl' tl tr  tr'
        *)
-      | ThreeMiddleHole_c tl' el er tr' c' =>
-          insertUp (Two_t tl' el tl, em, Two_t tr er tr') c'
+      | ThreeMiddleHole_c tl' el er tr' c' => insert_up (Two_t tl' el tl, em, Two_t tr er tr') c'
       (*      c'                   c'
        *      |                    |
        *   [el][er]       =>      [er]
@@ -246,16 +232,19 @@ Module TwoThreeTrees.
        *          // \\        /  \   /  \
        *         tl   tr      tl' tm tl  tr
        *)
-      | ThreeRightHole_c tl' el tm er c' =>
-          insertUp (Two_t tl' el tm, er, Two_t tl em tr) c'
+      | ThreeRightHole_c tl' el tm er c' => insert_up (Two_t tl' el tm, er, Two_t tl em tr) c'
       end.
 
     (* insert an element into the two-three tree *)
     Definition insert_with (f:V -> V -> V) (k:K) (v:V) (t:tree) : tree :=
       match locate k t Top_c with
-      | inl c => insertUp (Null_t, (k,v), Null_t) c
+      | inl c => insert_up (Null_t, (k,v), Null_t) c
       | inr ((_,v'), l) => fill_location (k,f v v') l
       end.
+    Definition insert_replace : K -> V -> tree -> tree :=
+      insert_with const.
+    Definition insert_keep : K -> V -> tree -> tree :=
+      insert_with (flip const).
 
     (* update an element in the tree *)
     Definition update (k:K) (f:V -> V) (t:tree) : tree :=
@@ -266,8 +255,8 @@ Module TwoThreeTrees.
 
     (* if remove results in a tree which is too short, propegate the gap into the
      * context *)
-    (* Returns None if the tree is not well founded *)
-    Fixpoint removeUp (t:tree) (c:context) : option tree :=
+    (* Returns None if the tree is not well formed *)
+    Fixpoint remove_up (t:tree) (c:context) : option tree :=
       match c with
       (*  _        
        *  ||
@@ -293,7 +282,7 @@ Module TwoThreeTrees.
        *    tl'   tr'
        *) 
       | TwoLeftHole_c em (Two_t tl' em' tr') c' =>
-          removeUp (Three_t t em tl' em' tr') c'
+          remove_up (Three_t t em tl' em' tr') c'
       (*          c'             c'
        *          |              |
        *         [em]   =>      [er']
@@ -313,7 +302,7 @@ Module TwoThreeTrees.
        *  tl'   tr'
        *) 
       | TwoRightHole_c (Two_t tl' em' tr') em c' =>
-          removeUp (Three_t tl' em' tr' em t) c'
+          remove_up (Three_t tl' em' tr' em t) c'
       (*         c'                      c'
        *         |                       | 
        *      [el][er]      =>        [el][er]
@@ -401,7 +390,7 @@ Module TwoThreeTrees.
       | ThreeRightHole_c _ _ Null_t _ _ => None
       end.
 
-    (* returns None if the tree is not well founded *)
+    (* returns None if the tree is not well formed *)
     Definition remove (k:K) (t:tree) : option (tree * option V) :=
       match locate k t Top_c with
       (* element doesn't exist *)
@@ -414,165 +403,71 @@ Module TwoThreeTrees.
               let mkContext g c' := TwoLeftHole_c g tr c' in
               match locate_greatest tl Top_c with
               (* no children: turn into a hole and propagate *)
-              | None =>
-                  removeUp Null_t c
+              | None => remove_up Null_t c
               (* greatest leaf is a two-node: replace it with a hole and propagate *)
-              | Some (g, inl c') =>
-                  removeUp Null_t $ fuse (mkContext g c') c
+              | Some (g, inl c') => remove_up Null_t $ fuse (mkContext g c') c
               (* greatest leaf is a three-node: turn it into a two-node *)
-              | Some (g, inr (el, c')) =>
-                  Some $ zip (single el) $ fuse (mkContext g c') c
+              | Some (g, inr (el, c')) => Some $ zip (single el) $ fuse (mkContext g c') c
               end
           (* element found on left side of three-node *)
           | ThreeLeftHole_l tl tm er tr c =>
               let mkContext g c' := ThreeLeftHole_c g tm er tr c' in
               match locate_greatest tl Top_c with
               (* no children: turn into a two-node *)
-              | None =>
-                  Some $ zip (single er) c
+              | None => Some $ zip (single er) c
               (* greatest leaf is a two-node: replace it with a hole and propagate *)
-              | Some (g, inl c') =>
-                  removeUp Null_t $ fuse (mkContext g c') c
+              | Some (g, inl c') => remove_up Null_t $ fuse (mkContext g c') c
               (* greatest leaf is a three-node: turn it into a two-node *)
-              | Some (g, inr (el, c')) =>
-                  Some $ zip (single el) $ fuse (mkContext g c') c
+              | Some (g, inr (el, c')) => Some $ zip (single el) $ fuse (mkContext g c') c
               end
           (* element found on right side of three-node *)
           | ThreeRightHole_l tl el tm tr c =>
               let mkContext g c' := ThreeMiddleHole_c tl el g tr c' in
               match locate_greatest tm Top_c with
               (* no children: turn into a two-node *)
-              | None =>
-                  Some $ zip (single el) c
+              | None => Some $ zip (single el) c
               (* greatest leaf is a two-node: replace it with a hole and propagate *)
-              | Some (g, inl c') =>
-                  removeUp Null_t $ fuse (mkContext g c') c
+              | Some (g, inl c') => remove_up Null_t $ fuse (mkContext g c') c
               (* greatest leaf is a three-node: turn it into a two-node *)
-              | Some (g, inr (el, c')) =>
-                  Some $ zip (single el) $ fuse (mkContext g c') c
+              | Some (g, inr (el, c')) => Some $ zip (single el) $ fuse (mkContext g c') c
               end
           end
       end.
 
 
-    Fixpoint to_list_k (t:tree) (k:list (K*V) -> list (K*V)) {struct t}
-        : list (K*V) :=
+    Fixpoint to_list_k (t:tree) (k:list (K*V) -> list (K*V)) : list (K*V) :=
       match t with
       | Null_t => k nil
       | Two_t tl em tr =>
-          to_list_k tl (fun xl =>
-            to_list_k tr (fun xr =>
-              k $ app xl (em::xr)))
+          to_list_k tl $ fun xl =>
+            to_list_k tr $ fun xr =>
+              k $ app xl (em::xr)
       | Three_t tl el tm er tr =>
-          to_list_k tl (fun xl =>
-            to_list_k tm (fun xm =>
-              to_list_k tr (fun xr =>
-                k $ xl ** (el::xm) ** (er::xr))))
+          to_list_k tl $ fun xl =>
+            to_list_k tm $ fun xm =>
+              to_list_k tr $ fun xr =>
+                k $ xl ** (el::xm) ** (er::xr)
       end.
 
     Definition to_list t := to_list_k t id.
-    Definition tree_cofold {m} {M:Comonad m} {B} (f:(K*V) -> m B -> B) (z:m B) (t:tree) : B := cofold f z (to_list t).
-    Definition tree_mbuild {m} {M:Monad m} (f:forall {C}, ((K*V) -> C -> C) -> C -> m C) : m tree :=
-      f (uncurry (insert_with const)) Null_t.
-
-    Definition from_list := foldr (uncurry $ insert_with const) Null_t.
+    Definition tree_cofold {w A} `{! Counit w ,! Cobind w } (f:(K*V) -> w A -> A) (aW:w A) : tree -> A :=
+      cofold f aW '.' to_list.
+    Definition tree_mbuild {m} `{! FUnit m ,! MBind m } (f:forall {A}, ((K*V) -> A -> A) -> A -> m A) : m tree :=
+      f (uncurry insert_replace) Null_t.
+    Definition from_list : list (K*V) -> tree := iter (fun t kv => uncurry insert_replace kv t) Null_t.
 
     Definition union_with (f:V -> V -> V) (t1:tree) (t2:tree) : tree :=
       let fld (t:tree) (e:K*V) :=
         let (k,v) := e in
         insert_with f k v t
       in
-      foldl fld t2 $ to_list t1.
+      iter fld t2 $ to_list t1.
 
-    Definition map_show {SK:Show K} {SV:Show V} {R} {SR:ShowResult R} (t:tree) : R :=
-      let show_pair (p:K*V) :=
-        let '(k,v) := p in
-        show k ** raw_string " => " ** show v
-      in
-      let show_inner :=
-        fix show_inner ps :=
-          match ps with
-          | [] => gunit
-          | p::ps' => raw_string "; " ** show_pair p ** show_inner ps'
-          end
-      in
-      match to_list t with
-      | [] => raw_string "{}"
-      | [p] => raw_string "{" ** show_pair p ** raw_string "}"
-      | p::ps => raw_string "{" ** show_pair p ** show_inner ps ** raw_string "}"
-      end.
-
-    Definition map_pretty {PK:Pretty K} {PV:Pretty V} (t:tree) : doc :=
-      let pretty_pair (p:K*V) :=
-        let '(k,v) := p in
-        group_d begin
-          pretty k `concat_d`
-          text_d " =>" `concat_d`
-          nest_d 2 (line_d `concat_d` pretty v)
-        end
-      in
-      let pretty_inner :=
-      fix pretty_inner ps :=
-        match ps with
-        | [] => nil_d
-        | p::ps =>
-            text_d "; " `concat_d`
-            nest_d 2 (pretty_pair p) `concat_d`
-            line_d `concat_d`
-            pretty_inner ps
-        end
-      in
-      match to_list t with
-      | [] => text_d "{}"
-      | [p] =>
-          group_d begin
-            text_d "{ " `concat_d`
-            nest_d 2 (pretty_pair p) `concat_d`
-            line_d `concat_d`
-            text_d "}"
-          end
-      | p::ps =>
-          group_d begin
-            text_d "{ " `concat_d`
-            nest_d 2 (pretty_pair p) `concat_d`
-            line_d `concat_d`
-            pretty_inner ps `concat_d`
-            text_d "}"
-          end
-      end.
-  End variable.
-  Arguments Null_t {K V}.
-  Arguments Two_t {K V} _ _ _.
-  Arguments Three_t {K V} _ _ _ _ _.
-  Arguments Top_c {K V}.
-  Arguments TwoLeftHole_c {K V} _ _ _.
-  Arguments TwoRightHole_c {K V} _ _ _.
-  Arguments ThreeLeftHole_c {K V} _ _ _ _ _.
-  Arguments ThreeMiddleHole_c {K V} _ _ _ _ _.
-  Arguments ThreeRightHole_c {K V} _ _ _ _ _.
-  Arguments TwoHole_l {K V} _ _ _.
-  Arguments ThreeLeftHole_l {K V} _ _ _ _ _.
-  Arguments ThreeRightHole_l {K V} _ _ _ _ _.
-  Arguments empty {K V}.
-  Arguments singleton {K V} k v.
-  Arguments zip {K V} _ _.
-  Arguments fuse {K V} _ _.
-  Arguments fill_location {K V} _ _.
-  Arguments locate {K kO V} _ _ _.
-  Arguments locate_greatest {K V} _ _.
-  Arguments remove {K kO V} k t.
-  Arguments to_list {K V} t.
-  Arguments tree_cofold {K V} {m} {M} {B} f z t.
-  Arguments tree_mbuild {K kO V} {m} {M} f.
-  Arguments from_list {K kO V} xs.
-  Arguments lookup {K kO V} k t.
-  Arguments insert_with {K kO V} f k v t.
-  Arguments update {K kO V} k f t.
-  Arguments union_with {K kO V} f t1 t2.
-  Arguments map_show {K V SK SV R SR} t.
+  End Context.
+  Arguments tree : clear implicits.
   
   (* returns none if not well founded *)
-  Definition difference {K V W} {kO:OrdDec K}
+  Definition difference {K V W} `{! TotalOrdDec K }
       (t1:tree K V) (t2:tree K W) : option (tree K V) :=
     let fld (t:tree K V) (e:K*W) : option (tree K V) :=
       let '(k,_) := e in
@@ -580,15 +475,15 @@ Module TwoThreeTrees.
     in
     miter fld t1 $ to_list t2.
 
-  Definition intersect_with {K} {kO:OrdDec K} {V W X}
+  Definition intersect_with {K} `{! TotalOrdDec K } {V W X}
       (f:V -> W -> X) (t1:tree K V) (t2:tree K W) : tree K X :=
     let fld (t:tree K X) (e:K*W) : tree K X :=
       let (k,w) := e in
       match lookup k t1 with
       | None => t
-      | Some v => insert_with const k (f v w) t
+      | Some v => insert_replace k (f v w) t
       end
-    in foldl fld empty $ to_list t2.
+    in iter fld empty $ to_list t2.
 
   Fixpoint map_with {K V W} (f:K -> V -> W) (t:tree K V) : tree K W :=
     match t with
@@ -603,22 +498,20 @@ Module TwoThreeTrees.
                 (map_with f tr)
     end.
 
-  Definition map {K V W} (f:V -> W) : tree K V -> tree K W := map_with (const f).
+  Definition map {K V W} (f:V -> W) : tree K V -> tree K W := map_with $ const f.
 
   Definition size {K V} : tree K V -> N := length '.' to_list.
 
-  Definition reduce {K V} {M:Monoid V} : tree K V -> V :=
-    gproductl '.' List.map snd '.' to_list.
+  Definition reduce {K V} `{! GUnit V ,! GTimes V } : tree K V -> V :=
+    gproduct '.' List.map snd '.' to_list.
 
-  Definition remove_unsafe {K} {kO:OrdDec K} {V}
-      : K -> tree K V -> tree K V * option V :=
-    from_option (empty, None) '..' remove .
+  Definition remove_unsafe {K} `{! TotalOrdDec K } {V} : K -> tree K V -> tree K V * option V :=
+    from_option (empty, None) '.:' remove .
 
-  Definition difference_unsafe {K} {kO:OrdDec K} {V W}
-      : tree K V -> tree K W -> tree K V :=
-    from_option empty '..' difference.
+  Definition difference_unsafe {K} `{! TotalOrdDec K } {V W} : tree K V -> tree K W -> tree K V :=
+    from_option empty '.:' difference.
 
-  Definition set_map {A B} {bO:OrdDec B} (f:A -> B) (t:tree A unit) : tree B unit :=
+  Definition set_map {A B} `{! TotalOrdDec B } (f:A -> B) (t:tree A unit) : tree B unit :=
     let fld (t:tree B unit) (e:A*unit) : tree B unit :=
       insert_with const (f (fst e)) tt t
     in
@@ -626,14 +519,14 @@ Module TwoThreeTrees.
 
   Definition set_empty {A} : tree A unit := empty.
   Definition set_singleton {A} (a:A) : tree A unit := singleton a tt.
-  Definition set_member {A} {aO:OrdDec A} (a:A) (t:tree A unit) : bool :=
+  Definition set_member {A} `{! TotalOrdDec A } (a:A) (t:tree A unit) : bool :=
     match lookup a t with
     | None => false
     | Some tt => true
     end.
-  Definition set_insert {A} {aO:OrdDec A} (a:A) (t:tree A unit) : tree A unit :=
+  Definition set_insert {A} `{! TotalOrdDec A } (a:A) (t:tree A unit) : tree A unit :=
     insert_with (const id) a tt t.
-  Definition set_remove {A} {aO:OrdDec A} (a:A) (t:tree A unit)
+  Definition set_remove {A} `{! TotalOrdDec A } (a:A) (t:tree A unit)
       : option (tree A unit * bool) :=
     match remove a t with
     | None => None
@@ -643,192 +536,66 @@ Module TwoThreeTrees.
         | Some _ => true
         end
     end.
-  Definition set_remove_unsafe {A} {aO:OrdDec A} (a:A) (t:tree A unit)
+  Definition set_remove_unsafe {A} `{! TotalOrdDec A } (a:A) (t:tree A unit)
       : tree A unit * bool :=
     match set_remove a t with
     | None => (empty, false)
     | Some x => x
     end.
 
-  Definition set_unionl {A} {aO:OrdDec A}
+  Definition set_unionl {A} `{! TotalOrdDec A }
       : tree A unit -> tree A unit -> tree A unit :=
     union_with const.
 
-  Definition set_difference {A} {aO:OrdDec A}
+  Definition set_difference {A} `{! TotalOrdDec A }
       : tree A unit -> tree A unit -> option (tree A unit) :=
     difference.
 
-  Definition set_difference_unsafe {A} {aO:OrdDec A}
+  Definition set_difference_unsafe {A} `{! TotalOrdDec A }
       : tree A unit -> tree A unit -> tree A unit :=
     difference_unsafe.
 
-  Definition set_intersect {A} {aO:OrdDec A}
+  Definition set_intersect {A} `{! TotalOrdDec A }
       : tree A unit -> tree A unit -> tree A unit :=
     intersect_with const.
 
   Definition set_size {A} : tree A unit -> N := size.
 
-  Definition set_reduce {A} {M:Monoid A} : tree A unit -> A :=
-    gproductl '.' List.map fst '.' to_list.
+  Definition set_reduce {A} `{! GUnit A ,! GTimes A } : tree A unit -> A :=
+    gproduct '.' List.map fst '.' to_list.
 
-  Definition set_from_list {A} {aO:OrdDec A} : list A -> tree A unit :=
-    from_list '.' fmap (fun a => (a, tt)).
+  Definition set_from_list {A} `{! TotalOrdDec A } : list A -> tree A unit :=
+    from_list '.' List.map (fun a => (a, tt)).
 
   Definition set_to_list {A} : tree A unit -> list A :=
-    fmap fst '.' to_list.
+    List.map fst '.' to_list.
 
-  Definition set_cofold {A} {m} {M:Comonad m} {B} (f:A -> m B -> B) : m B -> tree A unit -> B :=
-    tree_cofold (fun att bM => let (a,tt) := att in f a bM).
+  Definition set_cofold {A w} `{! Counit w ,! Cobind w } {B} (f:A -> w B -> B) : w B -> tree A unit -> B :=
+    tree_cofold (fun att bW => let (a,tt) := att in f a bW).
 
-  Definition set_mbuild {A} {aO:OrdDec A} {m} {M:Monad m} (ff:forall {C}, (A -> C -> C) -> C -> m C) : m (tree A unit) :=
+  Definition set_mbuild {A} `{! TotalOrdDec A } {m} `{ FUnit m, MBind m } (ff:forall {C}, (A -> C -> C) -> C -> m C) : m (tree A unit) :=
     tree_mbuild (fun _ f' => ff $ fun a => f' (a,tt)).
 
-  Fixpoint sequence {K} {u} {uA:Applicative u} {V} (tT : tree K (u V)) : u (tree K V) := 
+  Fixpoint sequence {K} {u} `{! FUnit u ,! FApply u } {V} (tT : tree K (u V)) : u (tree K V) := 
     match tT with
-    | Null_t => fret Null_t
+    | Null_t => funit Null_t
     | Two_t tl em tr =>
-        fret Two_t
+        funit Two_t
         <@> sequence tl
-        <@> tsequence em
+        <@> sequence_snd em
         <@> sequence tr
     | Three_t tl el tm er tr =>
-        fret Three_t
+        funit Three_t
         <@> sequence tl
-        <@> tsequence el
+        <@> sequence_snd el
         <@> sequence tm
-        <@> tsequence er
+        <@> sequence_snd er
         <@> sequence tr
     end.
 
-  Definition set_sequence {u} {uA:Applicative u} {A} {aO:OrdDec A}
+  Definition set_sequence {u} `{! FUnit u ,! FApply u } {A} `{! TotalOrdDec A }
       : tree (u A) unit -> u (tree A unit) :=
-    fmap set_from_list '.' tsequence '.' set_to_list.
-
-  Definition set_show {A} {AS:Show A} {R} {SR:ShowResult R} (t:tree A unit) : R :=
-    let show_inner :=
-      fix show_inner (xs:list A) :=
-        match xs with
-        | [] => gunit
-        | x::xs' => raw_string "; " ** show x ** show_inner xs'
-        end
-    in 
-    match set_to_list t with
-    | [] => raw_string "{}"
-    | [x] => raw_string "{" ** show x ** raw_string "}"
-    | x::xs => raw_string "{" ** show x ** show_inner xs ** raw_string "}"
-    end.
-
-    Definition set_pretty {A} {AK:Pretty A} (t:tree A unit) : doc :=
-      let pretty_inner :=
-      fix pretty_inner ps :=
-        match ps with
-        | [] => nil_d
-        | p::ps =>
-            text_d "; " `concat_d`
-            nest_d 2 (pretty p) `concat_d`
-            line_d `concat_d`
-            pretty_inner ps
-        end
-      in
-      match set_to_list t with
-      | [] => text_d "{}"
-      | [p] =>
-          group_d begin
-            text_d "{ " `concat_d`
-            nest_d 2 (pretty p) `concat_d`
-            line_d `concat_d`
-            text_d "}"
-          end
-      | p::ps =>
-          group_d begin
-            text_d "{ " `concat_d`
-            nest_d 2 (pretty p) `concat_d`
-            line_d `concat_d`
-            pretty_inner ps `concat_d`
-            text_d "}"
-          end
-      end.
-
+    fapply_fmap set_from_list '.' tsequence '.' set_to_list.
 End TwoThreeTrees.
-
 Definition two3map := TwoThreeTrees.tree.
-
-Instance two3map_Functor {K} : Functor (two3map K) :=
-  { fmap := @TwoThreeTrees.map _ }.
-
-Instance two3map_MapI {K} {oK:OrdDec K} : MapI K (two3map K) :=
-  { mempty := @TwoThreeTrees.empty _
-  ; msingleton := @TwoThreeTrees.singleton _ 
-  ; mlookup := @TwoThreeTrees.lookup _ _
-  ; minsert_with := @TwoThreeTrees.insert_with _ _
-  ; mremove := @TwoThreeTrees.remove_unsafe _ _
-  ; mupdate := @TwoThreeTrees.update _ _
-  ; munion_with := @TwoThreeTrees.union_with _ _
-  ; mdifference := @TwoThreeTrees.difference_unsafe _ _
-  ; mintersect_with := @TwoThreeTrees.intersect_with _ _
-  ; mmap_with := @TwoThreeTrees.map_with _
-  }.
-
-Instance two3map_FiniteMapI {K} {oK:OrdDec K} : FiniteMapI K (two3map K) :=
-  { msize := @TwoThreeTrees.size _
-  ; mreduce := @TwoThreeTrees.reduce _
-  ; mfrom_list := @TwoThreeTrees.from_list _ _
-  ; mto_list := @TwoThreeTrees.to_list _
-  }.
-
-Instance two3tree_Traversable {K} : Traversable (two3map K) :=
-  { tsequence := @TwoThreeTrees.sequence _ }.
-
-Instance two3map_EqvDec {K V} {KE:EqvDec K} {KO:OrdDec K} {VE:EqvDec V} : EqvDec (two3map K V) :=
-  { eqv_dec := eqv_dec (T:=list (K*V)) `on` mto_list }.
-Instance two3map_OrdDec {K V} {KO:OrdDec K} {VO:OrdDec V} : OrdDec (two3map K V) :=
-  { ord_dec := ord_dec `on` mto_list }.
-Instance two3tree_Show {K V} {SK:Show K} {SV:Show V} : Show (two3map K V) :=
-  { show := @TwoThreeTrees.map_show _ _ _ _ }.
-Instance two3tree_Pretty {K V} {SK:Pretty K} {SV:Pretty V} : Pretty (two3map K V) :=
-  { pretty := @TwoThreeTrees.map_pretty _ _ _ _ }.
-
-Instance two3tree_Foldable {K V} : Foldable (K*V) (two3map K V) :=
-  { cofold := @TwoThreeTrees.tree_cofold _ _ }.
-Instance two3tree_Buildable {K V} {KE:OrdDec K} : Buildable (K*V) (two3map K V) :=
-  { mbuild := @TwoThreeTrees.tree_mbuild _ _ _ }.
-
-Definition two3set e := two3map e unit.
-
-Instance two3set_FunctorP : FunctorP OrdDec two3set :=
-  { fmap_p := @TwoThreeTrees.set_map }.
-
-Instance two3set_SetI : SetI OrdDec two3set :=
-  { sempty := fun A _ => @TwoThreeTrees.set_empty A
-  ; ssingleton := fun A _ => @TwoThreeTrees.set_singleton A
-  ; smember := @TwoThreeTrees.set_member
-  ; sinsert := @TwoThreeTrees.set_insert
-  ; sremove := @TwoThreeTrees.set_remove_unsafe
-  ; sunionl := @TwoThreeTrees.set_unionl
-  ; sdifference := @TwoThreeTrees.set_difference_unsafe
-  ; sintersect := @TwoThreeTrees.set_intersect
-  }.
-
-Instance two3set_FiniteSetI : FiniteSetI OrdDec two3set :=
-  { ssize := fun A _ => @TwoThreeTrees.set_size A
-  ; sreduce := fun A _ => @TwoThreeTrees.set_reduce A
-  ; sfrom_list := @TwoThreeTrees.set_from_list
-  ; sto_list := fun A _ => @TwoThreeTrees.set_to_list A
-  }.
-
-Instance two3set_Traversable : TraversableP OrdDec two3set :=
-  { tsequence_p := @TwoThreeTrees.set_sequence }.
-
-Instance two3set_EqvDec {E} {EE:EqvDec E} {OE:OrdDec E} : EqvDec (two3set E) :=
-  { eqv_dec := eqv_dec `on` sto_list }.
-Instance two3set_OrdDec {E} {OE:OrdDec E} : OrdDec (two3set E) :=
-  { ord_dec := ord_dec `on` sto_list }.
-Instance two3set_Show {E} {SE:Show E} : Show (two3set E) :=
-  { show := @TwoThreeTrees.set_show _ _ }.
-Instance two3set_Pretty {E} {SE:Pretty E} : Pretty (two3set E) :=
-  { pretty := @TwoThreeTrees.set_pretty _ _ }.
-
-Instance two3set_Foldable {E} : Foldable E (two3set E) :=
-  { cofold := @TwoThreeTrees.set_cofold _ }.
-Instance two3set_Buildable {E} {OE:OrdDec E} : Buildable E (two3set E) :=
-  { mbuild := @TwoThreeTrees.set_mbuild _ _ }.
+Definition two3set := flip two3map unit.
