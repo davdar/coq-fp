@@ -188,27 +188,6 @@ Module TwoThreeTreesWF.
           -> k /~= kr -> not_in_context k c
           -> not_in_context k (ThreeRightHole_c tl (kl,vl) tm (kr,vr) c).
     Hint Constructors not_in_context.
-    (*
-    Hint Extern 1 =>
-      match goal with
-      | [ |- not_in_context _ (TwoLeftHole_c ?p _ _) ] =>
-           match p with (_,_) => fail | _ => destruct p end
-      | [ |- not_in_context _ (TwoRightHole_c _ ?p _) ] =>
-           match p with (_,_) => fail | _ => destruct p end
-      | [ |- not_in_context _ (ThreeLeftHole_c ?p _ _ _ _) ] =>
-           match p with (_,_) => fail | _ => destruct p end
-      | [ |- not_in_context _ (ThreeLeftHole_c _ _ ?p _ _) ] =>
-           match p with (_,_) => fail | _ => destruct p end
-      | [ |- not_in_context _ (ThreeMiddleHole_c _ ?p _ _ _) ] =>
-           match p with (_,_) => fail | _ => destruct p end
-      | [ |- not_in_context _ (ThreeMiddleHole_c _ _ ?p _ _) ] =>
-           match p with (_,_) => fail | _ => destruct p end
-      | [ |- not_in_context _ (ThreeRightHole_c _ ?p _ _ _) ] =>
-           match p with (_,_) => fail | _ => destruct p end
-      | [ |- not_in_context _ (ThreeRightHole_c _ _ _ ?p _) ] =>
-           match p with (_,_) => fail | _ => destruct p end
-      end.
-*)
 
     Inductive maps_context : K -> V -> context K V -> Prop :=
       | Maps_TwoLeftHoleNode :
@@ -318,7 +297,7 @@ Module TwoThreeTreesWF.
          -> balance_context (n+1) n' c
          -> balance_context n n' (ThreeRightHole_c tl pl tm pr c).
     Hint Constructors balance_context.
-         
+
     Inductive in_location : K -> location K V -> Prop :=
       | In_LocTwoHoleLeftTree :
           forall k tl tr c, in_tree k tl -> in_location k (TwoHole_l tl tr c)
@@ -347,6 +326,35 @@ Module TwoThreeTreesWF.
       | In_LocThreeRightHoleContext :
           forall k tl pl tm tr c, in_context k c -> in_location k (ThreeRightHole_l tl pl tm tr c).
     Hint Constructors in_location.
+
+    Inductive maps_location : K -> V -> location K V -> Prop :=
+      | Maps_LocTwoHoleLeftTree :
+          forall k v tl tr c, maps_tree k v tl -> maps_location k v (TwoHole_l tl tr c)
+      | Maps_LocTwoHoleRightTree :
+          forall k v tl tr c, maps_tree k v tr -> maps_location k v (TwoHole_l tl tr c)
+      | Maps_LocTwoHoleContext :
+          forall k v tl tr c, maps_context k v c -> maps_location k v (TwoHole_l tl tr c)
+      | Maps_LocThreeLeftHoleLeftTree :
+          forall k v tl tm pr tr c, maps_tree k v tl -> maps_location k v (ThreeLeftHole_l tl tm pr tr c)
+      | Maps_LocThreeLeftHoleMiddleTree :
+          forall k v tl tm pr tr c, maps_tree k v tm -> maps_location k v (ThreeLeftHole_l tl tm pr tr c)
+      | Maps_LocThreeLeftHoleNode :
+          forall k k' v tl tm tr c, k ~= k' -> maps_location k v (ThreeLeftHole_l tl tm (k',v) tr c)
+      | Maps_LocThreeLeftHoleRightTree :
+          forall k v tl tm pr tr c, maps_tree k v tr -> maps_location k v (ThreeLeftHole_l tl tm pr tr c)
+      | Maps_LocThreeLeftHoleContext :
+          forall k v tl tm pr tr c, maps_context k v c -> maps_location k v (ThreeLeftHole_l tl tm pr tr c)
+      | Maps_LocThreeRightHoleLeftTree :
+          forall k v tl pl tm tr c, maps_tree k v tl -> maps_location k v (ThreeRightHole_l tl pl tm tr c)
+      | Maps_LocThreeRightHoleNode :
+          forall k k' v tl tm tr c, k ~= k' -> maps_location k v (ThreeRightHole_l tl (k',v) tm tr c)
+      | Maps_LocThreeRightHoleMiddleTree :
+          forall k v tl pl tm tr c, maps_tree k v tm -> maps_location k v (ThreeRightHole_l tl pl tm tr c)
+      | Maps_LocThreeRightHoleRightTree :
+          forall k v tl pl tm tr c, maps_tree k v tr -> maps_location k v (ThreeRightHole_l tl pl tm tr c)
+      | Maps_LocThreeRightHoleContext :
+          forall k v tl pl tm tr c, maps_context k v c -> maps_location k v (ThreeRightHole_l tl pl tm tr c).
+    Hint Constructors maps_location.
 
     Inductive not_in_location : K -> location K V -> Prop :=
       | NotIn_TwoNode :
@@ -469,6 +477,8 @@ Module TwoThreeTreesWF.
       | [ H : Eq = _ <=>! _ |- _ ] => symmetry in H ; apply tord_dec_correct_eqv in H
       | [ H : Gt = _ <=>! _ |- _ ] => symmetry in H ; apply tord_dec_correct_gt in H
       | [ H1 : ?X -> ~?Y , H2 : ?X , H3 : ?Y |- _ ] => exfalso ; apply (H1 H2 H3)
+      | [ H : None = None |- _ ] => clear H
+      | [ H : Some _ = Some _ |- _ ] => injection H ; intros ; subst ; clear H
 
       (* tree rules *)
       | [ |- bst_tree _ _ (Two_t _ _ _) ] => constructor
@@ -480,6 +490,7 @@ Module TwoThreeTreesWF.
       | [ |- not_in_tree _ (Three_t _ ?p _ (_,_) _) ] => destruct p ; constructor
       | [ |- not_in_tree _ (Three_t _ (_,_) _ ?p _) ] => destruct p ; constructor
       | [ |- not_in_tree _ (Three_t _ ?pl _ ?pr _) ] => destruct pl,pr ; constructor
+      | [ H : empty_tree _ |- _ ] => inversion H ; subst ; clear H
       | [ H : in_tree _ Null_t |- _ ] => inversion H
       | [ H : not_in_tree _ Null_t |- _ ] => inversion H ; subst ; clear H
       | [ H : not_in_tree _ (Two_t _ _ _) |- _ ] => inversion H ; subst ; clear H
@@ -538,9 +549,6 @@ Module TwoThreeTreesWF.
       | [ H : in_context _ (ThreeRightHole_c _ _ _ _ _) |- _ ] => inversion H ; subst ; clear H
       end.
 
-    Create HintDb forward_db.
-    Create HintDb backward_db.
-
     Ltac flip_eqn x :=
       match goal with
       | [ H : _ = ?E |- _ ] => match E with context [ x ] => symmetry in H end
@@ -565,22 +573,6 @@ Module TwoThreeTreesWF.
       | [ H : context [ match ?X with _ => _ end ] |- _ ] =>
           match X with (?f _) => fail 1 | _ => destruct X end
       end.
-    (*
-      match goal with
-      | [ |- context [ match ?x with _ => _ end ] ] =>
-          match type of x with
-          | (tree K V) => destruct x
-          | (context K V) => destruct x
-          | (location K V) => destruct x
-          end
-      | [ H : context [ match ?x with _ => _ end ] |- _ ] =>
-          match type of x with
-          | (tree K V) => destruct x
-          | (context K V) => destruct x
-          | (location K V) => destruct x
-          end
-      end.
-  *)
 
     Lemma lt_eqv_contradiction : forall {x y}, x < y -> x /~= y.
     Admitted.
@@ -659,36 +651,6 @@ Module TwoThreeTreesWF.
     Qed.
     *)
 
-    (*
-    Lemma not_in_to_neg_in_tree_two_node :
-      forall k tl km vm tr, ~in_tree k (Two_t tl (km,vm) tr) -> k /~= km.
-    Admitted.
-    (*
-    Proof. intros ; unfold "/~=" ; simpl ; unfold "~" ; intros ; apply H ; eauto. Qed.
-    Hint Immediate not_in_to_neg_in_tree_two_node.
-    *)
-    *)
-
-    (*
-    Lemma not_in_to_neg_in_tree_three_left_node :
-      forall k tl kl vl tm kr vr tr, ~in_tree k (Three_t tl (kl,vl) tm (kr,vr) tr) -> k /~= kl.
-    Admitted.
-    (*
-    Proof. intros ; unfold "/~=" ; simpl ; unfold "~" ; intros ; apply H ; eauto. Qed.
-    Hint Immediate not_in_to_neg_in_tree_three_left_node.
-    *)
-    *)
-
-    (*
-    Lemma not_in_to_neg_in_tree_three_right_node :
-      forall k tl kl vl tm kr vr tr, ~in_tree k (Three_t tl (kl,vl) tm (kr,vr) tr) -> k /~= kr.
-    Admitted.
-    (*
-    Proof. intros ; unfold "/~=" ; simpl ; unfold "~" ; intros ; apply H ; eauto. Qed.
-    Hint Immediate not_in_to_neg_in_tree_three_right_node.
-    *)
-    *)
-
     Lemma not_in_to_neg_in_tree : forall k t, not_in_tree k t <-> ~in_tree k t.
     Admitted.
     (*
@@ -727,7 +689,52 @@ Module TwoThreeTreesWF.
     Admitted.
     Hint Immediate bst_tree_weaken.
 
+    (* Lemmas about single *)
+
+    Lemma single_in :
+      forall {k k' v},
+      k ~= k'
+      -> in_tree k (single (k',v)).
+             
+    Lemma single_not_in :
+      forall {k k' v},
+      k /~= k'
+      -> not_in_tree k (single (k',v)).
+    Admitted.
+    Hint Resolve single_not_in.
+    
+    (* Lemmas about zip *)
+
+    Lemma zip_in :
+      forall {k t c},
+      in_tree k t \/ in_context k c
+      -> in_tree k (zip t c).
+    Admitted.
+    Hint Resolve zip_in.
+
+    Lemma zip_not_in :
+      forall {k t c},
+      not_in_tree k t
+      -> not_in_context k c
+      -> not_in_tree k (zip t c).
+    Admitted.
+    Hint Resolve zip_not_in.
+
     (* Lemmas about fuse *)
+
+    Lemma fuse_in_c :
+      forall {k c c'},
+      in_context k c
+      -> in_context k (fuse c c').
+    Admitted.
+    Hint Resolve fuse_in_c.
+
+    Lemma fuse_in_c' :
+      forall {k c c'},
+      in_context k c'
+      -> in_context k (fuse c c').
+    Admitted.
+    Hint Resolve fuse_in_c'.
 
     Lemma fuse_not_in :
       forall k c c',
@@ -804,7 +811,7 @@ Module TwoThreeTreesWF.
       -> not_in_context k c
       -> not_in_context k c'.
     Admitted.
-    Hint Resolve locate_fail_not_in (* : forward_db *).
+    Hint Resolve locate_fail_not_in.
 
     Lemma locate_fail_in_tight1 :
       forall {k v k' t c c'},
@@ -812,25 +819,36 @@ Module TwoThreeTreesWF.
       -> maps_tree k v t \/ maps_context k v c
       -> maps_context k v c'.
     Admitted.
-    Hint Resolve locate_fail_in_tight1 (* : forward_db *).
+    Hint Resolve locate_fail_in_tight1.
 
-    Lemma locate_fail_in_tight2 :
+    Lemma locate_fail_in_tight2_t :
       forall {k v k' t c c'},
       locate k' t c = inl c'
       -> maps_context k v c'
       -> not_in_context k c
       -> maps_tree k v t.
     Admitted.
-    Hint Resolve locate_fail_in_tight2 (* : backward_db *).
+    Hint Resolve locate_fail_in_tight2_t.
 
-    Lemma locate_fail_in_tight2' :
+    Lemma locate_fail_in_tight2_c :
       forall {k v k' t c c'},
       locate k' t c = inl c'
       -> maps_context k v c'
       -> not_in_tree k t
       -> maps_context k v c.
     Admitted.
-    Hint Resolve locate_fail_in_tight2' (* : backward_db *).
+    Hint Resolve locate_fail_in_tight2_c.
+
+    Lemma locate_success_two_in_c' :
+      forall {k k' v t c tl tr c'},
+      locate k' t c = inr (v,TwoHole_l tl tr c')
+      -> k /~= k'
+      -> in_tree k t \/ in_context k c
+      -> not_in_tree k tl
+      -> not_in_tree k tr
+      -> in_context k c'.
+    Admitted.
+    Hint Resolve locate_success_two_in_c'.
 
     Lemma locate_success_not_in :
       forall {k t c v l},
@@ -838,8 +856,27 @@ Module TwoThreeTreesWF.
       -> in_tree k t
       -> not_in_location k l.
     Admitted.
-    Hint Resolve locate_success_not_in (* : forward_db *).
+    Hint Resolve locate_success_not_in.
 
+    Lemma locate_success_in_tight1_t :
+      forall {k v k' v' t c l},
+      locate k' t c = inr (v',l)
+      -> k /~= k'
+      -> maps_tree k v t
+      -> maps_location k v l.
+    Admitted.
+    Hint Resolve locate_success_in_tight1_t.
+
+    Lemma locate_success_in_tight1_c :
+      forall {k v k' v' t c l},
+      locate k' t c = inr (v',l)
+      -> k /~= k'
+      -> maps_context k v c
+      -> maps_location k v l.
+    Admitted.
+    Hint Resolve locate_success_in_tight1_c.
+
+    (*
     Ltac pose_locate_success_not_in :=
       let Hnotin := fresh "Hnotin" in
       let n := fresh "n" in
@@ -866,6 +903,7 @@ Module TwoThreeTreesWF.
           | _ => finish Heq k (ThreeRightHole_l tl pl tm tr c')
           end
       end.
+    *)
 
     Lemma locate_fail_bst_ex :
       forall {k l_t u_t t l_r u_r c c'},
@@ -899,7 +937,7 @@ Module TwoThreeTreesWF.
       -> bst_context l_r u_r l_t u_t c
       -> bst_location l_r u_r (Extend k) l.
     Admitted.
-    Hint Resolve locate_success_bst (* : forward_db *).
+    Hint Resolve locate_success_bst.
 
     Lemma locate_fail_balance :
       forall {k n t n' c c'},
@@ -909,7 +947,7 @@ Module TwoThreeTreesWF.
       -> balance_context n n' c
       -> balance_context 0 n' c'.
     Admitted.
-    Hint Resolve locate_fail_balance (* : forward_db *).
+    Hint Resolve locate_fail_balance.
 
     Lemma locate_success_balance :
       forall {k n t n' c v l},
@@ -919,7 +957,7 @@ Module TwoThreeTreesWF.
       -> balance_context n n' c
       -> balance_location n' l.
     Admitted.
-    Hint Resolve locate_success_balance (* : forward_db *).
+    Hint Resolve locate_success_balance.
 
     Ltac pose_locate_success_balance :=
       let Hex := fresh "Hex" in
@@ -934,20 +972,70 @@ Module TwoThreeTreesWF.
       match goal with
       | [ Heq : locate ?k ?t ?c = inr (_,TwoHole_l ?tl ?tr ?c') |- _ ] =>
           match goal with
-          | [ Hbal : balance_tree _ tl |- _ ] => fail 1
+          | [ Hbal : balance_context _ _ c' |- _ ] => fail 1
           | _ => finish Heq (TwoHole_l tl tr c')
           end
       | [ Heq : locate ?k ?t ?c = inr (_,ThreeLeftHole_l ?tl ?tm ?pr ?tr ?c') |- _ ] =>
           match goal with
-          | [ Hbal : balance_tree _ tl |- _ ] => fail 1
+          | [ Hbal : balance_context _ _ c' |- _ ] => fail 1
           | _ => finish Heq (ThreeLeftHole_l tl tm pr tr c')
           end
       | [ Heq : locate ?k ?t ?c = inr (_,ThreeRightHole_l ?tl ?pl ?tm ?tr ?c') |- _ ] =>
           match goal with
-          | [ Hbal : balance_tree _ tl |- _ ] => fail 1
+          | [ Hbal : balance_context _ _ c' |- _ ] => fail 1
           | _ => finish Heq (ThreeRightHole_l tl pl tm tr c')
           end
       end.
+
+    Hint Extern 1 =>
+      let H := fresh "H" in
+      match goal with
+      | [ Heq : locate ?k _ _ = inr (_,TwoHole_l ?tl ?tr ?c) |- _ ] =>
+          match goal with
+          | [ |- not_in_tree k tl ] =>
+              assert (not_in_location k (TwoHole_l tl tr c)) as H ; [|inversion H ; auto]
+          | [ |- not_in_tree k tr ] =>
+              assert (not_in_location k (TwoHole_l tl tr c)) as H ; [|inversion H ; auto]
+          | [ |- not_in_context k c ] =>
+              assert (not_in_location k (TwoHole_l tl tr c)) as H ; [|inversion H ; auto]
+          end
+       | [ Heq : locate ?k _ _ = inr (_,ThreeLeftHole_l ?tl ?tm (?kr,?vr) ?tr ?c) |- _ ] =>
+           match goal with
+          | [ |- not_in_tree k tl ] =>
+              assert (not_in_location k (ThreeLeftHole_l tl tm (kr,vr) tr c)) as H
+              ; [|inversion H ; auto]
+          | [ |- not_in_tree k tm ] =>
+              assert (not_in_location k (ThreeLeftHole_l tl tm (kr,vr) tr c)) as H
+              ; [|inversion H ; auto]
+          | [ |- k /~= kr ] =>
+              assert (not_in_location k (ThreeLeftHole_l tl tm (kr,vr) tr c)) as H
+              ; [|inversion H ; auto]
+          | [ |- not_in_tree k tr ] =>
+              assert (not_in_location k (ThreeLeftHole_l tl tm (kr,vr) tr c)) as H
+              ; [|inversion H ; auto]
+          | [ |- not_in_context k c ] =>
+              assert (not_in_location k (ThreeLeftHole_l tl tm (kr,vr) tr c)) as H
+              ; [|inversion H ; auto]
+           end
+       | [ Heq : locate ?k _ _ = inr (_,ThreeRightHole_l ?tl (?kl,?vl) ?tm ?tr ?c) |- _ ] =>
+           match goal with
+          | [ |- not_in_tree k tl ] =>
+              assert (not_in_location k (ThreeRightHole_l tl (kl,vl) tm tr c)) as H
+              ; [|inversion H ; auto]
+          | [ |- k /~= kl ] =>
+              assert (not_in_location k (ThreeRightHole_l tl (kl,vl) tm tr c)) as H
+              ; [|inversion H ; auto]
+          | [ |- not_in_tree k tm ] =>
+              assert (not_in_location k (ThreeRightHole_l tl (kl,vl) tm tr c)) as H
+              ; [|inversion H ; auto]
+          | [ |- not_in_tree k tr ] =>
+              assert (not_in_location k (ThreeRightHole_l tl (kl,vl) tm tr c)) as H
+              ; [|inversion H ; auto]
+          | [ |- not_in_context k c ] =>
+              assert (not_in_location k (ThreeRightHole_l tl (kl,vl) tm tr c)) as H
+              ; [|inversion H ; auto]
+           end
+       end.
 
     (* Lemmas about lookup. *)
 
@@ -969,7 +1057,7 @@ Module TwoThreeTreesWF.
       forall {k v l},
       not_in_location k l -> maps_tree k v (fill_location (k,v) l).
     Admitted.
-    Hint Resolve fill_location_maps (* : forward_db *).
+    Hint Resolve fill_location_maps.
 
     Lemma fill_location_maps_tight1 :
       forall {k k' v v' v'' t c l},
@@ -978,9 +1066,9 @@ Module TwoThreeTreesWF.
       -> maps_tree k v t \/ maps_context k v c
       -> maps_tree k v (fill_location (k',v'') l).
     Admitted.
-    Hint Resolve fill_location_maps_tight1 (* : forward_db *).
+    Hint Resolve fill_location_maps_tight1.
 
-    Lemma fill_location_maps_tight2 :
+    Lemma fill_location_maps_tight2_t :
       forall k k' v v' v'' t c l,
       locate k' t c = inr (v',l)
       -> k /~= k'
@@ -988,9 +1076,9 @@ Module TwoThreeTreesWF.
       -> not_in_context k c
       -> maps_tree k v t.
     Admitted.
-    Hint Resolve fill_location_maps_tight2 (* : backward_db *).
+    Hint Resolve fill_location_maps_tight2_t.
 
-    Lemma fill_location_maps_tight2' :
+    Lemma fill_location_maps_tight2_c :
       forall k k' v v' v'' t c l,
       locate k' t c = inr (v',l)
       -> k /~= k'
@@ -998,21 +1086,21 @@ Module TwoThreeTreesWF.
       -> not_in_tree k t
       -> maps_context k v c.
     Admitted.
-    Hint Resolve fill_location_maps_tight2' (* : backward_db *).
+    Hint Resolve fill_location_maps_tight2_c.
 
     Lemma fill_location_bst :
       forall k v l_r u_r l,
       bst_location l_r u_r (Extend k) l
       -> bst_tree l_r u_r (fill_location (k,v) l).
     Admitted.
-    Hint Resolve fill_location_bst (* : forward_db *).
+    Hint Resolve fill_location_bst.
 
     Lemma fill_location_balance :
       forall k v n l ,
       balance_location n l
       -> balance_tree n (fill_location (k,v) l).
     Admitted.
-    Hint Resolve fill_location_balance (* : forward_db *).
+    Hint Resolve fill_location_balance.
 
     (* Lemmas about locate_greatest *)
 
@@ -1056,6 +1144,29 @@ Module TwoThreeTreesWF.
           end
       end.
 
+    Lemma locate_greatest_success_result_ineq :
+      forall {k k' v t c cM},
+      locate_greatest t c = Some (k',v,cM)
+      -> not_in_tree k t
+      -> k /~= k'.
+    Admitted.
+    Hint Resolve locate_greatest_success_result_ineq.
+
+    Lemma locate_greatest_success_three_p_ineq :
+      forall {k k' v' t c k'' v'' c'},
+      locate_greatest t c = Some ((k',v'),inr((k'',v''),c'))
+      -> not_in_tree k t
+      -> k /~= k''.
+    Admitted.
+    Hint Resolve locate_greatest_success_three_p_ineq.
+
+    Lemma locate_greatest_success_two_in :
+      forall {k k' v' t c  c'},
+      locate_greatest t c = Some ((k',v'),inl c')
+      -> in_tree k t
+      -> k ~= k' \/ in_context k c'.
+    Admitted.
+
     Lemma locate_greatest_success_two_not_in :
       forall {k k' v' t c c'},
       locate_greatest t c = Some ((k',v'), inl c')
@@ -1065,13 +1176,21 @@ Module TwoThreeTreesWF.
     Admitted.
     Hint Resolve locate_greatest_success_two_not_in.
 
-    Lemma locate_greatest_success_two_result_ineq :
-      forall {k k' v t c c'},
-      locate_greatest t c = Some (k', v, inl c')
-      -> not_in_tree k t
-      -> k /~= k'.
+    Lemma locate_greatest_success_three_in :
+      forall {k k' v' k'' v'' t c  c'},
+      locate_greatest t c = Some ((k',v'),inr ((k'',v''),c'))
+      -> in_tree k t
+      -> k ~= k' \/ k ~= k'' \/ in_context k c'.
     Admitted.
-    Hint Resolve locate_greatest_success_two_result_ineq.
+
+    Lemma locate_greatest_success_three_not_in :
+      forall {k k' v' k'' v'' t c c'},
+      locate_greatest t c = Some ((k',v'), inr((k'',v''),c'))
+      -> not_in_tree k t
+      -> not_in_context k c
+      -> not_in_context k c'.
+    Admitted.
+    Hint Resolve locate_greatest_success_three_not_in.
 
     Lemma locate_greatest_success_two_bst :
       forall {k v l_t u_t t l_r u_r c c'},
@@ -1088,7 +1207,7 @@ Module TwoThreeTreesWF.
       -> balance_context n n' c
       -> balance_context (0+1) n' c'.
     Admitted.
-    Hint Resolve locate_greatest_success_two_balance (* : forward_db *).
+    Hint Resolve locate_greatest_success_two_balance.
 
     (* Lemmas about insert_up *)
 
@@ -1096,7 +1215,7 @@ Module TwoThreeTreesWF.
       forall {k v tl tr c},
       not_in_context k c -> maps_tree k v (insert_up (tl,(k,v),tr) c).
     Admitted.
-    Hint Resolve insert_up_maps (* : forward_db *).
+    Hint Resolve insert_up_maps.
 
     Lemma insert_up_tight1 :
       forall {k k' v v' tl tr c},
@@ -1104,7 +1223,7 @@ Module TwoThreeTreesWF.
       -> maps_context k v c
       -> maps_tree k v (insert_up (tl,(k',v'),tr) c).
     Admitted.
-    Hint Resolve insert_up_tight1 (* : forward_db *).
+    Hint Resolve insert_up_tight1.
 
     Lemma insert_up_tight2 :
       forall {k k' v v' tl tr c},
@@ -1112,7 +1231,7 @@ Module TwoThreeTreesWF.
       -> maps_tree k v (insert_up (tl,(k',v'),tr) c)
       -> maps_context k v c.
     Admitted.
-    Hint Resolve insert_up_tight2 (* : backward_db *).
+    Hint Resolve insert_up_tight2.
 
     Lemma insert_up_bst :
       forall {k v u_tl tl l_tr tr l_r u_r l_t u_t c},
@@ -1122,7 +1241,7 @@ Module TwoThreeTreesWF.
       -> bst_tree l_tr u_t tr
       -> bst_tree l_r u_r (insert_up (tl,(k,v),tr) c).
     Admitted.
-    Hint Resolve insert_up_bst (* : forward_db *).
+    Hint Resolve insert_up_bst.
 
     Lemma insert_up_balance :
       forall n tl k v tr n' c,
@@ -1185,6 +1304,14 @@ Module TwoThreeTreesWF.
     Admitted.
     Hint Resolve remove_up_not_in.
 
+    Lemma remove_up_in :
+      forall {k t c t'},
+      remove_up t c = Some t'
+      -> in_tree k t \/ in_context k c
+      -> in_tree k t'.
+    Admitted.
+    Hint Resolve remove_up_in.
+
     Ltac remove_up_wf_progress_goal :=
       let Heq := fresh "Heq" in
       let t' := fresh "t'" in
@@ -1199,8 +1326,10 @@ Module TwoThreeTreesWF.
     (* Lemmas about remove *)
 
     Lemma remove_wf :
-      forall k v n t,
-      balance_tree n t -> maps_tree k v t -> exists t', remove k t = Some (t',Some v).
+      forall k n t,
+      balance_tree n t -> exists t' vM, remove k t = Some (t',vM).
+    Admitted.
+    (*
     Proof.
       intros ; unfold remove
       ; repeat
@@ -1210,463 +1339,168 @@ Module TwoThreeTreesWF.
           || remove_up_wf_progress_goal
       ; eauto ; try (compute ; eauto ; fail).
     Qed.
+    *)
+      
+    Lemma remove_wf_maps :
+      forall k v n t,
+      balance_tree n t -> maps_tree k v t -> exists t', remove k t = Some (t',Some v).
+    Admitted.
+    (*
+    Proof.
+      intros ; unfold remove
+      ; repeat
+          mysimp || locate_match_progress || locate_greatest_match_progress
+          || let_pair_drill || atom_match_drill
+          || pose_locate_success_balance
+          || remove_up_wf_progress_goal
+      ; eauto ; try (compute ; eauto ; fail).
+    Qed.
+    *)
+
+    Lemma remove_wf_not_in :
+      forall k n t,
+      balance_tree n t -> not_in_tree k t -> exists t', remove k t = Some (t',None).
+    Admitted.
+    (*
+    Proof. intros ; unfold remove ; repeat mysimp || locate_match_progress ; eauto. Qed.
+    *)
 
     Ltac fmap_success_eq :=
       match goal with
       | [ H : fmap ?f ?xM = Some ?x |- _ ] =>
           let X := fresh "X" in
           remember xM as X ; flip_eqn xM ; destruct X ; unfold fmap in * ; simpl in *
-          ; try congruence ;
-          match goal with [ H : Some _ = Some _ |- _ ] => injection H ; intros ; subst ; clear H end
+          ; try congruence
       end.
-          
 
-    Lemma remove_in :
-      forall k t t' vM,
-      remove k t = Some (t',vM) -> not_in_tree k t'.
+    Lemma remove_not_in :
+      forall k n t t' vM,
+      remove k t = Some (t',vM) -> balance_tree n t -> not_in_tree k t'.
+    Admitted.
+    (*
     Proof.
       intros ; unfold remove in *
       ; repeat
           mysimp
+          || match goal with p : prod K V |- _ => destruct p end
           || locate_match_progress
           || locate_greatest_match_progress
           || let_pair_drill || atom_match_drill
-          || pose_locate_success_not_in
           || fmap_success_eq
-      ; eauto.
-      locate_greatest_match_progress.
-      eapply remove_up_not_in ; eauto.
-      eapply fuse_not_in ; eauto.
-      destruct p.
-      eauto.
-      eauto.
-      eapply locate_greatest_success_two_not_in ; eauto.
-      
-      ea
-      fmap_success_eq.
-      - remember (remove_up Null_t c) as X eqn:eqn ; symmetry in eqn
-        ; destruct X ; unfold fmap in * ; simpl in * ; try congruence
-        ; injection H ; intros ; subst ; clear H ; eauto.
-      - 
+      ; eauto 30.
+    Qed.
+    *)
+
+    Lemma remove_tight1 :
+      forall k v k' n t t' vM,
+      remove k' t = Some (t',vM)
+      -> k /~= k'
+      -> balance_tree n t
+      -> maps_tree k v t
+      -> maps_tree k v t'.
+    Proof.
+      intros ; unfold remove in *
+      ; repeat
+          mysimp
+          || match goal with p : prod K V |- _ => destruct p end
+          || locate_match_progress
+          || locate_greatest_match_progress
+          || let_pair_drill || atom_match_drill
+          || fmap_success_eq
+          || pose_locate_success_balance
+      ; eauto 10.
+      - eapply remove_up_in ; eauto.
+        right ; eauto.
+        assert (in_location k (TwoHole_l t0 t1 c)) as H'
+        ; [|inversion H' ; subst ; clear H'] ; eauto.
+        assert (k ~= k'1 \/ in_context k c0) as H'
+        ; [eapply locate_greatest_success_two_in|destruct H'] ; eauto.
+      - assert (in_location k (TwoHole_l t0 t1 c)) as H'
+        ; [|inversion H' ; subst ; clear H'] ; eauto.
+        + assert (k ~= k'1 \/ k ~= k0 \/ in_context k c0) as H'
+          ; [eapply locate_greatest_success_three_in|destruct H' as [Dis1|H'] ; [|destruct H']]
+          ; eauto.
+          eapply zip_in.
+        + assert (k ~= k'1 \/ k ~= k0 \/ in_context k c0) as H'
+          ; [eapply locate_greatest_success_three_in|] ; eauto.
+          destruct H' as [f|H'].
+        eapply fuse_in_c'.
+        econstructor.
+        eapply locate_greatest_success_result_ineq.
         eauto.
-      assert (not_in_context k c).
-      { eauto.
-        Lemma
-          locate k t c = inr (v,l)
-          -> 
+      ; eauto 30.
+      eapply remove_up_in_c ; eauto.
       eauto.
+      foo.
+                      
+      foo ; eauto.
+      eauto 30.
+      foo.
+      eauto.
+      mysimp.
+      mysimp.
+      mysimp.
+      foo.
+      foo.
+      eauto 30.
+      repeat mysimp || foo ; eauto.
+      eapply remove_up_in_c ; eauto.
+      foo ; repeat mysimp.
+      eauto.
+      eauto.
+      foo.
+      eauto.
+      mysimp.
+      mysimp.
+      foo.
       admit.
-      unfold fmap in H ; simpl in H.
-      soimp
-      Lemma
-        f <$> x = Some y -> x = Some (f y)kk
-      simpl in H.
-      remove_up_
-      ; repeat let_pair_drill || locate_drill || locate_greatest_drill || match_drill.
+      eauto 30.
+      eauto 30.
+      eauto 30.
+      eauto 30.
+      eauto 30.
+      eapply remove_up_in_c ; eauto.
+      eapply fuse_in_ggj.
+      eapply remove_up_in_c ; eauto.
+      eapply in_location_two_c.
+      eauto.
+      eauto.
+      eapply locate_success_in_tight1_t.
+      eauto.
+      eauto.
+      eauto.
+      left.
+      eauto.
+      eauto.
+      eauto 30 with in_location_elim.
+      mysimp.
+          mysimp
+          (*
+          || match goal with p : prod K V |- _ => destruct p end
+          || locate_match_progress
+          || locate_greatest_match_progress
+          || let_pair_drill || atom_match_drill
+          || fmap_success_eq
+          || pose_locate_success_balance
+*)
+      ; eauto 30 with in_location_elim.
+      foo.
+      foo.
       admit.
-      simpl in *.
+      admit.
+      admit.
+      admit.
+      admit.
+      fmap_success_eq.
+      mysimp.
+      mysimp.
+      fmap_success_eq.
+      eauto with in_location_elim.
 
-        inversion H5 ; subst ; clear H5.
-        match goal with
-                     
-
-        subst.
-
-      - admit.
-      - admit.
-      - admit.
-      - admit.
-      - admit.
-      - admit.
-      - admit.
-      - admit.
-    Qed.
-
-
-    (* ############ *)
-
-    Definition in_two_node_lib :
-      forall tl km vm tr, in_tree km (Two_t tl (km,vm) tr).
-    Proof. intros ; apply In_TwoNode ; reflexivity. Qed.
-    Hint Resolve in_two_node_lib.
-
-    Definition in_three_left_node_lib :
-      forall tl kl vl tm pr tr, in_tree kl (Three_t tl (kl,vl) tm pr tr).
-    Proof. intros ; apply In_ThreeLeftNode ; reflexivity. Qed.
-    Hint Resolve in_three_left_node_lib.
-
-    Definition in_three_right_node_lib :
-      forall tl pl tm kr vr tr, in_tree kr (Three_t tl pl tm (kr,vr) tr).
-    Proof. intros ; apply In_ThreeRightNode ; reflexivity. Qed.
-    Hint Resolve in_three_right_node_lib.
-
-    Lemma bst_tree_order : forall l u t, bst_tree l u t -> l <= u.
-    Proof.
-      intros l u t bstt ; gd u ; gd l ; induction t ; intros ; repeat mysimp || rip || auto ; eauto.
-      - transitivity (Extend k) ; eauto.
-      - transitivity (Extend kl) ; [|transitivity (Extend kr)] ; eauto.
-    Qed.
-    Hint Immediate bst_tree_order.
-
-    Lemma extend_bst_eqv_l :
-      forall {k k' l t1}, bst_tree l (Extend k) t1 -> k' ~= k -> l <= Extend k'.
-    Proof.
-      intros.
-      refine (PartialOrd_respect_eqv l l _ (Extend k) (Extend k') _ _)
-      ; eauto ; [reflexivity | symmetry].
-      apply InjectionRespect_eta ; auto.
-    Qed.
-    Hint Extern 0 =>
-      match goal with
-      | [ H1 : bst_tree ?l (Extend ?k) _
-        , H2 : ?k' ~= ?k
-        |- ?l <= Extend ?k'
-        ] => apply (extend_bst_eqv_l H1 H2)
-      end.
-
-    Lemma extend_bst_eqv_l2 :
-      forall {k k' l m t1 t2},
-      bst_tree l m t1 -> bst_tree m (Extend k) t2 -> k' ~= k -> l <= Extend k'.
-    Proof. intros ; transitivity m ; eauto. Qed.
-    Hint Extern 0 =>
-      match goal with
-      | [ H1 : bst_tree ?l ?m _
-        , H2 : bst_tree ?m (Extend ?k) _
-        , H3 : ?k' ~= ?k
-        |- ?l <= Extend ?k'
-        ] => apply (extend_bst_eqv_l2 H1 H2 H3)
-      end.
-
-    Lemma extend_bst_eqv_u :
-      forall {k k' u t1}, bst_tree (Extend k) u t1 -> k' ~= k -> Extend k' <= u.
-    Proof.
-      intros.
-      refine (PartialOrd_respect_eqv (Extend k) (Extend k') _ u u _ _)
-      ; eauto ; [symmetry | reflexivity].
-      apply InjectionRespect_eta ; auto.
-    Qed.
-    Hint Extern 0 =>
-      match goal with
-      | [ H1 : bst_tree (Extend ?k) ?u _
-        , H2 : ?k' ~= ?k
-        |- Extend ?k' <= ?u
-        ] => apply (extend_bst_eqv_u H1 H2)
-      end.
-
-    Lemma extend_bst_eqv_u2 :
-      forall {k k' m u t1 t2},
-      bst_tree (Extend k) m t1 -> bst_tree m u t2 -> k' ~= k -> Extend k' <= u.
-    Proof. intros ; transitivity m ; eauto. Qed.
-    Hint Extern 0 =>
-      match goal with
-      | [ H1 : bst_tree (Extend ?k) ?m _
-        , H2 : bst_tree ?m ?u _
-        , H3 : ?k' ~= ?k
-        |- Extend ?k' <= ?u
-        ] => apply (extend_bst_eqv_u2 H1 H2 H3)
-      end.
-
-    Lemma extend_bst_lte_l : forall l m u t1, l <= m -> bst_tree m u t1 -> l <= u.
-    Proof. intros ; transitivity m ; eauto. Qed.
-    Hint Immediate extend_bst_lte_l.
-
-    Lemma extend_bst_lte_l2
-      : forall l ml mr u t1 t2, l <= ml -> bst_tree ml mr t1 -> bst_tree mr u t2 -> l <= u.
-    Proof. intros ; transitivity mr ; eauto. Qed.
-    Hint Immediate extend_bst_lte_l2.
-
-    Lemma extend_bst_lte_u : forall l m u t1 , bst_tree l m t1 -> m <= u -> l <= u.
-    Proof. intros ; transitivity m ; eauto. Qed.
-    Hint Immediate extend_bst_lte_u.
-
-    Lemma extend_bst_lte_u2 :
-      forall l ml mr u t1 t2, bst_tree l ml t1 -> bst_tree ml mr t2 -> mr <= u -> l <= u.
-    Proof. intros ; transitivity ml ; eauto. Qed.
-    Hint Immediate extend_bst_lte_u2.
-
-    Lemma bst_tree_order_trans : forall l m u t1 t2, bst_tree l m t1 -> bst_tree m u t2 -> l <= u.
-    Proof.
-      intros ; transitivity m ; eauto.
-    Qed.
-    Hint Immediate bst_tree_order_trans.
-
-    Lemma in_bst_tree_order : forall {k l u t}, bst_tree l u t -> in_tree k t -> l <= Extend k <= u.
-    Proof.
-      intros k l u t bstt int ; gd u ; gd l ; induction t ; intros
-      ; repeat mysimp ||
-        match goal with
-        | [ IH : in_tree _ ?t -> forall l u, bst_tree l u ?t -> _
-          , Hin : in_tree _ ?t
-          , HB : bst_tree ?l ?u ?t |- _
-          ] => specialize (IH Hin l u HB)
-        end || rip || auto ; eauto.
-    Qed.
-    Hint Immediate in_bst_tree_order.
-
-    Lemma in_bst_tree_order_l : forall {k l u t}, bst_tree l u t -> in_tree k t -> l <= Extend k.
-    Proof. intros k l u t H1 H2 ; apply (in_bst_tree_order H1 H2). Qed.
-    Hint Immediate in_bst_tree_order_l.
-
-    Lemma in_bst_tree_order_l' :
-      forall {kl km u t}, bst_tree (Extend kl) u t -> in_tree km t -> kl <= km.
-    Proof. intros ; apply InjectionRespect_beta ; eauto. Qed.
-    Hint Immediate in_bst_tree_order_l'.
-
-    Lemma in_bst_tree_order_u : forall {k l u t}, bst_tree l u t -> in_tree k t -> Extend k <= u.
-    Proof. intros k l u t H1 H2 ; apply (in_bst_tree_order H1 H2). Qed.
-    Hint Immediate in_bst_tree_order_u.
-
-    Lemma in_bst_tree_order_u' :
-      forall {l km ku t}, bst_tree l (Extend ku) t -> in_tree km t -> km <= ku.
-    Proof. intros ; apply InjectionRespect_beta ; eauto. Qed.
-    Hint Immediate in_bst_tree_order_u'.
-
-    Lemma in_tree_lt_contradiction :
-      forall {k k' u t}, bst_tree (Extend k') u t -> in_tree k t -> k < k' -> False.
-    Proof. intros k k' u t Hbst Hin Hlt ; apply Hlt ; eauto. Qed.
-    Hint Extern 0 =>
-      match goal with
-      | [ H1 : bst_tree (Extend ?k') ?u ?t , H2 : in_tree ?k ?t , H3 : ?k < ?k' |- _ ] =>
-          exfalso ; apply (in_tree_lt_contradiction H1 H2 H3)
-      end.
-
-    Lemma in_Two_t_lt_pm_refine :
-      forall k l_tl tl km vm u_tr tr,
-      bst_tree l_tl u_tr (Two_t tl (km,vm) tr)
-      -> in_tree k (Two_t tl (km,vm) tr)
-      -> k < km
-      -> in_tree k tl.
-    Proof.
-      intros ; repeat mysimp || rip || auto ; eauto.
-    Qed.
-    Hint Resolve in_Two_t_lt_pm_refine.
+      Print HintDb in_location_elim.
       
-    Lemma zip_in_t : forall k t c, in_tree k t -> in_tree k (zip t c).
-    Proof. intros k t c ; gd t ; induction c ; intros ; simpl ; auto. Qed.
-    Hint Resolve zip_in_t.
+        
 
-    Lemma zip_in_c : forall k t c, in_context k c -> in_tree k (zip t c).
-    Proof.
-      intros k t c ; gd t ; induction c ; intros ; simpl ; repeat mysimp || rip || auto ; eauto.
-    Qed.
-    Hint Resolve zip_in_c.
-
-    Lemma zip_bst :
-      forall l_r u_r l_h u_h t c,
-      bst_tree l_h u_h t
-      -> bst_context l_r u_r l_h u_h c
-      -> bst_tree l_r u_r (zip t c).
-    Proof.
-      intros l_r u_r l_h u_h t c bstt bstc ; gd t ; gd u_h ; gd l_h ; induction c ; intros ; simpl
-      ; mysimp ; eauto.
-    Qed.
-    Hint Resolve zip_bst.
-
-    Lemma zip_height :
-      forall n n' t c, height_tree n t -> height_context n n' c -> height_tree n' (zip t c).
-    Proof. intros n n' t c ; gd t ; gd n ; induction c ; intros ; simpl ; mysimp ; eauto. Qed.
-    Hint Resolve zip_height.
-
-    Lemma fuse_in_c1 : forall k c1 c2, in_context k c1 -> in_context k (fuse c1 c2).
-    Proof.
-      intros k c1 c2 inc1 ; induction c1 ; intros ; simpl ; repeat mysimp || rip || auto ; eauto.
-    Qed.
-    Hint Resolve fuse_in_c1.
-
-    Lemma fuse_in_c2 : forall k c1 c2, in_context k c2 -> in_context k (fuse c1 c2).
-    Proof. intros k c1 c2 inc1 ; induction c1 ; intros ; simpl ; auto. Qed.
-    Hint Resolve fuse_in_c2.
-      
-    Lemma fuse_bst :
-      forall l_r u_r l_h u_h c1 l_r' u_r' c2,
-      bst_context l_r u_r l_h u_h c1
-      -> bst_context l_r' u_r' l_r u_r c2
-      -> bst_context l_r' u_r' l_h u_h (fuse c1 c2).
-    Proof.
-      intros l_r u_r l_h u_h c1 l_r' u_r' c2 bstc1 bstc2
-      ; gd u_h ; gd l_h ; induction c1 ; intros ; simpl
-      ; mysimp ; eauto.
-    Qed.
-    Hint Resolve fuse_bst.
-
-    Lemma fuse_height :
-      forall n n' c1 n'' c2,
-      height_context n n' c1
-      -> height_context n' n'' c2
-      -> height_context n n'' (fuse c1 c2).
-    Proof.
-      intros n n' c1 n'' c2 heightc1 heightc2
-      ; gd n ; induction c1 ; intros ; simpl ; mysimp ; auto.
-    Qed.
-    Hint Resolve fuse_height.
-
-    Lemma fill_location_in_k : forall k v l, in_tree k (fill_location (k,v) l).
-    Proof. intros k v l ; destruct l ; simpl ; auto. Qed.
-    Hint Resolve fill_location_in_k.
-
-    Lemma fill_location_in_l : forall k v l, in_location k l -> in_tree k (fill_location (k,v) l).
-    Proof. intros k v l inloc ; destruct l ; simpl ; auto. Qed.
-    Hint Resolve fill_location_in_l.
-      
-    Lemma fill_location_bst :
-      forall k v l_r u_r l,
-      bst_location l_r u_r (Extend k) l
-      -> bst_tree l_r u_r (fill_location (k,v) l).
-    Proof. intros k v l_r u_r l bstloc ; destruct l ; simpl ; mysimp ; eauto. Qed.
-    Hint Resolve fill_location_bst.
-
-    Lemma fill_location_height :
-      forall k v n l, height_location n l -> height_tree n (fill_location (k,v) l).
-    Proof. intros k v n l heightl ; gd n ; destruct l ; intros ; simpl ; mysimp ; eauto. Qed.
-    Hint Resolve fill_location_height.
-
-    Ltac locate_drill :=
-      match goal with
-      | [ |- context [ let (_,_) := ?p in _ ] ] => destruct p
-      | [ |- context [ ?x <=>! ?y ] ] => remember (x <=>! y) as m ; destruct m
-      | [ H : Lt = _ |- _ ] => symmetry in H ; apply tord_dec_correct_lt in H
-      | [ H : Eq = _ |- _ ] => symmetry in H ; apply tord_dec_correct_eqv in H
-      | [ H : Gt = _ |- _ ] => symmetry in H ; apply tord_dec_correct_gt in H
-      | [ IH : forall c, match locate ?k ?t c with _ => _ end
-        |- match locate ?k ?t ?c with _ => _ end
-        ] => specialize (IH c) ; remember (locate k t c) as m ; destruct m ; intros
-      | [ IH : forall c, _ -> match locate ?k ?t c with _ => _ end
-        |- match locate ?k ?t ?c with _ => _ end
-        ] => specialize (IH c) ; remember (locate k t c) as m ; destruct m ; intros
-        | [ IH : forall l_t u_t, _ -> forall c, match locate ?k ?t c with _ => _ end
-          , H : bst_tree ?l_t ?u_t ?t
-          |- match locate ?k ?t ?c with _ => _ end
-          ] => specialize (IH l_t u_t H c) ; remember (locate k t c) as m ; destruct m ; intros
-      end.
-
-    Lemma locate_in_fail_in_t_c :
-      forall k {l_t u_t t} c,
-      bst_tree l_t u_t t
-      -> match locate k t c with
-         | inl c' => forall k', in_tree k' t \/ in_context k' c -> in_context k' c'
-         | inr _ => True
-         end.
-    Proof.
-      intros k l_t u_t t c bstt ; gd c ; gd u_t ; gd l_t ; induction t ; simpl ; intros
-      ; repeat mysimp || locate_drill || rip || auto ; eauto.
-    Qed.
-
-    Lemma locate_in_fail_in_t :
-      forall k l_t u_t t c,
-      bst_tree l_t u_t t
-      -> match locate k t c with
-         | inl c' => forall k', in_tree k' t -> in_context k' c'
-         | inr _ => True
-         end.
-    Proof.
-      intros k l_t u_t t c Hbst ; remember (locate_in_fail_in_t_c k c Hbst) eqn:eqn ; clear eqn
-      ; destruct (locate k t c) ; eauto.
-    Qed.
-
-    Lemma locate_in_fail_in_c :
-      forall k l_t u_t t c,
-      bst_tree l_t u_t t
-      -> match locate k t c with
-         | inl c' => forall k', in_context k' c -> in_context k' c'
-         | inr _ => True
-         end.
-    Proof.
-      intros k l_t u_t t c Hbst ; remember (locate_in_fail_in_t_c k c Hbst) eqn:eqn ; clear eqn
-      ; destruct (locate k t c) ; eauto.
-    Qed.
-
-    Lemma locate_in_success_k :
-      forall k (t:tree K V) c,
-      match locate k t c with
-      | inl _ => True
-      | inr ((k',_),_) => in_tree k t /\ k ~= k'
-      end.
-    Proof.
-      intros k t c ; gd c ; induction t ; intros ; simpl
-      ; repeat mysimp || locate_drill ||
-        match goal with
-        end || rip || auto ; eauto.               
-    Qed.
-
-  Lemma remove_in :
-    forall t k t_lower t_upper t_height,
-    tree_iwf t_lower t_upper t_height t
-    -> match remove k t with
-       | None => True
-       | Some (t',_) =>
-         forall k', k' /~= k -> in_tree k' t -> in_tree k' t'
-       end.
-  Proof.
-    intros t ; induction t ; simpl ; intros ; auto.
-    - unfold remove ; simpl.
-      destruct p.
-      remember (k <=>! k0) as m eqn:meqn
-      ; symmetry in meqn ; destruct m
-      ; [ apply tord_dec_correct_eqv in meqn
-        | apply tord_dec_correct_lt in meqn
-        | apply tord_dec_correct_gt in meqn
-        ].
-      + remember (locate_greatest t1 Top_c) as m ; destruct m ; simpl.
-        { destruct p.
-          destruct s.
-          - destruct t2 ; simpl ; auto.
-            + remember (remove_up (Three_t Null_t p t2_1 p0 t2_2) (fuse c Top_c)) as m ; destruct m ; simpl ; intros.
-              { pose (remove_up_in_tree (fuse c Top_c) (Three_t Null_t p t2_1 p0 t2_2)).
-                rewrite <- Heqm0 in y.
-                apply y.
-                pose (locate_greatest_in t1 Top_c).
-                rewrite <- Heqm in y0 ; destruct p ; simpl in y0.
-                pose (locate_greatest_in_result t1 Top_c).
-                rewrite <- Heqm in y1.
-                specialize (y0 k).
-                inversion H1 ; subst ; clear H1.
-                - specialize (y0 k).
-    
-  Lemma remove_spec :
-    forall k t t_lower t_upper t_height,
-    tree_iwf t_lower t_upper t_height t
-    -> match remove k t with
-       | None => True
-       | Some (t',vM) =>
-           ~ in_tree k t'
-           /\ (forall k', k' /~= k -> in_tree k' t -> in_tree k' t')
-           /\ match vM with
-              | None => ~ in_tree k t
-              | Some v => in_tree k t /\ lookup k t = Some v
-              end
-           /\
-       end.
-            
-      
-           
-  Program Definition empty_wf : with_wf (tree K V) := exist _ empty _.
-  Next Obligation.
-    exists 0, (lbot:extend K) , (lbot:extend K) ; constructor ; reflexivity.
-  Defined.
-
-  Program Definition singleton_wf (k:K) (v:V) : with_wf (tree K V) := exist _ (singleton k v) _.
-  Next Obligation.
-    exists (0+1), (lbot:extend K), (ltop:extend K).
-    econstructor ; eauto ; constructor ; [ apply lbot_ineq | apply ltop_ineq ].
-  Defined.
-
-  Definition tree_inwf (k:K) (twf:with_wf (tree K V)) : Prop := in_tree k (proj1_sig twf).
-
-  Definition lookup_wf (k:K) (twf:with_wf (tree K V)) `(! tree_inwf k twf ) : V.
-  Proof.
-    destruct twf as [t p].
-    elimtype { v | lookup k t = Some v} ; intros.
-    { exact x. }
-    unfold lookup ; unfold tree_inwf in tree_inwf0 ; simpl in tree_inwf0
-    ; remember (locate k t Top_c) as m ; destruct m
-    ; pose (locate_in t k Top_c) ; rewrite <- Heqm in y ; repeat mysimp.
-    - exfalso.
-      destruct p as [n Ex] ; destruct Ex as [kM Ex] ; destruct Ex.
-      pose (locate_not_in k Top_c H).
-      rewrite <- Heqm in y0.
-      contradiction.
-    - econstructor ; reflexivity.
-  Qed.
 
   
   
