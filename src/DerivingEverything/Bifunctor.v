@@ -114,6 +114,8 @@ Class DE_BifunctorI U :=
          }, BoundedLatticeWF (U A B)
   }.
 
+Class DE_BifunctorI' U := { de_bifunctor_i : DE_BifunctorI U }.
+
 Module Type DE_Bifunctor_Arg.
   Parameter T : Type -> Type -> Type.
   Parameter U : Type -> Type -> Type.
@@ -121,10 +123,12 @@ Module Type DE_Bifunctor_Arg.
   Parameter from : forall {A B}, U A B -> T A B.
   Parameter IR_to : forall {A B}, InjectionRespect (T A B) (U A B) to eq eq.
   Parameter II_from : forall {A B}, InjectionInverse (U A B) (T A B) from to eq.
-  Global Declare Instance _DE_BifunctorI : DE_BifunctorI U.
+  Global Declare Instance _DE_BifunctorI : DE_BifunctorI' U.
 End DE_Bifunctor_Arg.
 
 Module DE_Bifunctor (M:DE_Bifunctor_Arg).
+  Local Existing Instance de_bifunctor_i.
+
   Import M.
   Arguments T _ _ /.
   Arguments U _ _ /.

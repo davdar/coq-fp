@@ -1,9 +1,9 @@
-Require Import FP.Categories.
+Require Import FP.Classes.
 Require Import FP.CoreData.
 Require Import FP.Data.Type.
 Require Import FP.Data.Identity.
 
-Import CategoriesNotation.
+Import ClassesNotation.
 Import CoreDataNotation.
 
 Inductive state_t S m A := StateT { un_state_t : S -> m (A * S) }.
@@ -16,30 +16,29 @@ Definition state S := state_t S identity.
 Definition run_state {S A} : S -> state S A -> (A * S) := run_identity '.:' run_state_t.
 
 Section Monad.
-  Context {S:Type} {m} `{! FUnit m ,! MBind m }.
+  Context {S:Type} {m} `{! Monad m }.
 
-  Definition state_t_funit {A} (a:A) : state_t S m A := StateT $ fun s => ret (a, s).
-  Global Instance state_t_FUnit : FUnit (state_t S m) :=
-    { funit := @state_t_funit }.
-
-  Definition state_t_bind {A B} (aM:state_t S m A) (k:A -> state_t S m B) : state_t S m B :=
+  Definition state_t_mret {A} (a:A) : state_t S m A := StateT $ fun s => mret (a, s).
+  Definition state_t_mbind {A B} (aM:state_t S m A) (k:A -> state_t S m B) : state_t S m B :=
     StateT $ fun s =>
       axs' <- run_state_t s aM ;;
       let (a,s') := axs' in
       run_state_t s' $ k a.
-  Global Instance state_t_MBind : MBind (state_t S m) :=
-    { bind := @state_t_bind }.
+  Global Instance state_t_Monad : Monad (state_t S m) :=
+    { mret := @state_t_mret
+    ; mbind := @state_t_mbind
+    }.
 
-  Definition state_t_get : state_t S m S := StateT $ fun s => ret (s, s).
-  Definition state_t_put (s:S) : state_t S m unit := StateT $ const (ret (tt, s)).
+  Definition state_t_mget : state_t S m S := StateT $ fun s => mret (s, s).
+  Definition state_t_mput (s:S) : state_t S m unit := StateT $ const (mret (tt, s)).
   Global Instance state_t_MonadState : MonadState S (state_t S m) :=
-    { get := state_t_get
-    ; put := state_t_put
+    { mget := state_t_mget
+    ; mput := state_t_mput
     }.
 End Monad.
 
-Definition eval_state_t {S m A} `{! FUnit m ,! MBind m } : S -> state_t S m A -> m A := bind_fmap fst '.:' run_state_t.
-Definition exec_state_t {S m A} `{! FUnit m ,! MBind m } : S -> state_t S m A -> m S := bind_fmap snd '.:' run_state_t.
+Definition eval_state_t {S m A} `{! Monad m } : S -> state_t S m A -> m A := mbind_fmap fst '.:' run_state_t.
+Definition exec_state_t {S m A} `{! Monad m } : S -> state_t S m A -> m S := mbind_fmap snd '.:' run_state_t.
 
 Definition eval_state {S A} : S -> state S A -> A := run_identity '.:' eval_state_t.
 Definition exec_state {S A} : S -> state S A -> S := run_identity '.:' exec_state_t.

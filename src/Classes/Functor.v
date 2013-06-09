@@ -4,19 +4,19 @@ Require Import FP.CoreClasses.
 Import CoreClassesNotation.
 Import CoreDataNotation.
 
-Class FMap (t:Type->Type) : Type :=
+Class Functor (t:Type->Type) : Type :=
   { fmap : forall {A B}, (A -> B) -> t A -> t B }.
-Arguments fmap {t FMap A B} _ _ : simpl never.
+Arguments fmap {t Functor A B} _ _ : simpl never.
 
-Section FMap.
-  Context {t u} `{! FMap t ,! FMap u}.
+Section Functor.
+  Context {t u} `{! Functor t ,! Functor u }.
 
   Definition fmap2 {A} {B} : (A -> B) -> u (t A) -> u (t B) := fmap '.' fmap.
 
-  Context {v} `{! FMap v }.
+  Context {v} `{! Functor v }.
 
   Definition fmap3 {A} {B} : (A -> B) -> v (u (t A)) -> v (u (t B)) := fmap '.' fmap2.
-End FMap.
+End Functor.
 
 Module FunctorNotation.
   Infix "<$>" := fmap (at level 47, left associativity).
@@ -25,7 +25,7 @@ Module FunctorNotation.
 End FunctorNotation.
 
 Section FunctorWF.
-  Context {t} `{! FMap t ,! F_Eqv t ,! F_PER_WF t }.
+  Context {t} `{! Functor t ,! F_Eqv t ,! F_PER_WF t }.
   
   Class FunctorWF :=
     { fmap_id :

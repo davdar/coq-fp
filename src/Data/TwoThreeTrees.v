@@ -1,6 +1,6 @@
 Require Import FP.CoreData.
 Require Import FP.CoreClasses.
-Require Import FP.Categories.
+Require Import FP.Classes.
 Require Import FP.Data.Option.
 Require Import FP.Data.List.
 Require Import FP.Data.Foldable.
@@ -9,7 +9,7 @@ Require Import FP.Data.Prod.
 
 Import CoreDataNotation.
 Import CoreClassesNotation.
-Import CategoriesNotation.
+Import ClassesNotation.
 
 Module TwoThreeTrees.
   Section Context.
@@ -35,7 +35,7 @@ Module TwoThreeTrees.
 
     Definition empty := Null_t.
     Definition single (e:K*V) : tree := Two_t Null_t e Null_t.
-    Definition singleton (k:K) (v:V) : tree := Two_t Null_t (k,v) Null_t.
+    Definition singleton (k:K) (v:V) : tree := single (k,v).
 
     (* a context of a two-three tree. this is the type of taking a tree and
      * replacing a sub-tree with a hole.
@@ -134,21 +134,21 @@ Module TwoThreeTrees.
 
     (* returns either a context where the key would be located or an
        existing pair and its location *)
-    Fixpoint locate (k:K) (t:tree) (c:context) : context + (K*V) * location :=
+    Fixpoint locate (k:K) (t:tree) (c:context) : context + V * location :=
       match t with
       | Null_t => inl c
       | Two_t tl (km,vm) tr =>
           match k <=>! km with
           | Lt => locate k tl $ TwoLeftHole_c (km,vm) tr c
-          | Eq => inr ((km,vm), TwoHole_l tl tr c)
+          | Eq => inr (vm, TwoHole_l tl tr c)
           | Gt => locate k tr $ TwoRightHole_c tl (km,vm) c
           end
       | Three_t tl (kl,vl) tm (kr,vr) tr =>
           match k <=>! kl, k <=>! kr with
           | Lt, _ => locate k tl $ ThreeLeftHole_c (kl,vl) tm (kr,vr) tr c
-          | Eq, _ => inr ((kl,vl), ThreeLeftHole_l tl tm (kr,vr) tr c)
+          | Eq, _ => inr (vl, ThreeLeftHole_l tl tm (kr,vr) tr c)
           | Gt, Lt => locate k tm $ ThreeMiddleHole_c tl (kl,vl) (kr,vr) tr c
-          | _, Eq => inr ((kr,vr), ThreeRightHole_l tl (kl,vl) tm tr c)
+          | _, Eq => inr (vr, ThreeRightHole_l tl (kl,vl) tm tr c)
           | _, Gt => locate k tr $ ThreeRightHole_c tl (kl,vl) tm (kr,vr) c
           end
       end.
@@ -172,7 +172,7 @@ Module TwoThreeTrees.
     Definition lookup (k:K) (t:tree) : option V :=
       match locate k t Top_c with
       | inl _ => None
-      | inr ((_,v),_) => Some v
+      | inr (v,_) => Some v
       end.
 
     (* if insertion results in a subtree which is too tall, propegate it up into
@@ -239,7 +239,7 @@ Module TwoThreeTrees.
     Definition insert_with (f:V -> V -> V) (k:K) (v:V) (t:tree) : tree :=
       match locate k t Top_c with
       | inl c => insert_up (Null_t, (k,v), Null_t) c
-      | inr ((_,v'), l) => fill_location (k,f v v') l
+      | inr (v', l) => fill_location (k,f v v') l
       end.
     Definition insert_replace : K -> V -> tree -> tree :=
       insert_with const.
@@ -250,7 +250,7 @@ Module TwoThreeTrees.
     Definition update (k:K) (f:V -> V) (t:tree) : tree :=
       match locate k t Top_c with
       | inl c => t
-      | inr ((_,v), l) => fill_location (k,f v) l
+      | inr (v, l) => fill_location (k,f v) l
       end.
 
     (* if remove results in a tree which is too short, propegate the gap into the
@@ -305,14 +305,14 @@ Module TwoThreeTrees.
           remove_up (Three_t tl' em' tr' em t) c'
       (*         c'                      c'
        *         |                       | 
-       *      [el][er]      =>        [el][er]
+       *      [el][er]      =>        [el'][er]
        *   //    |     \             /   |    \
-       *  t  [el'][er'] tr       [el']  [er']  tr
+       *  t  [el'][er'] tr       [el]  [er']  tr
        *    /    |    \          /  \    /  \
        *   tl'   tm'  tr'       t   tl' tm' tr'
        *) 
       | ThreeLeftHole_c el (Three_t tl' el' tm' er' tr') er tr c' =>
-          Some $ zip (Three_t (Two_t t el' tl') el (Two_t tm' er' tr') er tr) c'
+          Some $ zip (Three_t (Two_t t el tl') el' (Two_t tm' er' tr') er tr) c'
       (*         c'                       c'
        *         |                        | 
        *      [el][er]      =>           [er]
@@ -396,40 +396,40 @@ Module TwoThreeTrees.
       (* element doesn't exist *)
       | inl _ => Some (t, None)
       (* element found at location [loc] *)
-      | inr ((_,v), loc) =>
+      | inr (v, loc) =>
           (fun t => (t, Some v)) <$> match loc with
           (* element found at a two-node *)
           | TwoHole_l tl tr c =>
-              let mkContext g c' := TwoLeftHole_c g tr c' in
+              let fill_context g := TwoLeftHole_c g tr c in
               match locate_greatest tl Top_c with
               (* no children: turn into a hole and propagate *)
               | None => remove_up Null_t c
               (* greatest leaf is a two-node: replace it with a hole and propagate *)
-              | Some (g, inl c') => remove_up Null_t $ fuse (mkContext g c') c
+              | Some (g, inl c') => remove_up Null_t $ fuse c' $ fill_context g
               (* greatest leaf is a three-node: turn it into a two-node *)
-              | Some (g, inr (el, c')) => Some $ zip (single el) $ fuse (mkContext g c') c
+              | Some (g, inr (el, c')) => Some $ zip (single el) $ fuse c' $ fill_context g
               end
           (* element found on left side of three-node *)
           | ThreeLeftHole_l tl tm er tr c =>
-              let mkContext g c' := ThreeLeftHole_c g tm er tr c' in
+              let fill_context g := ThreeLeftHole_c g tm er tr c in
               match locate_greatest tl Top_c with
               (* no children: turn into a two-node *)
               | None => Some $ zip (single er) c
               (* greatest leaf is a two-node: replace it with a hole and propagate *)
-              | Some (g, inl c') => remove_up Null_t $ fuse (mkContext g c') c
+              | Some (g, inl c') => remove_up Null_t $ fuse c' $ fill_context g
               (* greatest leaf is a three-node: turn it into a two-node *)
-              | Some (g, inr (el, c')) => Some $ zip (single el) $ fuse (mkContext g c') c
+              | Some (g, inr (el, c')) => Some $ zip (single el) $ fuse c' $ fill_context g
               end
           (* element found on right side of three-node *)
           | ThreeRightHole_l tl el tm tr c =>
-              let mkContext g c' := ThreeMiddleHole_c tl el g tr c' in
+              let fill_context g := ThreeMiddleHole_c tl el g tr c in
               match locate_greatest tm Top_c with
               (* no children: turn into a two-node *)
               | None => Some $ zip (single el) c
               (* greatest leaf is a two-node: replace it with a hole and propagate *)
-              | Some (g, inl c') => remove_up Null_t $ fuse (mkContext g c') c
+              | Some (g, inl c') => remove_up Null_t $ fuse c' $ fill_context g
               (* greatest leaf is a three-node: turn it into a two-node *)
-              | Some (g, inr (el, c')) => Some $ zip (single el) $ fuse (mkContext g c') c
+              | Some (g, inr (el, c')) => Some $ zip (single el) $ fuse c' $ fill_context g
               end
           end
       end.
@@ -450,9 +450,9 @@ Module TwoThreeTrees.
       end.
 
     Definition to_list t := to_list_k t id.
-    Definition tree_cofold {w A} `{! Counit w ,! Cobind w } (f:(K*V) -> w A -> A) (aW:w A) : tree -> A :=
+    Definition tree_cofold {w A} `{! Comonad w } (f:(K*V) -> w A -> A) (aW:w A) : tree -> A :=
       cofold f aW '.' to_list.
-    Definition tree_mbuild {m} `{! FUnit m ,! MBind m } (f:forall {A}, ((K*V) -> A -> A) -> A -> m A) : m tree :=
+    Definition tree_mbuild {m} `{! Monad m } (f:forall {A}, ((K*V) -> A -> A) -> A -> m A) : m tree :=
       f (uncurry insert_replace) Null_t.
     Definition from_list : list (K*V) -> tree := iter (fun t kv => uncurry insert_replace kv t) Null_t.
 
@@ -465,6 +465,8 @@ Module TwoThreeTrees.
 
   End Context.
   Arguments tree : clear implicits.
+  Arguments context : clear implicits.
+  Arguments location : clear implicits.
   
   (* returns none if not well founded *)
   Definition difference {K V W} `{! TotalOrdDec K }
@@ -570,22 +572,22 @@ Module TwoThreeTrees.
   Definition set_to_list {A} : tree A unit -> list A :=
     List.map fst '.' to_list.
 
-  Definition set_cofold {A w} `{! Counit w ,! Cobind w } {B} (f:A -> w B -> B) : w B -> tree A unit -> B :=
+  Definition set_cofold {A w} `{! Comonad w } {B} (f:A -> w B -> B) : w B -> tree A unit -> B :=
     tree_cofold (fun att bW => let (a,tt) := att in f a bW).
 
-  Definition set_mbuild {A} `{! TotalOrdDec A } {m} `{ FUnit m, MBind m } (ff:forall {C}, (A -> C -> C) -> C -> m C) : m (tree A unit) :=
+  Definition set_mbuild {A} `{! TotalOrdDec A } {m} `{! Monad m } (ff:forall {C}, (A -> C -> C) -> C -> m C) : m (tree A unit) :=
     tree_mbuild (fun _ f' => ff $ fun a => f' (a,tt)).
 
-  Fixpoint sequence {K} {u} `{! FUnit u ,! FApply u } {V} (tT : tree K (u V)) : u (tree K V) := 
+  Fixpoint sequence {K} {u} `{! Applicative u } {V} (tT : tree K (u V)) : u (tree K V) := 
     match tT with
-    | Null_t => funit Null_t
+    | Null_t => fret Null_t
     | Two_t tl em tr =>
-        funit Two_t
+        fret Two_t
         <@> sequence tl
         <@> sequence_snd em
         <@> sequence tr
     | Three_t tl el tm er tr =>
-        funit Three_t
+        fret Three_t
         <@> sequence tl
         <@> sequence_snd el
         <@> sequence tm
@@ -593,7 +595,7 @@ Module TwoThreeTrees.
         <@> sequence tr
     end.
 
-  Definition set_sequence {u} `{! FUnit u ,! FApply u } {A} `{! TotalOrdDec A }
+  Definition set_sequence {u} `{! Applicative u } {A} `{! TotalOrdDec A }
       : tree (u A) unit -> u (tree A unit) :=
     fapply_fmap set_from_list '.' tsequence '.' set_to_list.
 End TwoThreeTrees.

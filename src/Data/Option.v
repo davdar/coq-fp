@@ -1,6 +1,6 @@
 Require Import FP.CoreData.
 Require Import FP.CoreClasses.
-Require Import FP.Categories.
+Require Import FP.Classes.
 Require Import FP.DerivingEverything.
 Require Import FP.DerivingMonad.
 Require Import FP.Data.Type.
@@ -10,7 +10,7 @@ Require Import FP.Data.Error.
 Require Import FP.Data.ErrorMonad.
 
 Import CoreClassesNotation.
-Import CategoriesNotation.
+Import ClassesNotation.
 
 Arguments Some {A} _.
 Arguments None {A}.
@@ -50,8 +50,8 @@ Module option_DE_Arg <: DE_Functor_Arg.
   Definition from : forall {A}, U A -> T A := @sum_to_option.
   Definition IR_to {A} : InjectionRespect (T A) (U A) to eq eq := _.
   Definition II_from {A} : InjectionInverse (U A) (T A) from to eq := _.
-  Definition _DE_FunctorI : DE_FunctorI U.
-  Proof. econstructor ; eauto with typeclass_instances. Defined.
+  Definition _DE_FunctorI : DE_FunctorI' U.
+  Proof. econstructor ; econstructor ; eauto with typeclass_instances. Defined.
 End option_DE_Arg.
 Module option_DE := DE_Functor option_DE_Arg.
 Import option_DE.
@@ -199,8 +199,8 @@ Module option_DMError_Arg <: DMError_Functor_Arg.
   Definition U := error unit.
   Definition to : forall {A}, T A -> U A := @option_to_error.
   Definition from : forall {A}, U A -> T A := @error_to_option.
-  Definition _DM_FunctorI : DM_FunctorI T U.
-  Proof. econstructor ; eauto with typeclass_instances. Defined.
+  Definition _DM_FunctorI : DM_FunctorI' T U.
+  Proof. econstructor ; econstructor ; eauto with typeclass_instances. Defined.
   Definition IR_from_eqv :
     forall {A} `{! Eqv A ,! PER_WF A },
     InjectionRespect (U A) (T A) from eqv eqv := _.

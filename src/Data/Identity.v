@@ -1,7 +1,7 @@
 Require Import FP.CoreClasses.
 Require Import FP.CoreData.
 Require Import FP.DerivingEverything.
-Require Import FP.Categories.
+Require Import FP.Classes.
 
 Import CoreClassesNotation.
 Import CoreDataNotation.
@@ -34,8 +34,8 @@ Module identity_DE_Arg <: DE_Functor_Arg.
   Definition from : forall {A}, U A -> T A := @Identity.
   Definition IR_to {A} : InjectionRespect (T A) (U A) to eq eq := _.
   Definition II_from {A} : InjectionInverse (U A) (T A) from to eq := _.
-  Definition _DE_FunctorI : DE_FunctorI U.
-  Proof. econstructor ; eauto with typeclass_instances. Defined.
+  Definition _DE_FunctorI : DE_FunctorI' U.
+  Proof. econstructor ; econstructor ; eauto with typeclass_instances. Defined.
 End identity_DE_Arg.
 Module identity_DE := DE_Functor identity_DE_Arg.
 Import identity_DE.
@@ -57,35 +57,30 @@ Section Proper.
 End Proper.
 
 Section Monad.
-  Definition identity_unit {A} : A -> identity A := Identity.
-  Arguments identity_unit {A} _ /.
-  Global Instance identity_FUnit : FUnit identity := { funit := @identity_unit }.
-
-  Definition identity_bind {A B} (aM:identity A) (k:A -> identity B) : identity B :=
+  Definition identity_mret {A} : A -> identity A := Identity.
+  Arguments identity_mret {A} _ /.
+  Definition identity_mbind {A B} (aM:identity A) (k:A -> identity B) : identity B :=
     k $ run_identity aM.
-  Arguments identity_bind {A B} _ _ /.
-  Global Instance identity_MBind : MBind identity := { bind := @identity_bind }.
+  Arguments identity_mbind {A B} _ _ /.
+  Global Instance identity_Monad : Monad identity :=
+    { mret := @identity_mret
+    ; mbind := @identity_mbind
+    }.
 
-  Global Instance identity_PointedWF : PointedWF identity.
-  Proof.
-    constructor ; intros.
-    unfold Proper ; logical_eqv_intro.
-    unfold eqv ; auto.
-  Qed.
   Global Instance identity_MonadWF : MonadWF identity.
   Proof.
-    constructor ; intros ; unfold bind ; simpl ; logical_eqv.
-    unfold Proper ; logical_eqv_intro.
-    simpl ; logical_eqv.
+    constructor ; intros ; unfold mret,mbind ; simpl ; logical_eqv.
+    unfold Proper ; logical_eqv_intro ; simpl ; logical_eqv.
   Qed.
 End Monad.
 
 Section Comonad.
-  Definition identity_counit {A} : identity A -> A := run_identity.
-  Arguments identity_counit {A} _ /.
-  Global Instance identity_Counit : Counit identity := { counit := @identity_counit }.
-
+  Definition identity_coret {A} : identity A -> A := run_identity.
+  Arguments identity_coret {A} _ /.
   Definition identity_cobind {A B} (aM:identity A) (k:identity A -> B) : identity B :=
     Identity $ k aM.
-  Global Instance identity_Cobind : Cobind identity := { cobind := @identity_cobind }.
+  Global Instance identity_Comonad : Comonad identity :=
+    { coret := @identity_coret
+    ; cobind := @identity_cobind
+    }.
 End Comonad.

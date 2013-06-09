@@ -1,10 +1,15 @@
+Require Coq.NArith.BinNat.
+
 Require Import FP.CoreData.
-Require Import FP.Categories.
+Require Import FP.Classes.
 Require Import FP.Data.Positive.
 
-Import CategoriesNotation.
+Import ClassesNotation.
 
-Definition N_cofold {w} `{! Counit w ,! Cobind w } {A} (f:N -> w A -> A) (aW:w A) (n:N) : A :=
+Instance N_Zero : Zero N := { zero := BinNat.N.zero }.
+Instance N_Plus : Plus N := { plus := BinNat.N.add }.
+
+Definition N_cofold {w} `{! Comonad w } {A} (f:N -> w A -> A) (aW:w A) (n:N) : A :=
   let aW := codo aW =>
     match n with
     | N0 => coret aW
@@ -14,7 +19,7 @@ Definition N_cofold {w} `{! Counit w ,! Cobind w } {A} (f:N -> w A -> A) (aW:w A
   f N0 aW.
 Instance N_Foldable : Foldable N N := { cofold := @N_cofold }.
 
-Definition N_coiter {w} `{! Counit w ,! Cobind w } {A} (f:w A -> N -> A) (aW:w A) (n:N) : A :=
+Definition N_coiter {w} `{! Comonad w } {A} (f:w A -> N -> A) (aW:w A) (n:N) : A :=
   let aW := codo aW => f aW N0 in
   match n with
   | N0 => coret aW
@@ -22,12 +27,12 @@ Definition N_coiter {w} `{! Counit w ,! Cobind w } {A} (f:w A -> N -> A) (aW:w A
   end.
 Instance N_Iterable : Iterable N N := { coiter := @N_coiter }.
 
-Definition N_coloopr {w} `{! Counit w ,! Cobind w } {A} (f:w A -> A) (aW:w A) (n:N) : A :=
+Definition N_coloopr {w} `{! Comonad w } {A} (f:w A -> A) (aW:w A) (n:N) : A :=
   match n with
   | N0 => coret aW
   | Npos p => coloopr f aW p
   end.
-Definition N_coloopl {w} `{! Counit w ,! Cobind w } {A} (f:w A -> A) (aW:w A) (n:N) : A :=
+Definition N_coloopl {w} `{! Comonad w } {A} (f:w A -> A) (aW:w A) (n:N) : A :=
   match n with
   | N0 => coret aW
   | Npos p => coloopl f aW p

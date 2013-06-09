@@ -1,10 +1,13 @@
 Require Import FP.CoreData.
-Require Import FP.Categories.
+Require Import FP.Classes.
 
-Import CategoriesNotation.
+Import ClassesNotation.
 Import CoreDataNotation.
 
-Fixpoint pos_cofold' {w} `{! Counit w ,! Cobind w } {A}
+Instance N_One : One positive := { one := 1%positive }.
+Instance N_Plus : Plus positive := { plus := BinPos.Pos.add }.
+
+Fixpoint pos_cofold' {w} `{! Comonad w } {A}
     (f:positive -> w A -> A) (aW:w A) (n:positive) : A :=
   let double_cofold :=
     pos_cofold' $ fun n aW =>
@@ -21,14 +24,14 @@ Fixpoint pos_cofold' {w} `{! Counit w ,! Cobind w } {A}
       let aW := codo aW => double_cofold aW n in
       f xH aW
   end.
-Definition pos_cofold {w} `{! Counit w ,! Cobind w } {A}
+Definition pos_cofold {w} `{! Comonad w } {A}
     (f:positive -> w A -> A) (aW:w A) (n:positive) : A :=
   let aW := codo aW => f n aW in
   pos_cofold' f aW n.
 Instance pos_Foldable : Foldable positive positive :=
   { cofold := @pos_cofold }.
 
-Fixpoint pos_coiter' {w} `{! Counit w ,! Cobind w } {A}
+Fixpoint pos_coiter' {w} `{! Comonad w } {A}
     (f:w A -> positive -> A) (aW:w A) (n:positive) : A :=
   let double_cofold :=
     pos_coiter' $ fun aW n =>
@@ -45,14 +48,14 @@ Fixpoint pos_coiter' {w} `{! Counit w ,! Cobind w } {A}
       let aW := codo aW => double_cofold aW n in
       f aW (xO n)
   end.
-Definition pos_coiter {w} `{! Counit w ,! Cobind w } {A}
+Definition pos_coiter {w} `{! Comonad w } {A}
     (f:w A -> positive -> A) (aW:w A) (n:positive) : A :=
   let aW := codo aW => pos_coiter' f aW n in
   f aW n.
 Instance pos_Iterable : Iterable positive positive :=
   { coiter := @pos_coiter }.
 
-Fixpoint pos_coloopr' {w} `{! Counit w ,! Cobind w } {A}
+Fixpoint pos_coloopr' {w} `{! Comonad w } {A}
     (f:w A -> A) (aW:w A) (n:positive) : A :=
   let double_coloopr :=
     pos_coloopr' $ fun aW =>
@@ -69,12 +72,12 @@ Fixpoint pos_coloopr' {w} `{! Counit w ,! Cobind w } {A}
       let aW := codo aW => f aW in
       f aW
   end.
-Definition pos_coloopr {w} `{! Counit w ,! Cobind w } {A}
+Definition pos_coloopr {w} `{! Comonad w } {A}
     (f:w A -> A) (aW:w A) (n:positive) : A :=
   let aW := codo aW => pos_coloopr' f aW n in
   f aW.
 
-Fixpoint pos_coloopl' {w} `{! Counit w ,! Cobind w } {A}
+Fixpoint pos_coloopl' {w} `{! Comonad w } {A}
     (f:w A -> A) (aW:w A) (n:positive) : A :=
   let double_coloopl :=
     pos_coloopl' $ fun aW =>
@@ -91,7 +94,7 @@ Fixpoint pos_coloopl' {w} `{! Counit w ,! Cobind w } {A}
       let aW := codo aW => f aW in
       double_coloopl aW n
   end.
-Definition pos_coloopl {w} `{! Counit w ,! Cobind w } {A}
+Definition pos_coloopl {w} `{! Comonad w } {A}
     (f:w A -> A) (aW:w A) (n:positive) : A :=
   let aW := codo aW => f aW in
   pos_coloopl' f aW n.

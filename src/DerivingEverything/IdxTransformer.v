@@ -136,6 +136,8 @@ Class DE_IdxTransformerI U :=
          }, BoundedLatticeWF (U I m A)
   }.
 
+Class DE_IdxTransformerI' U := { de_idx_transformer_i : DE_IdxTransformerI U }.
+
 Module Type DE_IdxTransformer_Arg.
   Parameter T : Type -> (Type -> Type) -> Type -> Type.
   Parameter U : Type -> (Type -> Type) -> Type -> Type.
@@ -143,10 +145,12 @@ Module Type DE_IdxTransformer_Arg.
   Parameter from : forall {I m A}, U I m A -> T I m A.
   Parameter IR_to : forall {I m A}, InjectionRespect (T I m A) (U I m A) to eq eq.
   Parameter II_from : forall {I m A}, InjectionInverse (U I m A) (T I m A) from to eq.
-  Parameter _DE_IdxTransformerI : DE_IdxTransformerI U.
+  Parameter _DE_IdxTransformerI : DE_IdxTransformerI' U.
 End DE_IdxTransformer_Arg.
 
 Module DE_IdxTransformer (M:DE_IdxTransformer_Arg).
+  Local Existing Instance de_idx_transformer_i.
+
   Import M.
   Arguments T _ _ _ /.
   Arguments U _ _ _ /.

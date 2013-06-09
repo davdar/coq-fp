@@ -1,5 +1,4 @@
 Require Coq.Numbers.BinNums.
-Require Coq.NArith.BinNat.
 
 Definition N := BinNums.N.
 Definition N0 := BinNums.N0.

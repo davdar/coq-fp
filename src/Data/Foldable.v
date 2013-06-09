@@ -1,4 +1,4 @@
-Require Import FP.Categories.
+Require Import FP.Classes.
 Require Import FP.CoreData.
 Require Import FP.CoreClasses.
 Require Import FP.Data.Identity.
@@ -11,7 +11,7 @@ Require Import FP.Data.State.
 
 Import CoreDataNotation.
 Import CoreClassesNotation.
-Import CategoriesNotation.
+Import ClassesNotation.
 Import SuspNotation.
 
 Section Foldable.
@@ -19,14 +19,14 @@ Section Foldable.
 
   Definition fold {A} (f:X -> A -> A) (a:A) : T -> A :=
     cofold (fun (x:X) (aM:identity A) => f x $ run_identity aM) (Identity a).
-  Definition mfold {m A} `{! FUnit m ,! MBind m } (f:X -> A -> m A) (a:A) : T -> m A :=
-    fold (fun (x:X) (aM:m A) => a <- aM ;; f x a) (ret a).
+  Definition mfold {m A} `{! Monad m } (f:X -> A -> m A) (a:A) : T -> m A :=
+    fold (fun (x:X) (aM:m A) => a <- aM ;; f x a) (mret a).
   Definition revfold {A} (f:X -> A -> A) : A -> T -> A :=
     run_cont '.:' 
       mfold begin fun (x:X) (a:A) =>
         callcc $ fun (k:A -> cont A A) =>
           a <- k a ;;
-          ret $ f x a
+          mret $ f x a
       end.
   Definition lazyfold {A} (f:forall {C}, X -> (C -> A) -> C -> A) (a:A) : T -> A :=
     cofold (fun (x:X) (aW:susp A) => f x force aW) (delay | a).
@@ -41,11 +41,11 @@ Section Fix.
       ff $ fun _ (a:A) => k l t a
     end (const2 None) t t a.
 
-  Definition fold_mfix {m A B} `{! FUnit m ,! MBind m }
+  Definition fold_mfix {m A B} `{! Monad m }
       (ff:(T -> A -> m (option B)) -> T -> A -> m (option B)) (t:T) (a:A) : m (option B) :=
     lazyfold begin fun (C:Type) (t:T) (k:C->T->A->m (option B)) (l:C) =>
       ff $ fun _ (a:A) => k l t a
-    end (const2 $ ret None) t t a.
+    end (const2 $ mret None) t t a.
 End Fix.
 
 Section Iterable.
@@ -53,14 +53,14 @@ Section Iterable.
 
   Definition iter {A} (f:A -> X -> A) (a:A) : T -> A :=
     coiter (fun (aM:identity A) (x:X) => f (run_identity aM) x) (Identity a).
-  Definition miter {m A} `{! FUnit m ,! MBind m } (f:A -> X -> m A) (a:A) : T -> m A :=
-    iter (fun (aM:m A) (x:X) => a <- aM ;; f a x) (ret a).
+  Definition miter {m A} `{! Monad m } (f:A -> X -> m A) (a:A) : T -> m A :=
+    iter (fun (aM:m A) (x:X) => a <- aM ;; f a x) (mret a).
   Definition reviter {A} (f:A -> X -> A) : A -> T -> A :=
     run_cont '.:'
       miter begin fun (a:A) (x:X) =>
         callcc $ fun (k:A -> cont A A) =>
           a <- k a ;;
-          ret $ f a x
+          mret $ f a x
       end.
   Definition lazyiter {A} (f:forall {C}, (C -> A) -> X -> C -> A) (a:A) : T -> A :=
     coiter (fun (aW:susp A) (x:X) => f force x aW) (delay | a).
@@ -72,7 +72,7 @@ Section Buildable.
   Definition build (f:forall A, (X -> A -> A) -> A -> A) : T :=
     run_identity $ mbuild $
       fun A (f':X -> A -> A) (a:A) =>
-        ret $ f A begin fun (x:X) (a:A) =>
+        mret $ f A begin fun (x:X) (a:A) =>
           f' x a
         end a.
 End Buildable.
@@ -98,7 +98,7 @@ Section GeneralizedList.
 
   Definition lookup {T A B} `{! EqvDec A ,! Foldable (A*B) T } (a:A)
       : T -> option B :=
-    bind_fmap snd '.' select (fun (p:A*B) => fst p ~=! a).
+    mbind_fmap snd '.' select (fun (p:A*B) => fst p ~=! a).
   
   Definition cat_options {T A U} `{! Foldable (option A) T ,! Buildable A U }
       (t:T) : U :=
@@ -109,18 +109,17 @@ Section GeneralizedList.
       (t:T) : U :=
     eval_state 0 $ mbuild $ fun C (cons:N*A -> C -> C) (nil:C) =>
       mfold begin fun (a:A) (c:C) =>
-        n <- get ;;
-        modify psucc ;;
-        ret $ cons (n,a) c
+        n <- pinc ;;
+        mret $ cons (n,a) c
       end nil t.
 
   Definition intersperse {T A U} `{! Foldable A T ,! Buildable A U }
       (i:A) (t:T) : U :=
     eval_state false $ mbuild $ fun C (cons:A -> C -> C) (nil:C) =>
       mfold begin fun (a:A) (c:C) =>
-        b <- get ;;
-        put true ;;
-        ret $ if b:bool then
+        b <- mget ;;
+        mput true ;;
+        mret $ if b:bool then
           cons a (cons i c)
         else
           cons a c 
@@ -133,6 +132,6 @@ Section GeneralizedList.
   Definition length {T A P} `{! Foldable A T ,! Peano P } (t:T) : P :=
     exec_state pzero $
       mfold begin fun (_:A) (_:unit) =>
-        pinc ;; ret tt
+        pinc ;; mret tt
       end tt t.
 End GeneralizedList.

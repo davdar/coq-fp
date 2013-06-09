@@ -1,13 +1,15 @@
 Require Import FP.CoreClasses.
-Require Import FP.Categories.Monad.
+Require Import FP.Classes.Monad.
 
 Import CoreClassesNotation.
 Import MonadNotation.
 
-Class MPlus (m:Type->Type) :=
+Class MonadPlus (m:Type->Type) :=
   { mzero : forall {A}, m A
   ; mplus : forall {A}, m A -> m A -> m A
   }.
+Arguments mzero {m MonadPlus A} : simpl never.
+Arguments mplus {m MonadPlus A} _ _ : simpl never.
 
 Module MonadPlusNotation.
   Infix "<+>" := mplus (at level 46, right associativity).
@@ -15,20 +17,20 @@ End MonadPlusNotation.
 Import MonadPlusNotation.
 
 Section MonadPlusWF.
-  Context {m} `{! F_Eqv m ,! F_PER_WF m ,! MBind m ,! MPlus m }.
+  Context {m} `{! F_Eqv m ,! F_PER_WF m ,! Monad m ,! MonadPlus m }.
 
   Class MonadPlusWF :=
-    { mplus_left_zero :
+    { MonadPlus_left_zero :
         forall
           {A} `{! Eqv A ,! PER_WF A }
           (aM:m A) `{! Proper eqv aM },
          mplus mzero aM ~= aM
-    ; mplus_right_zero :
+    ; MonadPlus_right_zero :
         forall
           {A} `{! Eqv A ,! PER_WF A }
           (aM:m A) `{! Proper eqv aM },
         mplus aM mzero ~= aM
-    ; mplus_distribute :
+    ; MonadPlus_distribute :
         forall 
           {A} `{! Eqv A ,! PER_WF A }
           {B} `{! Eqv B ,! PER_WF B }

@@ -1,10 +1,10 @@
 Require Import FP.CoreClasses.
-Require Import FP.Categories.
+Require Import FP.Classes.
 Require Import FP.DerivingEverything.
 Require Import FP.Data.Type.
 Require Import FP.Data.Sum.
 
-Import CategoriesNotation.
+Import ClassesNotation.
 Import CoreClassesNotation.
 
 Inductive error E A :=
@@ -48,8 +48,8 @@ Module error_DE_Arg <: DE_IdxFunctor_Arg.
   Definition from : forall {E A}, U E A -> T E A := @sum_to_error.
   Definition IR_to {E A} : InjectionRespect (T E A) (U E A) to eq eq := _.
   Definition II_from {E A} : InjectionInverse (U E A) (T E A) from to eq := _.
-  Definition _DE_IdxFunctorI : DE_IdxFunctorI U.
-  Proof. econstructor ; eauto with typeclass_instances. Defined.
+  Definition _DE_IdxFunctorI : DE_IdxFunctorI' U.
+  Proof. econstructor ; econstructor ; eauto with typeclass_instances. Defined.
 End error_DE_Arg.
 Module error_DE := DE_IdxFunctor error_DE_Arg.
 Import error_DE.
@@ -66,6 +66,8 @@ Section IR.
       apply InjectionRespect_beta in H ; auto.
   Qed.
 
+  Global Instance Failure_Proper : Proper eqv (@Failure E A) := Proper_inj.
+
   Global Instance IR_Success_eqv : InjectionRespect A (error E A) Success eqv eqv.
     constructor ; unfold Proper,"==>","<==" ; intros ; simpl.
     - apply InjectionRespect_beta ; simpl.
@@ -73,6 +75,8 @@ Section IR.
     - apply InjectionRespect_eta in H ; simpl in H.
       apply InjectionRespect_beta in H ; auto.
   Qed.
+
+  Global Instance Success_Proper : Proper eqv (@Success E A) := Proper_inj.
 End IR.
 
 Definition error_elim {E A C} (aM:error E A) (ef:E -> C) (af:A -> C) : C :=

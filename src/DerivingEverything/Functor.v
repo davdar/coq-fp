@@ -92,6 +92,8 @@ Class DE_FunctorI U :=
          }, BoundedLatticeWF (U A)
   }.
 
+Class DE_FunctorI' U := { de_functor_i : DE_FunctorI U }.
+
 Module Type DE_Functor_Arg.
   Parameter T : Type -> Type.
   Parameter U : Type -> Type.
@@ -99,10 +101,12 @@ Module Type DE_Functor_Arg.
   Parameter from : forall {A}, U A -> T A.
   Parameter IR_to : forall {A}, InjectionRespect (T A) (U A) to eq eq.
   Parameter II_from : forall {A}, InjectionInverse (U A) (T A) from to eq.
-  Parameter _DE_FunctorI : DE_FunctorI U.
+  Parameter _DE_FunctorI : DE_FunctorI' U.
 End DE_Functor_Arg.
 
 Module DE_Functor (M:DE_Functor_Arg).
+  Local Existing Instance de_functor_i.
+
   Import M.
   Arguments T / _.
   Arguments U / _.

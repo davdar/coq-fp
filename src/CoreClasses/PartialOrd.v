@@ -18,7 +18,6 @@ Class PartialOrdDec T :=
 Section lt_un.
   Context {T} `{! Eqv T ,! Lte T ,! ER_WF T ,! PartialOrd T }.
 
-  Definition lt x y := lte x y /\ ~lte y x.
   Global Instance lt_respect_eqv : Proper (eqv ==> eqv ==> impl) lt.
   Proof.
     unfold Proper,"==>",impl,Basics.impl ; intros.
@@ -28,7 +27,6 @@ Section lt_un.
       rewrite H ; rewrite H0 ; auto.
   Qed.
 
-  Definition un x y := ~lte x y /\ ~lte y x.
   Global Instance un_respect_eqv : Proper (eqv ==> eqv ==> impl) un.
   Proof.
     unfold Proper,"==>",impl,Basics.impl ; intros.
@@ -123,10 +121,6 @@ Section lt_un_dec.
     | false, false => None
     end.
 
-  (* NOTE: These are all built against eqv being an equivalent
-  relation. They could alternatively be built against PERs under the
-  assumption that x and y are Proper. No point in making all of these
-  alternative definitions until I find a use case for them... -D *)
   Definition eqv_impl_lte : forall {x y}, eqv x y -> lte x y.
   Proof.
     intros.

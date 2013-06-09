@@ -8,6 +8,8 @@ Require Export FP.CoreClasses.PartialOrd.
 Require Export FP.CoreClasses.PreOrd.
 Require Export FP.CoreClasses.RelDec.
 Require Export FP.CoreClasses.TotalOrd.
+Require Export FP.CoreClasses.Bijection.
+Require Export FP.CoreClasses.HEqv.
 
 Module CoreClassesNotation.
   Export EqvNotation.

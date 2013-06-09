@@ -114,6 +114,8 @@ Class DE_IdxFunctorI U :=
          }, BoundedLatticeWF (U I A)
   }.
 
+Class DE_IdxFunctorI' U := { de_idx_functor_i : DE_IdxFunctorI U }.
+
 Module Type DE_IdxFunctor_Arg.
   Parameter T : Type -> Type -> Type.
   Parameter U : Type -> Type -> Type.
@@ -121,10 +123,12 @@ Module Type DE_IdxFunctor_Arg.
   Parameter from : forall {I A}, U I A -> T I A.
   Parameter IR_to : forall {I A}, InjectionRespect (T I A) (U I A) to eq eq.
   Parameter II_from : forall {I A}, InjectionInverse (U I A) (T I A) from to eq.
-  Parameter _DE_IdxFunctorI : DE_IdxFunctorI U.
+  Parameter _DE_IdxFunctorI : DE_IdxFunctorI' U.
 End DE_IdxFunctor_Arg.
 
 Module DE_IdxFunctor (M:DE_IdxFunctor_Arg).
+  Local Existing Instance de_idx_functor_i.
+
   Import M.
   Arguments T / _ _ .
   Arguments U / _ _ .

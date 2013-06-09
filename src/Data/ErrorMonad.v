@@ -4,7 +4,7 @@ Require Import FP.Data.Identity.
 Require Import FP.DerivingMonad.
 Require Import FP.CoreData.
 Require Import FP.CoreClasses.
-Require Import FP.Categories.
+Require Import FP.Classes.
 
 Import CoreDataNotation.
 Import CoreClassesNotation.
@@ -55,8 +55,8 @@ Module error_DMError_Arg <: DMError_IdxFunctor_Arg.
   Definition U := error_b.
   Definition to : forall {I A}, T I A -> U I A := @error_to_error_b.
   Definition from : forall {I A}, U I A -> T I A := @error_b_to_error.
-  Definition _DM_IdxFunctorI : DM_IdxFunctorI T U.
-  Proof. econstructor ; eauto with typeclass_instances. Defined.
+  Definition _DM_IdxFunctorI : DM_IdxFunctorI' T U.
+  Proof. econstructor ; econstructor ; eauto with typeclass_instances. Defined.
   Definition IR_from_eqv :
     forall {I A} `{! Eqv I ,! PER_WF I ,! Eqv A ,! PER_WF A },
     InjectionRespect (U I A) (T I A) from eqv eqv := _.

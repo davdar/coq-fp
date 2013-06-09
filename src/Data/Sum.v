@@ -1,6 +1,6 @@
 Require Import FP.CoreData.
 Require Import FP.CoreClasses.
-Require Import FP.Categories.
+Require Import FP.Classes.
 
 Import CoreClassesNotation.
 Import CoreDataNotation.
@@ -372,12 +372,12 @@ Section TotalOrd.
       constructor ; eauto with typeclass_instances ; intros.
       unfold "~" at 1 ; intros H ; destruct H.
       destruct x,y.
-      - apply (TotalOrd_comparable (x:=a) (y:=a0))
+      - apply (TotalOrd_comparable a a0)
         ; constructor ; unfold "~" ; intros ; [ apply H | apply H0 ]
         ; repeat mysimp.
       - apply H ; repeat mysimp.
       - apply H0 ; repeat mysimp.
-      - apply (TotalOrd_comparable (x:=b) (y:=b0))
+      - apply (TotalOrd_comparable b b0)
         ; constructor ; unfold "~" ; intros ; [ apply H | apply H0 ]
         ; repeat mysimp.
     Qed.

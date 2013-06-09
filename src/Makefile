@@ -1,4 +1,4 @@
-PACKAGES   := CoreData CoreClasses Categories DerivingEverything DerivingMonad Data
+PACKAGES   := CoreClasses CoreData DerivingEverything DerivingMonad Classes Data
 FILES      := $(foreach pkg,$(PACKAGES),$(patsubst %.v,%,$(wildcard $(pkg)/*.v))) \
 	            $(patsubst %.v,%,$(wildcard *.v))
 SOURCES    := $(FILES:%=%.v) 

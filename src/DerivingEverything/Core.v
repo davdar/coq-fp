@@ -260,18 +260,11 @@ Section Deriving_TotalOrd.
     }.
   Definition Deriving_TotalOrd : TotalOrd T.
   Proof.
-    constructor.
-    - eauto with typeclass_instances.
-    - intros.
-      unfold "~" at 1 ; intros pun.
-      assert (~ inj x <= inj y /\ ~ inj y <= inj x).
-      { destruct pun ; constructor ; unfold "~" in * ; intros.
-        - apply H.
-          apply InjectionRespect_beta ; auto.
-        - apply H0.
-          apply InjectionRespect_beta ; auto.
-      }
-      apply (TotalOrd_comparable H).
+    constructor ; eauto with typeclass_instances.
+    intros.
+    unfold "~" at 1 ; intros pun ; destruct pun.
+    apply (TotalOrd_comparable (inj x) (inj y)) ; constructor
+    ; unfold "~" ; intros H1 ; apply InjectionRespect_beta in H1 ; contradiction.
   Qed.
 End Deriving_TotalOrd.
 

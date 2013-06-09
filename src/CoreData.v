@@ -14,4 +14,5 @@ Module CoreDataNotation.
   Export PositiveNotation.
   Export FunctionNotation.
   Export ListNotation.
+  Export BoolNotation.
 End CoreDataNotation.

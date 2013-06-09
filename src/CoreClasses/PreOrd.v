@@ -18,6 +18,39 @@ Section PreOrd.
   Definition lte_dec_p : forall x y, {lte x y}+{~lte x y} := rel_dec_p.
 End PreOrd.
 
+Section lt_un.
+  Context {T} `{! Lte T }.
+
+  Definition lt x y := lte x y /\ ~lte y x.
+  Definition un x y := ~lte x y /\ ~lte y x.
+
+  Context `{! PreOrd T }.
+
+  Global Instance lt_Transitive : Transitive lt.
+  Proof.
+    unfold Transitive ; intros.
+    destruct H,H0.
+    constructor.
+    - transitivity y ; auto.
+    - unfold "~" in * ; intros ; apply H1.
+      transitivity z ; auto.
+  Qed.
+
+  Lemma lt_trans_lte : forall {x} y {z}, lte y z -> lt x y -> lt x z.
+  Proof.
+    intros * * * H H1 ; destruct H1 as [Hlt Hnlt] ; constructor.
+    - transitivity y ; auto.
+    - unfold "~" ; intros H2 ; apply Hnlt ; transitivity z ; auto.
+  Qed.
+
+  Lemma lte_trans_lt : forall {x} y {z}, lte x y -> lt y z -> lt x z.
+  Proof.
+    intros * * * H H1 ; destruct H1 as [Hlt Hnlt] ; constructor.
+    - transitivity y ; auto.
+    - unfold "~" ; intros H2 ; apply Hnlt ; transitivity x ; auto.
+  Qed.
+End lt_un.
+
 Module PreOrdNotation.
   Notation "x <= y"        := (lte x y)
     (at level 70, no associativity).

@@ -118,6 +118,7 @@ Section Fun_WFPER.
       logical_eqv_elim ; auto.
   Qed.
 End Fun_WFPER.
+Hint Extern 9 (PER_WF (_ -> _)) => apply Fun_WFPER : typeclass_instances.
 
 Section Eqv_Logical.
   Context {A} `{! Eqv A ,! PER_WF A }.
@@ -133,24 +134,26 @@ Section Eqv_Logical.
     : Proper (eqv ==> eqv ==> eqv ==> eqv) f := Proper0.
   Global Instance Proper_app (f:A -> B) `(! Proper eqv f ) (a:A) `(! Proper eqv a )
     : Proper eqv (f a) := Proper0 a a Proper1.
-  Global Instance per_Proper_left (x:A) (y:A) `(! eqv x y ) : Proper eqv x.
+  Definition per_Proper_left (x:A) (y:A) `(! eqv x y ) : Proper eqv x.
   Proof.
     unfold Proper.
     transitivity y ; auto.
     symmetry ; auto.
   Qed.
-  Global Instance per_Proper_right (x:A) (y:A) `(! eqv x y ) : Proper eqv y.
+  Definition per_Proper_right (x:A) (y:A) `(! eqv x y ) : Proper eqv y.
   Proof.
     unfold Proper.
     transitivity x ; auto.
     symmetry ; auto.
   Qed.
 End Eqv_Logical.
+Hint Extern 1 (Proper eqv _) => eapply per_Proper_left ; trivial : typeclass_instances.
+Hint Extern 1 (Proper eqv _) => eapply per_Proper_right ; trivial : typeclass_instances.
 
 Section Injection.
   Context {T U} `{! Eqv T ,! Eqv U }.
 
-  Global Instance Proper_inj {inj} `{! InjectionRespect T U inj eqv eqv }
+  Definition Proper_inj {inj} `{! InjectionRespect T U inj eqv eqv }
     : Proper eqv inj.
   Proof.
     unfold Proper ; apply fun_eqv_intro.

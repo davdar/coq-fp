@@ -13,7 +13,7 @@ Import ProperNotation.
 
 Class TotalOrd T `{! Lte T ,! Eqv T ,! ER_WF T } :=
   { TotalOrd_PartialOrd :> PartialOrd T
-  ; TotalOrd_comparable : forall {x y}, ~(~lte x y /\ ~lte y x)
+  ; TotalOrd_comparable : forall x y, ~(~lte x y /\ ~lte y x)
   }.
 
 Class TotalOrdDec T := { tord_dec : T -> T -> comparison}.

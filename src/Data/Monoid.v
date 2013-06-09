@@ -1,4 +1,4 @@
-Require Import FP.Categories.
+Require Import FP.Classes.
 Require Import FP.Data.Foldable.
 
 Section Monoid.

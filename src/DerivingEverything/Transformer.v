@@ -114,6 +114,8 @@ Class DE_TransformerI U :=
          }, BoundedLatticeWF (U m A)
   }.
 
+Class DE_TransformerI' U := { de_transformer_i : DE_TransformerI U }.
+
 Module Type DE_Transformer_Arg.
   Parameter T : (Type -> Type) -> Type -> Type.
   Parameter U : (Type -> Type) -> Type -> Type.
@@ -121,10 +123,12 @@ Module Type DE_Transformer_Arg.
   Parameter from : forall {m A}, U m A -> T m A.
   Parameter IR_to : forall {m A}, InjectionRespect (T m A) (U m A) to eq eq.
   Parameter II_from : forall {m A}, InjectionInverse (U m A) (T m A) from to eq.
-  Global Declare Instance _DE_TransformerI : DE_TransformerI U.
+  Global Declare Instance _DE_TransformerI : DE_TransformerI' U.
 End DE_Transformer_Arg.
 
 Module DE_Transformer (M:DE_Transformer_Arg).
+  Local Existing Instance de_transformer_i.
+
   Import M.
   Arguments T _ _ /.
   Arguments U _ _ /.
